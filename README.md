@@ -23,6 +23,17 @@ Cross-module edges are limited to exactly what [`Module Dependency Diagram.md`](
 curl localhost:8080/healthz   # -> OK
 ```
 
+`./gradlew check` needs Docker for the `integrationTest` (L4-L6) source set — `docker compose up` brings up the local data tier (PostgreSQL, Kafka, Elasticsearch, MongoDB, Redis) from `compose.yaml`, and Testcontainers starts its own PostgreSQL container for `app`'s `PostgresConnectivityIT` independently of Compose.
+
+**On Colima:** start it first (`colima start --memory 4`, per the repo root `CLAUDE.md`), then point Testcontainers at the Colima VM's Docker socket — the default `docker context` resolution isn't enough on its own:
+
+```sh
+export DOCKER_HOST=unix://$HOME/.colima/default/docker.sock
+export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock   # the socket path inside the Colima VM, not the host path
+```
+
+Testcontainers reuse is a per-developer opt-in, not a repo setting — add `testcontainers.reuse.enable=true` to `~/.testcontainers.properties` to keep a container warm across local `integrationTest` runs. Leave it unset in CI.
+
 ## Planted-violation demo
 
 To demonstrate that a structural mistake fails the build (not just review), on the running build:
@@ -31,3 +42,7 @@ To demonstrate that a structural mistake fails the build (not just review), on t
 2. Add a class in `payment.api` (e.g. `Marker`) and reference it from a new class in `catalog.api`.
 3. Run `./gradlew :app:test --tests ModularityTests` — it fails with a `org.springframework.modulith.core.Violations` report naming the undeclared `catalog -> payment` edge.
 4. Delete both added classes and revert `catalog/build.gradle.kts`, then re-run — it passes.
+
+### ArchUnit's four planted violations (`EN-GATE-1`)
+
+`app/src/test/java/org/phuchoang/ecp/ArchitectureTests.java` carries the layer and forbidden-edge rules of [`Module Dependency Diagram.md`](../docs/SA-docs/02-backend/Module%20Dependency%20Diagram.md) §6-§7, on top of the module-boundary check above. Four violations are rehearsed the same way (add → `./gradlew :app:test` fails → revert → passes): `review -> payment`, `inventory -> ordering` (caught by Gradle's own circular-dependency check before Modulith even runs, since `ordering -> inventory` is already a real edge), a `domain` class referencing `identity`, and a class reaching into another module's `application` package. See the Sprint 01 backlog's Review Notes for the exact failure messages each one produces.

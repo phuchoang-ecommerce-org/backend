@@ -24,6 +24,9 @@ dependencies {
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.modulith:spring-modulith-starter-test")
+    testImplementation(libs.archunit.junit5)
+    testImplementation(libs.jmolecules.archunit)
+    testImplementation(libs.jmolecules.ddd)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
@@ -36,6 +39,14 @@ val integrationTest: SourceSet = sourceSets.create("integrationTest") {
 
 configurations["integrationTestImplementation"].extendsFrom(configurations.testImplementation.get())
 configurations["integrationTestRuntimeOnly"].extendsFrom(configurations.testRuntimeOnly.get())
+
+dependencies {
+    "integrationTestImplementation"(platform(libs.testcontainers.bom))
+    "integrationTestImplementation"("org.testcontainers:junit-jupiter")
+    "integrationTestImplementation"("org.testcontainers:postgresql")
+    "integrationTestImplementation"(libs.postgresql)
+    "integrationTestImplementation"("org.springframework.boot:spring-boot-testcontainers")
+}
 
 val integrationTestTask = tasks.register<Test>("integrationTest") {
     description = "Runs L4-L6 Testcontainers-backed integration tests."
