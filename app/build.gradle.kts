@@ -6,7 +6,15 @@ plugins {
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.boot:spring-boot-starter-jdbc")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.modulith:spring-modulith-starter-core")
+    // spring-boot-starter-flyway, not raw flyway-core: Boot 4's modularised
+    // autoconfiguration puts FlywayAutoConfiguration in spring-boot-flyway,
+    // which only this starter pulls in.
+    implementation("org.springframework.boot:spring-boot-starter-flyway")
+    runtimeOnly(libs.flyway.postgresql)
+    runtimeOnly(libs.postgresql)
 
     implementation(project(":shared-kernel"))
     implementation(project(":identity"))
@@ -23,6 +31,10 @@ dependencies {
     implementation(project(":reporting"))
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    // Spring Boot 4's per-starter test-slice split (Technology Stack.md's Boot 4.1.1 pin) —
+    // @WebMvcTest now ships with spring-boot-webmvc's own "-test" starter, not the generic
+    // spring-boot-starter-test.
+    testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
     testImplementation("org.springframework.modulith:spring-modulith-starter-test")
     testImplementation(libs.archunit.junit5)
     testImplementation(libs.jmolecules.archunit)
@@ -46,6 +58,8 @@ dependencies {
     "integrationTestImplementation"("org.testcontainers:postgresql")
     "integrationTestImplementation"(libs.postgresql)
     "integrationTestImplementation"("org.springframework.boot:spring-boot-testcontainers")
+    "integrationTestImplementation"(libs.flyway.core)
+    "integrationTestImplementation"(libs.flyway.postgresql)
 }
 
 val integrationTestTask = tasks.register<Test>("integrationTest") {

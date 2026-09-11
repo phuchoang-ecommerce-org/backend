@@ -24,6 +24,10 @@ spring-modulith-bom = { module = "org.springframework.modulith:spring-modulith-b
 jmolecules-bom = { module = "org.jmolecules:jmolecules-bom", version.ref = "jmoleculesBom" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 testcontainers-bom = { module = "org.testcontainers:testcontainers-bom", version.ref = "testcontainers" }
+# Versions left to Spring Boot's dependency management (ADR-0029 §4) — override
+# here with version.ref only if a specific version is ever needed.
+flyway-core = { module = "org.flywaydb:flyway-core" }
+flyway-postgresql = { module = "org.flywaydb:flyway-database-postgresql" }
 
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "springBoot" }
