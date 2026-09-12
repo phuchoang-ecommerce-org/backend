@@ -28,6 +28,7 @@ public final class Account {
     @Identity
     private final UUID id;
     private EmailAddress email;
+    private EmailAddress pendingEmail;
     private CredentialHash credentialHash;
     private String displayName;
     private AccountStatus status;
@@ -41,11 +42,12 @@ public final class Account {
 
     private final List<Object> domainEvents = new ArrayList<>();
 
-    private Account(UUID id, EmailAddress email, CredentialHash credentialHash, String displayName,
-            AccountStatus status, VerificationStatus verificationStatus, Instant verifiedAt,
+    private Account(UUID id, EmailAddress email, EmailAddress pendingEmail, CredentialHash credentialHash,
+            String displayName, AccountStatus status, VerificationStatus verificationStatus, Instant verifiedAt,
             Instant lastLoginAt, int failedLoginCount, long version, Set<RoleCode> roles, Instant createdAt) {
         this.id = Objects.requireNonNull(id);
         this.email = Objects.requireNonNull(email);
+        this.pendingEmail = pendingEmail;
         this.credentialHash = Objects.requireNonNull(credentialHash);
         this.displayName = displayName;
         this.status = Objects.requireNonNull(status);
@@ -67,17 +69,17 @@ public final class Account {
     public static Account register(UUID id, EmailAddress email, CredentialHash credentialHash,
             String displayName, Clock clock) {
         Instant now = Instant.now(clock);
-        return new Account(id, email, credentialHash, displayName, AccountStatus.ACTIVE,
+        return new Account(id, email, null, credentialHash, displayName, AccountStatus.ACTIVE,
             VerificationStatus.UNVERIFIED, null, null, 0, 0L, EnumSet.of(RoleCode.CUSTOMER), now);
     }
 
     /** Reconstitutes a persisted account. No event is raised — rehydration is not a business event. */
-    public static Account reconstitute(UUID id, EmailAddress email, CredentialHash credentialHash,
-            String displayName, AccountStatus status, VerificationStatus verificationStatus,
-            Instant verifiedAt, Instant lastLoginAt, int failedLoginCount, long version, Set<RoleCode> roles,
-            Instant createdAt) {
-        return new Account(id, email, credentialHash, displayName, status, verificationStatus, verifiedAt,
-            lastLoginAt, failedLoginCount, version, roles, createdAt);
+    public static Account reconstitute(UUID id, EmailAddress email, EmailAddress pendingEmail,
+            CredentialHash credentialHash, String displayName, AccountStatus status,
+            VerificationStatus verificationStatus, Instant verifiedAt, Instant lastLoginAt, int failedLoginCount,
+            long version, Set<RoleCode> roles, Instant createdAt) {
+        return new Account(id, email, pendingEmail, credentialHash, displayName, status, verificationStatus,
+            verifiedAt, lastLoginAt, failedLoginCount, version, roles, createdAt);
     }
 
     /**
@@ -91,6 +93,55 @@ public final class Account {
         this.verificationStatus = VerificationStatus.VERIFIED;
         this.verifiedAt = Instant.now(clock);
         domainEvents.add(new AccountVerified(id, email.value(), Instant.now(clock)));
+    }
+
+    /**
+     * `UC-CUS-06` step 4: replaces the stored hash. Session invalidation (`BR-CUS-03`) is a
+     * {@code TokenRepository} concern the application service handles itself — the aggregate
+     * knows nothing about tokens.
+     */
+    public void changePassword(CredentialHash newCredentialHash, Clock clock) {
+        this.credentialHash = Objects.requireNonNull(newCredentialHash);
+        domainEvents.add(new PasswordChanged(id, Instant.now(clock)));
+    }
+
+    /**
+     * `UC-CUS-08` main scenario, steps 2-4: whole-or-nothing profile update. {@code displayName}
+     * is applied directly; {@code null} leaves it unchanged (`A2`).
+     */
+    public void updateDisplayName(String newDisplayName) {
+        if (newDisplayName != null) {
+            this.displayName = newDisplayName;
+        }
+    }
+
+    /**
+     * `UC-CUS-08` A1: a requested new address is held pending, never applied to {@code email}
+     * directly, until proven via the same verification-token mechanism as initial registration.
+     */
+    public void requestEmailChange(EmailAddress newEmail, Clock clock) {
+        this.pendingEmail = newEmail;
+        domainEvents.add(new AccountProfileUpdated(id, Instant.now(clock)));
+        domainEvents.add(new EmailChangeRequested(id, email.value(), newEmail.value(), Instant.now(clock)));
+    }
+
+    /** No pending email to confirm — a plain profile-field update (`A2`/no email change). */
+    public void confirmProfileUpdate(Clock clock) {
+        domainEvents.add(new AccountProfileUpdated(id, Instant.now(clock)));
+    }
+
+    /**
+     * `UC-CUS-08` A1 completion: the verification token for {@code pendingEmail} was consumed.
+     * Promotes it to {@code email} and clears the pending slot. Idempotent-safe: does nothing if
+     * there is no pending email (the token would not have been issued).
+     */
+    public void confirmPendingEmail(Clock clock) {
+        if (pendingEmail == null) {
+            return;
+        }
+        this.email = pendingEmail;
+        this.pendingEmail = null;
+        domainEvents.add(new AccountProfileUpdated(id, Instant.now(clock)));
     }
 
     public void recordSuccessfulLogin(Clock clock) {
@@ -123,6 +174,10 @@ public final class Account {
 
     public EmailAddress email() {
         return email;
+    }
+
+    public EmailAddress pendingEmail() {
+        return pendingEmail;
     }
 
     public CredentialHash credentialHash() {

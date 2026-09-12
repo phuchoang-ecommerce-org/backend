@@ -1,9 +1,13 @@
 package org.phuchoang.ecp.identity.infrastructure.event;
 
+import org.phuchoang.ecp.identity.domain.AccountProfileUpdated;
 import org.phuchoang.ecp.identity.domain.AccountRegistered;
 import org.phuchoang.ecp.identity.domain.AccountVerified;
 import org.phuchoang.ecp.identity.domain.DuplicateRegistrationAttempted;
+import org.phuchoang.ecp.identity.domain.EmailChangeRequested;
 import org.phuchoang.ecp.identity.domain.EmailVerificationResent;
+import org.phuchoang.ecp.identity.domain.PasswordChanged;
+import org.phuchoang.ecp.identity.domain.PasswordResetRequested;
 import org.phuchoang.ecp.identity.domain.SessionEnded;
 import org.phuchoang.ecp.identity.domain.SessionEstablished;
 import org.slf4j.Logger;
@@ -58,5 +62,31 @@ class NotificationAndAuditStubListeners {
     @ApplicationModuleListener
     void on(SessionEnded event) {
         log.info("[stub-audit] UC-AUD-01: logOut accountId={} allSessions={}", event.accountId(), event.allSessions());
+    }
+
+    @ApplicationModuleListener
+    void on(PasswordChanged event) {
+        log.info("[stub-audit] UC-AUD-01: changeOwnPassword accountId={}", event.accountId());
+        log.info("[stub-notification] \"your password changed\" email would be sent to the account on {}",
+            event.accountId());
+    }
+
+    @ApplicationModuleListener
+    void on(PasswordResetRequested event) {
+        log.info("[stub-notification] password-reset email would be sent to {} (accountId={}, token redacted)",
+            event.email(), event.accountId());
+    }
+
+    @ApplicationModuleListener
+    void on(AccountProfileUpdated event) {
+        log.info("[stub-audit] UC-AUD-01: updateOwnProfile accountId={}", event.accountId());
+    }
+
+    @ApplicationModuleListener
+    void on(EmailChangeRequested event) {
+        log.info("[stub-notification] verification email would be sent to {} (accountId={}, token redacted)",
+            event.newEmail(), event.accountId());
+        log.info("[stub-notification] \"an email change was requested\" heads-up would be sent to {} (accountId={})",
+            event.oldEmail(), event.accountId());
     }
 }

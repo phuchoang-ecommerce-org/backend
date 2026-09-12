@@ -45,7 +45,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     private static final Set<String> AUTH_STRICT_PATHS = Set.of(
         "/api/v1/accounts", "/api/v1/account-verification-requests", "/api/v1/sessions",
-        "/api/v1/session-renewals");
+        "/api/v1/session-renewals", "/api/v1/password-reset-requests", "/api/v1/password-resets");
 
     /** Empty until a `payment` module controller exists (Sprint 04 scope note, `US-AUD-04`). */
     private static final Set<String> PAYMENT_RETRY_PATHS = Set.of();

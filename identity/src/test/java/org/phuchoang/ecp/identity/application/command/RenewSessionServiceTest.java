@@ -151,7 +151,7 @@ class RenewSessionServiceTest {
     }
 
     private Account activeAccount(UUID id) {
-        return Account.reconstitute(id, new EmailAddress("customer@example.com"), new CredentialHash("hashed"),
+        return Account.reconstitute(id, new EmailAddress("customer@example.com"), null, new CredentialHash("hashed"),
             "Customer", AccountStatus.ACTIVE, VerificationStatus.VERIFIED, Instant.now(clock), null, 0, 0L,
             Set.of(RoleCode.CUSTOMER), Instant.now(clock));
     }

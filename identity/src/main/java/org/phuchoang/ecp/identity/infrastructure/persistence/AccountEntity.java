@@ -30,6 +30,9 @@ class AccountEntity {
     @Column(name = "display_name")
     private String displayName;
 
+    @Column(name = "pending_email")
+    private String pendingEmail;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 16)
     private AccountStatus status;
@@ -67,11 +70,12 @@ class AccountEntity {
         // JPA
     }
 
-    AccountEntity(UUID id, String email, String credentialHash, String displayName, AccountStatus status,
-            VerificationStatus verificationStatus, Instant verifiedAt, Instant lastLoginAt, int failedLoginCount,
-            long version, Instant createdAt) {
+    AccountEntity(UUID id, String email, String pendingEmail, String credentialHash, String displayName,
+            AccountStatus status, VerificationStatus verificationStatus, Instant verifiedAt, Instant lastLoginAt,
+            int failedLoginCount, long version, Instant createdAt) {
         this.id = id;
         this.email = email;
+        this.pendingEmail = pendingEmail;
         this.credentialHash = credentialHash;
         this.displayName = displayName;
         this.status = status;
@@ -98,6 +102,10 @@ class AccountEntity {
 
     String getDisplayName() {
         return displayName;
+    }
+
+    String getPendingEmail() {
+        return pendingEmail;
     }
 
     AccountStatus getStatus() {

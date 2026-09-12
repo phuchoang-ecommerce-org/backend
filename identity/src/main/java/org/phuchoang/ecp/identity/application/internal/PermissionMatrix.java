@@ -52,6 +52,14 @@ public final class PermissionMatrix {
      */
     public static final String GET_PRODUCT = "getProduct";
 
+    /**
+     * Sprint 05 (`US-CUS-10`) — {@code ordering} does not have its own permission matrix yet (the
+     * module is still a scaffold), so this row is declared here temporarily, the same way
+     * {@link #GET_PRODUCT} is. Move it into `ordering`'s own matrix once that module exists for
+     * real (Sprint 18).
+     */
+    public static final String LIST_ORDERS = "listOrders";
+
     private static final Set<RoleCode> ANY_AUTHENTICATED =
         EnumSet.of(CUSTOMER, STAFF, WAREHOUSE_OPERATOR, CUSTOMER_SUPPORT, ADMINISTRATOR);
 
@@ -77,7 +85,8 @@ public final class PermissionMatrix {
         Map.entry(END_ALL_OWN_SESSIONS, ANY_AUTHENTICATED),
         Map.entry(LOG_IN, EnumSet.of(GUEST)),
         Map.entry(LOG_OUT, ANY_AUTHENTICATED),
-        Map.entry(GET_PRODUCT, ANY_AUTHENTICATED_PLUS_GUEST));
+        Map.entry(GET_PRODUCT, ANY_AUTHENTICATED_PLUS_GUEST),
+        Map.entry(LIST_ORDERS, ANY_AUTHENTICATED));
 
     private PermissionMatrix() {
     }

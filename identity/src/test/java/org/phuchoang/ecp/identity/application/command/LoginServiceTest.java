@@ -95,14 +95,14 @@ class LoginServiceTest {
     }
 
     private Account activeAccount() {
-        return Account.reconstitute(UUID.randomUUID(), new EmailAddress("customer@example.com"),
+        return Account.reconstitute(UUID.randomUUID(), new EmailAddress("customer@example.com"), null,
             new CredentialHash("hashed"), "Customer", AccountStatus.ACTIVE,
             org.phuchoang.ecp.identity.domain.VerificationStatus.VERIFIED, Instant.now(clock), null, 0, 0L,
             Set.of(RoleCode.CUSTOMER), Instant.now(clock));
     }
 
     private Account suspendedAccount() {
-        return Account.reconstitute(UUID.randomUUID(), new EmailAddress("suspended@example.com"),
+        return Account.reconstitute(UUID.randomUUID(), new EmailAddress("suspended@example.com"), null,
             new CredentialHash("hashed"), "Suspended", AccountStatus.SUSPENDED,
             org.phuchoang.ecp.identity.domain.VerificationStatus.VERIFIED, Instant.now(clock), null, 0, 0L,
             Set.of(RoleCode.CUSTOMER), Instant.now(clock));

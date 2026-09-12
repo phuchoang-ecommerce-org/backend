@@ -43,7 +43,7 @@ class JpaAccountRepositoryAdapter implements AccountRepository {
         // transaction would make that transaction's later commit throw UnexpectedRollbackException.
         // A dedicated nested transaction is what lets RegisterAccountService catch
         // DuplicateEmailException and still commit its own (otherwise untouched) transaction.
-        AccountEntity entity = new AccountEntity(account.id(), account.email().value(),
+        AccountEntity entity = new AccountEntity(account.id(), account.email().value(), pendingEmailValueOf(account),
             account.credentialHash().value(), account.displayName(), account.status(),
             account.verificationStatus(), account.verifiedAt(), account.lastLoginAt(),
             account.failedLoginCount(), account.version(), account.createdAt());
@@ -61,7 +61,7 @@ class JpaAccountRepositoryAdapter implements AccountRepository {
 
     @Override
     public Account save(Account account) {
-        AccountEntity entity = new AccountEntity(account.id(), account.email().value(),
+        AccountEntity entity = new AccountEntity(account.id(), account.email().value(), pendingEmailValueOf(account),
             account.credentialHash().value(), account.displayName(), account.status(),
             account.verificationStatus(), account.verifiedAt(), account.lastLoginAt(),
             account.failedLoginCount(), account.version(), account.createdAt());
@@ -82,9 +82,14 @@ class JpaAccountRepositoryAdapter implements AccountRepository {
     }
 
     private Account toDomain(AccountEntity entity, Set<RoleCode> roles) {
-        return Account.reconstitute(entity.getId(), new EmailAddress(entity.getEmail()),
+        EmailAddress pendingEmail = entity.getPendingEmail() == null ? null : new EmailAddress(entity.getPendingEmail());
+        return Account.reconstitute(entity.getId(), new EmailAddress(entity.getEmail()), pendingEmail,
             new CredentialHash(entity.getCredentialHash()), entity.getDisplayName(), entity.getStatus(),
             entity.getVerificationStatus(), entity.getVerifiedAt(), entity.getLastLoginAt(),
             entity.getFailedLoginCount(), entity.getVersion(), roles, entity.getCreatedAt());
+    }
+
+    private static String pendingEmailValueOf(Account account) {
+        return account.pendingEmail() == null ? null : account.pendingEmail().value();
     }
 }

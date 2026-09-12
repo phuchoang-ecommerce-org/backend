@@ -65,7 +65,13 @@ public class VerifyEmailService {
 
         Account account = accountRepository.findById(token.accountId())
             .orElseThrow(() -> new DomainException(GenErrorCode.NOT_FOUND, "The verification link is not valid."));
-        account.verify(clock); // A1 — idempotent if already verified.
+        if (account.pendingEmail() != null) {
+            // UC-CUS-08 A1 completion: this token was issued for an email-change request, not the
+            // initial registration — promote the pending address instead of re-verifying the account.
+            account.confirmPendingEmail(clock);
+        } else {
+            account.verify(clock); // A1 — idempotent if already verified.
+        }
         accountRepository.save(account);
         account.pullDomainEvents().forEach(events::publishEvent);
     }

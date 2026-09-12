@@ -60,7 +60,7 @@ class SessionControllerTest {
     @Test
     void successfulLoginReturns201WithASessionBody() throws Exception {
         AccountView account = new AccountView("018f3c2a-0000-7000-8000-000000000000", "customer@example.com",
-            "ACTIVE", "VERIFIED", Set.of("CUSTOMER"), Instant.parse("2026-09-01T00:00:00Z"), null,
+            "Customer", "ACTIVE", "VERIFIED", null, Set.of("CUSTOMER"), Instant.parse("2026-09-01T00:00:00Z"), null,
             Instant.parse("2026-09-01T00:00:00Z"));
         SessionResponse session = new SessionResponse("access-token", "refresh-token", 900, false, account);
         BDDMockito.given(identityFacade.logIn(any(LoginRequest.class))).willReturn(session);

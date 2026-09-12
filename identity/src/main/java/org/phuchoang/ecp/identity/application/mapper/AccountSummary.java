@@ -11,8 +11,10 @@ import java.util.Set;
 public record AccountSummary(
     String id,
     String email,
+    String displayName,
     String status,
     String verificationStatus,
+    String pendingEmail,
     Set<String> roles,
     Instant verifiedAt,
     Instant lastLoginAt,
@@ -22,8 +24,10 @@ public record AccountSummary(
         return new AccountSummary(
             account.id().toString(),
             account.email().value(),
+            account.displayName(),
             account.status().name(),
             account.verificationStatus().name(),
+            account.pendingEmail() == null ? null : account.pendingEmail().value(),
             account.roles().stream().map(Enum::name).collect(java.util.stream.Collectors.toUnmodifiableSet()),
             account.verifiedAt(),
             account.lastLoginAt(),

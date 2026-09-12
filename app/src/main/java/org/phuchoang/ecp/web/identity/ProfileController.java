@@ -1,0 +1,41 @@
+package org.phuchoang.ecp.web.identity;
+
+import org.phuchoang.ecp.identity.api.AccountView;
+import org.phuchoang.ecp.identity.api.Actor;
+import org.phuchoang.ecp.identity.api.IdentityFacade;
+import org.phuchoang.ecp.identity.api.ProfileUpdateRequest;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Set;
+import java.util.UUID;
+
+/** `getOwnAccount`, `updateOwnProfile` (`UC-CUS-08`). */
+@RestController
+class ProfileController {
+
+    private final IdentityFacade identityFacade;
+
+    ProfileController(IdentityFacade identityFacade) {
+        this.identityFacade = identityFacade;
+    }
+
+    @GetMapping("/api/v1/accounts/me")
+    AccountView getOwnAccount(@AuthenticationPrincipal Jwt jwt) {
+        return identityFacade.getOwnAccount(actorOf(jwt));
+    }
+
+    @PatchMapping("/api/v1/accounts/me")
+    AccountView updateOwnProfile(@AuthenticationPrincipal Jwt jwt, @RequestBody ProfileUpdateRequest request) {
+        return identityFacade.updateOwnProfile(actorOf(jwt), request);
+    }
+
+    private Actor actorOf(Jwt jwt) {
+        Set<String> roles = Set.copyOf(jwt.getClaimAsStringList("roles"));
+        return new Actor(UUID.fromString(jwt.getSubject()), roles);
+    }
+}

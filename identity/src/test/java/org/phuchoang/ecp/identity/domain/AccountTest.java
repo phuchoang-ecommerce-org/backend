@@ -71,4 +71,64 @@ class AccountTest {
         assertThat(account.failedLoginCount()).isZero();
         assertThat(account.lastLoginAt()).isEqualTo(Instant.now(clock));
     }
+
+    @Test
+    void changePasswordReplacesTheHashAndRaisesPasswordChanged_UC_CUS_06() {
+        Account account = Account.register(UUID.randomUUID(), new EmailAddress("guest@example.com"),
+            new CredentialHash("old-hash"), "Guest", clock);
+
+        account.changePassword(new CredentialHash("new-hash"), clock);
+
+        assertThat(account.credentialHash().value()).isEqualTo("new-hash");
+        assertThat(account.pullDomainEvents()).hasSize(1).first().isInstanceOf(PasswordChanged.class);
+    }
+
+    @Test
+    void requestEmailChangeHoldsTheNewAddressPendingWithoutTouchingEmail_UC_CUS_08_A1() {
+        Account account = Account.register(UUID.randomUUID(), new EmailAddress("guest@example.com"),
+            new CredentialHash("hashed"), "Guest", clock);
+
+        account.requestEmailChange(new EmailAddress("new@example.com"), clock);
+
+        assertThat(account.email().value()).isEqualTo("guest@example.com");
+        assertThat(account.pendingEmail().value()).isEqualTo("new@example.com");
+        assertThat(account.pullDomainEvents()).hasSize(2)
+            .anyMatch(AccountProfileUpdated.class::isInstance)
+            .anyMatch(EmailChangeRequested.class::isInstance);
+    }
+
+    @Test
+    void confirmPendingEmailPromotesThePendingAddressAndClearsIt_UC_CUS_08_A1() {
+        Account account = Account.register(UUID.randomUUID(), new EmailAddress("guest@example.com"),
+            new CredentialHash("hashed"), "Guest", clock);
+        account.requestEmailChange(new EmailAddress("new@example.com"), clock);
+        account.pullDomainEvents();
+
+        account.confirmPendingEmail(clock);
+
+        assertThat(account.email().value()).isEqualTo("new@example.com");
+        assertThat(account.pendingEmail()).isNull();
+        assertThat(account.pullDomainEvents()).hasSize(1).first().isInstanceOf(AccountProfileUpdated.class);
+    }
+
+    @Test
+    void confirmPendingEmailIsANoOpWhenNothingIsPending() {
+        Account account = Account.register(UUID.randomUUID(), new EmailAddress("guest@example.com"),
+            new CredentialHash("hashed"), "Guest", clock);
+
+        account.confirmPendingEmail(clock);
+
+        assertThat(account.email().value()).isEqualTo("guest@example.com");
+        assertThat(account.pullDomainEvents()).isEmpty();
+    }
+
+    @Test
+    void updateDisplayNameLeavesItUnchangedWhenNull_UC_CUS_08_A2() {
+        Account account = Account.register(UUID.randomUUID(), new EmailAddress("guest@example.com"),
+            new CredentialHash("hashed"), "Guest", clock);
+
+        account.updateDisplayName(null);
+
+        assertThat(account.displayName()).isEqualTo("Guest");
+    }
 }
