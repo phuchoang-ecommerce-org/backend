@@ -2,6 +2,8 @@
 
 Gradle multi-project build for the Enterprise Commerce Platform (ECP) backend — a Spring Modulith modular monolith. See [`docs/SA-docs/02-backend/Module Dependency Diagram.md`](../docs/SA-docs/02-backend/Module%20Dependency%20Diagram.md) for the full architecture rationale.
 
+> Split out of the original `phuchoang2005/ecommerce` monorepo into its own repo under the `phuchoang-ecommerce-org` organization, with full git history preserved. Architecture/product/PM documentation lives in the sibling [`docs`](https://github.com/phuchoang-ecommerce-org/docs) repo, pulled in here as a git submodule at `docs/` (see that repo's README). The `../docs/...` links below still reflect the old monorepo layout and will be repointed at the submodule path.
+
 ## Layout
 
 Root project `ecp` with 14 subprojects:
