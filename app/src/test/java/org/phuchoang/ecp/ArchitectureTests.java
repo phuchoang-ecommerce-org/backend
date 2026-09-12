@@ -151,8 +151,51 @@ class ArchitectureTests {
     }
 
     private static final String[] IDENTITY_APPLICATION_SERVICES = {
-        "RegisterAccountService", "VerifyEmailService", "LoginService", "LogoutService"
+        "RegisterAccountService", "VerifyEmailService", "LoginService", "LogoutService", "RenewSessionService"
     };
+
+    @Test
+    void identityIsNotNamedFromAnotherModulesDomainPackage() {
+        // US-AUD-03 (Sprint 04): a domain object asking who the caller is would make
+        // authorisation part of a business invariant, forbidden by Domain Model.md §5.2 — the
+        // concrete violation the sprint backlog's "identity named only from application" language
+        // is about. identity.api types (CallerContext, AuthorizationService) legitimately pass
+        // through another module's api/infrastructure as plumbing (a facade parameter, an
+        // adapter's argument) on their way to that module's application layer, which is where
+        // the actual authorisation call happens — domainDoesNotNameAnotherModule already forbids
+        // any other module from being named from domain, and this rule gives identity specifically
+        // its own dedicated, US-AUD-03-traceable check.
+        for (String module : MODULES) {
+            if (module.equals("identity") || module.equals("sharedkernel")) {
+                continue;
+            }
+            String base = ROOT_PACKAGE + "." + module;
+            ArchRule rule = noClasses()
+                .that().resideInAPackage(base + ".domain..")
+                .should().dependOnClassesThat().resideInAPackage(ROOT_PACKAGE + ".identity..")
+                .because("a domain object must not name identity — authorisation is an application "
+                    + "concern (Domain Model.md §5.2, ADR-0016 §4, US-AUD-03)")
+                .allowEmptyShould(true);
+            rule.check(mainClasses);
+        }
+    }
+
+    @Test
+    void thePlantedDomainImportOfIdentityFailsTheConfinementRule_US_AUD_03() {
+        // Permanent evidence (not a one-time manual step) that the rule above actually catches a
+        // violation: catalog.domain.PlantedIdentityDomainImport (this module's test sources only
+        // — never shipped in catalog's own main sources) imports identity.api.AuthorizationService
+        // directly from a domain package. This test proves the rule fails on it, then discards
+        // the result — the fixture's only job is to be caught.
+        JavaClasses testFixtureClasses = new ClassFileImporter()
+            .importPath(Paths.get("build", "classes", "java", "test"));
+        ArchRule rule = noClasses()
+            .that().resideInAPackage(ROOT_PACKAGE + ".catalog.domain..")
+            .should().dependOnClassesThat().resideInAPackage(ROOT_PACKAGE + ".identity..")
+            .because("planted-violation proof for identityIsNotNamedFromAnotherModulesDomainPackage");
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> rule.check(testFixtureClasses))
+            .isInstanceOf(AssertionError.class);
+    }
 
     @Test
     void everyIdentityApplicationServiceDependsOnAuthorizationService() {

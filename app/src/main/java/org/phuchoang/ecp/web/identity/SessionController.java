@@ -4,6 +4,7 @@ import org.phuchoang.ecp.identity.api.Actor;
 import org.phuchoang.ecp.identity.api.IdentityFacade;
 import org.phuchoang.ecp.identity.api.LoginRequest;
 import org.phuchoang.ecp.identity.api.LogoutRequest;
+import org.phuchoang.ecp.identity.api.RenewSessionRequest;
 import org.phuchoang.ecp.identity.api.SessionResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -50,6 +51,19 @@ class SessionController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void endAllOwnSessions(@AuthenticationPrincipal Jwt jwt) {
         identityFacade.endAllOwnSessions(actorOf(jwt));
+    }
+
+    /**
+     * `renewSession` (`UC-CUS-05`). No {@code @AuthenticationPrincipal} — the caller's access
+     * token is, by definition, expired or absent here; only the refresh token in the body
+     * authenticates this call (see {@code SecurityConfig}'s anonymous allowlist).
+     */
+    @PostMapping("/api/v1/session-renewals")
+    SessionResponse renewSession(@RequestBody RenewSessionRequest request) {
+        AccountController.requireNonBlank(request.refreshToken(), "refreshToken");
+        // 200, not 201 (openapi.yaml `sessionRenewals` — this renews the existing session in
+        // place, unlike `logIn`, which creates a brand-new one).
+        return identityFacade.renewSession(request);
     }
 
     private Actor actorOf(Jwt jwt) {

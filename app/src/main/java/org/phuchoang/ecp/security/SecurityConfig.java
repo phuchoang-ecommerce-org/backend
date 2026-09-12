@@ -38,6 +38,10 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/v1/account-verifications").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/account-verification-requests").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/sessions").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/session-renewals").permitAll()
+                // Sprint 04 (US-AUD-03) RBAC wiring demo — getProduct permits GUEST per the
+                // permission matrix, so it must be reachable unauthenticated too.
+                .requestMatchers(HttpMethod.GET, "/api/v1/demo-products/*").permitAll()
                 .anyRequest().authenticated())
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
         return http.build();

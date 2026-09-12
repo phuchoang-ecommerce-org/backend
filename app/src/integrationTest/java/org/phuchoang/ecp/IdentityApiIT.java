@@ -55,6 +55,12 @@ class IdentityApiIT {
         registry.add("ecp.redis.cache.port", () -> REDIS_CACHE.getMappedPort(6379));
         registry.add("ecp.redis.state.host", REDIS_STATE::getHost);
         registry.add("ecp.redis.state.port", () -> REDIS_STATE.getMappedPort(6379));
+        // Every test method in this class shares one Spring context, one Redis instance, and one
+        // caller address (TestRestTemplate's loopback) — the production auth-strict limit (10 per
+        // 5 minutes, NFR-SEC-05) exists to stop credential-guessing from one caller, not to bound
+        // how many of *this suite's* tests may register/log in/renew a session. Raised here only,
+        // never in application.yml, so the real defence stays exactly as configured (US-AUD-04).
+        registry.add("ecp.rate-limit.auth-strict.limit", () -> 1000);
     }
 
     @Autowired
@@ -126,6 +132,72 @@ class IdentityApiIT {
             logoutRequest, Void.class);
 
         assertThat(logout.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+    }
+
+    @Test
+    void renewSessionRotatesTheRefreshToken_US_CUS_05() {
+        String email = "renew-" + UUID.randomUUID() + "@example.com";
+        restTemplate.postForEntity("/api/v1/accounts",
+            jsonBody(Map.of("email", email, "password", "Str0ngPassword")), Void.class);
+        Map<?, ?> session = restTemplate.postForEntity("/api/v1/sessions",
+            jsonBody(Map.of("email", email, "password", "Str0ngPassword")), Map.class).getBody();
+        String originalRefreshToken = (String) session.get("refreshToken");
+
+        ResponseEntity<Map> renewed = restTemplate.postForEntity("/api/v1/session-renewals",
+            jsonBody(Map.of("refreshToken", originalRefreshToken)), Map.class);
+
+        assertThat(renewed.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(renewed.getBody()).containsKey("accessToken");
+        String newRefreshToken = (String) renewed.getBody().get("refreshToken");
+        assertThat(newRefreshToken).isNotEqualTo(originalRefreshToken);
+    }
+
+    @Test
+    void reusingAnAlreadyRotatedRefreshTokenInvalidatesTheWholeChain_ADR_0016() {
+        String email = "reuse-" + UUID.randomUUID() + "@example.com";
+        restTemplate.postForEntity("/api/v1/accounts",
+            jsonBody(Map.of("email", email, "password", "Str0ngPassword")), Void.class);
+        Map<?, ?> session = restTemplate.postForEntity("/api/v1/sessions",
+            jsonBody(Map.of("email", email, "password", "Str0ngPassword")), Map.class).getBody();
+        String originalRefreshToken = (String) session.get("refreshToken");
+
+        Map<?, ?> firstRenewal = restTemplate.postForEntity("/api/v1/session-renewals",
+            jsonBody(Map.of("refreshToken", originalRefreshToken)), Map.class).getBody();
+        String rotatedRefreshToken = (String) firstRenewal.get("refreshToken");
+
+        // Reusing the now-consumed original token is rejected...
+        ResponseEntity<Map> reuseAttempt = restTemplate.postForEntity("/api/v1/session-renewals",
+            jsonBody(Map.of("refreshToken", originalRefreshToken)), Map.class);
+        assertThat(reuseAttempt.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(reuseAttempt.getBody().get("code")).isEqualTo("ECP-GEN-4011");
+
+        // ...and the reuse invalidates the whole chain: even the legitimately-rotated token that
+        // replaced it no longer works.
+        ResponseEntity<Map> rotatedTokenAfterReuse = restTemplate.postForEntity("/api/v1/session-renewals",
+            jsonBody(Map.of("refreshToken", rotatedRefreshToken)), Map.class);
+        assertThat(rotatedTokenAfterReuse.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void logOutInvalidatesTheChainSoARotatedTokenFromItAlsoStopsWorking_US_CUS_05() {
+        String email = "logout-chain-" + UUID.randomUUID() + "@example.com";
+        restTemplate.postForEntity("/api/v1/accounts",
+            jsonBody(Map.of("email", email, "password", "Str0ngPassword")), Void.class);
+        Map<?, ?> session = restTemplate.postForEntity("/api/v1/sessions",
+            jsonBody(Map.of("email", email, "password", "Str0ngPassword")), Map.class).getBody();
+        String accessToken = (String) session.get("accessToken");
+        String refreshToken = (String) session.get("refreshToken");
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(accessToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        restTemplate.exchange("/api/v1/sessions/current", HttpMethod.DELETE,
+            new HttpEntity<>("{\"refreshToken\":\"" + refreshToken + "\"}", headers), Void.class);
+
+        ResponseEntity<Map> renewAfterLogout = restTemplate.postForEntity("/api/v1/session-renewals",
+            jsonBody(Map.of("refreshToken", refreshToken)), Map.class);
+
+        assertThat(renewAfterLogout.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 
     private HttpEntity<String> jsonBody(Map<String, String> fields) {

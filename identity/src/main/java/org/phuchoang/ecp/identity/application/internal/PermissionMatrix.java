@@ -43,8 +43,20 @@ public final class PermissionMatrix {
     public static final String LOG_IN = "logIn";
     public static final String LOG_OUT = "logOut";
 
+    /**
+     * Sprint 04 (`US-AUD-03`) RBAC cross-module wiring demo only — {@code catalog}'s real
+     * `getProduct` row (once that module exists for real) belongs in its own domain's section of
+     * `Permission Matrix.md`, not here. Kept here for now because this is the only central table
+     * {@code identity.api.AuthorizationService} consults; revisit when a per-module matrix
+     * exists.
+     */
+    public static final String GET_PRODUCT = "getProduct";
+
     private static final Set<RoleCode> ANY_AUTHENTICATED =
         EnumSet.of(CUSTOMER, STAFF, WAREHOUSE_OPERATOR, CUSTOMER_SUPPORT, ADMINISTRATOR);
+
+    private static final Set<RoleCode> ANY_AUTHENTICATED_PLUS_GUEST =
+        EnumSet.of(GUEST, CUSTOMER, STAFF, WAREHOUSE_OPERATOR, CUSTOMER_SUPPORT, ADMINISTRATOR);
 
     private static final Map<String, Set<RoleCode>> ALLOWED_ROLES = Map.ofEntries(
         Map.entry(RESEND_EMAIL_VERIFICATION, EnumSet.of(GUEST, CUSTOMER)),
@@ -64,7 +76,8 @@ public final class PermissionMatrix {
         Map.entry(RENEW_SESSION, ANY_AUTHENTICATED),
         Map.entry(END_ALL_OWN_SESSIONS, ANY_AUTHENTICATED),
         Map.entry(LOG_IN, EnumSet.of(GUEST)),
-        Map.entry(LOG_OUT, ANY_AUTHENTICATED));
+        Map.entry(LOG_OUT, ANY_AUTHENTICATED),
+        Map.entry(GET_PRODUCT, ANY_AUTHENTICATED_PLUS_GUEST));
 
     private PermissionMatrix() {
     }

@@ -5,6 +5,7 @@ import org.phuchoang.ecp.identity.application.command.LoginService;
 import org.phuchoang.ecp.identity.application.command.LogoutService;
 import org.phuchoang.ecp.identity.application.command.RegisterAccountCommand;
 import org.phuchoang.ecp.identity.application.command.RegisterAccountService;
+import org.phuchoang.ecp.identity.application.command.RenewSessionService;
 import org.phuchoang.ecp.identity.application.command.VerifyEmailService;
 import org.phuchoang.ecp.identity.application.mapper.LoginResult;
 import org.springframework.stereotype.Service;
@@ -23,13 +24,15 @@ public class IdentityApplicationService {
     private final VerifyEmailService verifyEmailService;
     private final LoginService loginService;
     private final LogoutService logoutService;
+    private final RenewSessionService renewSessionService;
 
     IdentityApplicationService(RegisterAccountService registerAccountService, VerifyEmailService verifyEmailService,
-            LoginService loginService, LogoutService logoutService) {
+            LoginService loginService, LogoutService logoutService, RenewSessionService renewSessionService) {
         this.registerAccountService = registerAccountService;
         this.verifyEmailService = verifyEmailService;
         this.loginService = loginService;
         this.logoutService = logoutService;
+        this.renewSessionService = renewSessionService;
     }
 
     public void registerAccount(RegisterAccountCommand command) {
@@ -54,5 +57,9 @@ public class IdentityApplicationService {
 
     public void endAllOwnSessions(CallerContext caller) {
         logoutService.endAllOwnSessions(caller);
+    }
+
+    public LoginResult renewSession(String refreshToken) {
+        return renewSessionService.renewSession(refreshToken);
     }
 }

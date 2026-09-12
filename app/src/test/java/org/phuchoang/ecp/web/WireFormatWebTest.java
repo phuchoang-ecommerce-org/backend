@@ -6,6 +6,7 @@ import org.phuchoang.ecp.sharedkernel.api.RateLimiter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -27,11 +28,14 @@ class WireFormatWebTest {
     @Autowired
     private MockMvc mockMvc;
 
-    // RateLimitFilter (Sprint 03, EN-WIRE-2) is a servlet Filter bean, which @WebMvcTest always
-    // includes regardless of controller scope — it needs a RateLimiter, which this narrow slice
-    // otherwise has no bean for.
+    // RateLimitFilter (Sprint 03, EN-WIRE-2; per-caller keying added Sprint 04, US-AUD-04) is a
+    // servlet Filter bean, which @WebMvcTest always includes regardless of controller scope — it
+    // needs a RateLimiter and a JwtDecoder, which this narrow slice otherwise has no bean for.
     @MockitoBean
     private RateLimiter rateLimiter;
+
+    @MockitoBean
+    private JwtDecoder jwtDecoder;
 
     @BeforeEach
     void allowEveryRequest() {

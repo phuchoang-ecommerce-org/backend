@@ -50,6 +50,12 @@ public final class IdentityFacade {
         applicationService.endAllOwnSessions(toCallerContext(actor));
     }
 
+    public SessionResponse renewSession(RenewSessionRequest request) {
+        LoginResult result = applicationService.renewSession(request.refreshToken());
+        return new SessionResponse(result.accessToken(), result.refreshToken(), result.expiresInSeconds(),
+            result.restricted(), toAccountView(result.account()));
+    }
+
     private static AccountView toAccountView(AccountSummary summary) {
         return new AccountView(summary.id(), summary.email(), summary.status(), summary.verificationStatus(),
             summary.roles(), summary.verifiedAt(), summary.lastLoginAt(), summary.createdAt());

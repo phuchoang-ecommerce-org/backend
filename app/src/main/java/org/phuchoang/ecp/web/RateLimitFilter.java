@@ -10,7 +10,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -23,9 +27,15 @@ import java.util.Set;
  * makes it a brute-force defence rather than a throttle (`NFR-SEC-05`). Correct credentials never
  * bypass it.
  *
- * <p>The caller id is the remote address — there is no authenticated principal yet at this point
- * in the pipeline (this filter runs ahead of Spring Security), and the endpoints in the
- * auth-strict set are all pre-authentication by definition.
+ * <p>Every request is classified into one of four buckets (`US-AUD-04`, Sprint 04): the
+ * pre-authentication {@code auth-strict}/{@code payment-retry} paths (fail closed — a silently
+ * unavailable limiter must never look like "no limit"), {@code read} for {@code GET}, and
+ * {@code write} for every other state-changing method. For an authenticated caller, the bucket is
+ * keyed by the access token's {@code sub} claim rather than the remote address — decoded directly
+ * here, since this filter must still run <em>ahead of</em> Spring Security (for the pre-auth
+ * buckets) and so cannot rely on the security context being populated yet. A caller with no
+ * bearer token, or a token that fails to decode (it will 401 downstream regardless), falls back
+ * to the remote address.
  */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 1)
@@ -34,38 +44,40 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private static final Logger log = LoggerFactory.getLogger(RateLimitFilter.class);
 
     private static final Set<String> AUTH_STRICT_PATHS = Set.of(
-        "/api/v1/accounts", "/api/v1/account-verification-requests", "/api/v1/sessions");
+        "/api/v1/accounts", "/api/v1/account-verification-requests", "/api/v1/sessions",
+        "/api/v1/session-renewals");
+
+    /** Empty until a `payment` module controller exists (Sprint 04 scope note, `US-AUD-04`). */
+    private static final Set<String> PAYMENT_RETRY_PATHS = Set.of();
+
+    private static final Set<String> FAIL_CLOSED_BUCKETS = Set.of("auth-strict", "payment-retry");
 
     private final RateLimiter rateLimiter;
+    private final JwtDecoder jwtDecoder;
 
-    public RateLimitFilter(RateLimiter rateLimiter) {
+    public RateLimitFilter(RateLimiter rateLimiter, JwtDecoder jwtDecoder) {
         this.rateLimiter = rateLimiter;
+        this.jwtDecoder = jwtDecoder;
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
-        if (!"POST".equalsIgnoreCase(request.getMethod())) {
-            chain.doFilter(request, response);
-            return;
-        }
-
-        boolean authStrict = AUTH_STRICT_PATHS.contains(request.getRequestURI());
-        String bucket = authStrict ? "auth-strict" : "write";
-        String callerId = request.getRemoteAddr();
+        String bucket = bucketFor(request);
+        String callerId = callerIdOf(request);
 
         RateLimiter.Decision decision;
         try {
             decision = rateLimiter.tryConsume(bucket, callerId);
         } catch (RateLimiter.RateLimiterUnavailableException e) {
-            if (authStrict) {
-                // ADR-0015 §4 / Backend Architecture.md §5.8 — the auth-strict bucket fails
+            if (FAIL_CLOSED_BUCKETS.contains(bucket)) {
+                // ADR-0015 §4 / Backend Architecture.md §5.8 — auth-strict/payment-retry fail
                 // CLOSED: a silently-unavailable limiter must never look like "no limit".
-                log.warn("redis-state unavailable for auth-strict bucket; failing closed", e);
-                writeProblem(response, GenErrorCode.DEPENDENCY_UNAVAILABLE, "Authentication is temporarily unavailable.");
+                log.warn("redis-state unavailable for {} bucket; failing closed", bucket, e);
+                writeProblem(response, GenErrorCode.DEPENDENCY_UNAVAILABLE, "This request is temporarily unavailable.");
                 return;
             }
-            log.warn("redis-state unavailable for write bucket; failing open", e);
+            log.warn("redis-state unavailable for {} bucket; failing open", bucket, e);
             chain.doFilter(request, response);
             return;
         }
@@ -77,6 +89,33 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
 
         chain.doFilter(request, response);
+    }
+
+    private static String bucketFor(HttpServletRequest request) {
+        if ("POST".equalsIgnoreCase(request.getMethod()) && AUTH_STRICT_PATHS.contains(request.getRequestURI())) {
+            return "auth-strict";
+        }
+        if (PAYMENT_RETRY_PATHS.contains(request.getRequestURI())) {
+            return "payment-retry";
+        }
+        if (HttpMethod.GET.matches(request.getMethod())) {
+            return "read";
+        }
+        return "write";
+    }
+
+    private String callerIdOf(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        if (header != null && header.regionMatches(true, 0, "Bearer ", 0, 7)) {
+            try {
+                Jwt jwt = jwtDecoder.decode(header.substring(7));
+                return jwt.getSubject();
+            } catch (JwtException e) {
+                // Falls through to the client address — an invalid/expired token 401s downstream
+                // regardless; this filter only needs *a* caller id to key the bucket by.
+            }
+        }
+        return request.getRemoteAddr();
     }
 
     /**

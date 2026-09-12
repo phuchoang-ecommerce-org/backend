@@ -25,7 +25,7 @@ class JpaTokenRepositoryAdapter implements TokenRepository {
     @Override
     public IdentityToken save(IdentityToken token) {
         TokenEntity entity = new TokenEntity(token.id(), token.accountId(), token.type(), token.tokenHash(),
-            token.issuedAt(), token.expiresAt(), token.consumedAt(), token.replacedBy());
+            token.issuedAt(), token.expiresAt(), token.consumedAt(), token.replacedBy(), token.chainId());
         TokenEntity saved = tokenJpaRepository.save(entity);
         return toDomain(saved);
     }
@@ -43,13 +43,25 @@ class JpaTokenRepositoryAdapter implements TokenRepository {
 
     @Override
     @Transactional
+    public boolean rotateIfUsable(UUID tokenId, UUID replacedByTokenId, Instant now) {
+        return tokenJpaRepository.rotateIfUsable(tokenId, replacedByTokenId, now) == 1;
+    }
+
+    @Override
+    @Transactional
     public void invalidateOutstanding(UUID accountId, TokenType type) {
         tokenJpaRepository.invalidateOutstanding(accountId, type, Instant.now(clock));
+    }
+
+    @Override
+    @Transactional
+    public void invalidateChain(UUID chainId, Instant now) {
+        tokenJpaRepository.invalidateChain(chainId, now);
     }
 
     private IdentityToken toDomain(TokenEntity entity) {
         return new IdentityToken(entity.getId(), entity.getAccountId(), entity.getTokenType(),
             entity.getTokenHash(), entity.getIssuedAt(), entity.getExpiresAt(), entity.getConsumedAt(),
-            entity.getReplacedBy());
+            entity.getReplacedBy(), entity.getChainId());
     }
 }

@@ -41,6 +41,9 @@ class TokenEntity {
     @Column(name = "replaced_by")
     private UUID replacedBy;
 
+    @Column(name = "chain_id")
+    private UUID chainId;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -49,7 +52,7 @@ class TokenEntity {
     }
 
     TokenEntity(UUID id, UUID accountId, TokenType tokenType, String tokenHash, Instant issuedAt,
-            Instant expiresAt, Instant consumedAt, UUID replacedBy) {
+            Instant expiresAt, Instant consumedAt, UUID replacedBy, UUID chainId) {
         this.id = id;
         this.accountId = accountId;
         this.tokenType = tokenType;
@@ -58,6 +61,7 @@ class TokenEntity {
         this.expiresAt = expiresAt;
         this.consumedAt = consumedAt;
         this.replacedBy = replacedBy;
+        this.chainId = chainId;
         this.createdAt = issuedAt;
     }
 
@@ -91,5 +95,9 @@ class TokenEntity {
 
     UUID getReplacedBy() {
         return replacedBy;
+    }
+
+    UUID getChainId() {
+        return chainId;
     }
 }

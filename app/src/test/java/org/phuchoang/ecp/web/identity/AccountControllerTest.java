@@ -11,6 +11,7 @@ import org.phuchoang.ecp.sharedkernel.api.RateLimiter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -35,6 +36,9 @@ class AccountControllerTest {
 
     @MockitoBean
     private RateLimiter rateLimiter;
+
+    @MockitoBean
+    private JwtDecoder jwtDecoder;
 
     @BeforeEach
     void allowEveryRequest() {

@@ -51,7 +51,9 @@ public class LogoutService {
         if (rawRefreshToken != null && !rawRefreshToken.isBlank()) {
             Optional<IdentityToken> token =
                 tokenRepository.findByTokenHash(RefreshTokenGenerator.hash(rawRefreshToken), TokenType.REFRESH);
-            token.ifPresent(t -> tokenRepository.consumeIfUsable(t.id(), Instant.now(clock)));
+            // US-CUS-05: invalidate the whole chain, not just the presented token — a token
+            // rotated moments before this logOut call must not survive it in the same chain.
+            token.ifPresent(t -> tokenRepository.invalidateChain(t.chainId(), Instant.now(clock)));
             // Absent, expired, or already consumed — E1: success, no action.
         }
         events.publishEvent(new SessionEnded(caller.accountId(), false, Instant.now(clock)));

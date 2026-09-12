@@ -33,17 +33,22 @@ class RedisRateLimiter implements RateLimiter {
         """, List.class);
 
     private final RedisTemplate<String, String> stateRedisTemplate;
+    private final RateLimitBuckets rateLimitBuckets;
     private final Clock clock;
 
-    RedisRateLimiter(@Qualifier("stateRedisTemplate") RedisTemplate<String, String> stateRedisTemplate, Clock clock) {
+    RedisRateLimiter(@Qualifier("stateRedisTemplate") RedisTemplate<String, String> stateRedisTemplate,
+            RateLimitBuckets rateLimitBuckets, Clock clock) {
         this.stateRedisTemplate = stateRedisTemplate;
+        this.rateLimitBuckets = rateLimitBuckets;
         this.clock = clock;
     }
 
     @Override
     public Decision tryConsume(String bucket, String callerId) {
-        String key = "rl:" + bucket + ":" + callerId;
-        RateLimitBucket limits = RateLimitBucket.of(bucket);
+        // Key order matches Database.md §7.3's `rl:{callerId}:{bucket}` (US-AUD-04 fix — this
+        // adapter previously had the two segments swapped).
+        String key = "rl:" + callerId + ":" + bucket;
+        RateLimitBucket limits = rateLimitBuckets.of(bucket);
         try {
             long nowMs = clock.millis();
             List<Long> result = stateRedisTemplate.execute(SLIDING_WINDOW_SCRIPT, List.of(key),

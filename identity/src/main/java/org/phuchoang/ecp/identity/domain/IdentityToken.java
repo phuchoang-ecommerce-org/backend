@@ -15,6 +15,11 @@ import java.util.UUID;
  * presentations of one token cannot both succeed — the same reasoning as `BR-CUS-01`'s unique
  * index. This object's {@link #isExpired(Clock)}/{@link #isConsumed()} are for deciding which
  * response to give, not the concurrency guarantee itself.
+ *
+ * <p>{@code chainId} (Sprint 04, `US-CUS-05`, ADR-0016 §4) links every token produced by rotating
+ * one login's refresh token together — a fresh login's refresh token is its own chain's head
+ * ({@code chainId == id}); every rotation inherits the presented token's {@code chainId}. Only
+ * {@link TokenType#REFRESH} tokens carry one; verification/reset tokens never rotate.
  */
 public final class IdentityToken {
 
@@ -26,9 +31,10 @@ public final class IdentityToken {
     private final Instant expiresAt;
     private final Instant consumedAt;
     private final UUID replacedBy;
+    private final UUID chainId;
 
     public IdentityToken(UUID id, UUID accountId, TokenType type, String tokenHash, Instant issuedAt,
-            Instant expiresAt, Instant consumedAt, UUID replacedBy) {
+            Instant expiresAt, Instant consumedAt, UUID replacedBy, UUID chainId) {
         this.id = Objects.requireNonNull(id);
         this.accountId = Objects.requireNonNull(accountId);
         this.type = Objects.requireNonNull(type);
@@ -37,12 +43,22 @@ public final class IdentityToken {
         this.expiresAt = Objects.requireNonNull(expiresAt);
         this.consumedAt = consumedAt;
         this.replacedBy = replacedBy;
+        this.chainId = chainId;
     }
 
     public static IdentityToken issue(UUID id, UUID accountId, TokenType type, String tokenHash,
             java.time.Duration ttl, Clock clock) {
         Instant now = Instant.now(clock);
-        return new IdentityToken(id, accountId, type, tokenHash, now, now.plus(ttl), null, null);
+        UUID chainId = type == TokenType.REFRESH ? id : null;
+        return new IdentityToken(id, accountId, type, tokenHash, now, now.plus(ttl), null, null, chainId);
+    }
+
+    /** A rotated refresh token: inherits {@code chainId} from the token it replaces. */
+    public static IdentityToken rotate(UUID id, UUID accountId, String tokenHash, java.time.Duration ttl,
+            UUID chainId, Clock clock) {
+        Instant now = Instant.now(clock);
+        return new IdentityToken(id, accountId, TokenType.REFRESH, tokenHash, now, now.plus(ttl), null, null,
+            Objects.requireNonNull(chainId));
     }
 
     public boolean isExpired(Clock clock) {
@@ -87,5 +103,9 @@ public final class IdentityToken {
 
     public UUID replacedBy() {
         return replacedBy;
+    }
+
+    public UUID chainId() {
+        return chainId;
     }
 }
