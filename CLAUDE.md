@@ -1,5 +1,5 @@
 
-The document of this project is defined in [Document](../docs/)
+The document of this project is defined in [Document](docs/)
 
 
 ```sh

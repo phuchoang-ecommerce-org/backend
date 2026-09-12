@@ -1,8 +1,8 @@
 # ecommerce-backend-spring
 
-Gradle multi-project build for the Enterprise Commerce Platform (ECP) backend — a Spring Modulith modular monolith. See [`docs/SA-docs/02-backend/Module Dependency Diagram.md`](../docs/SA-docs/02-backend/Module%20Dependency%20Diagram.md) for the full architecture rationale.
+Gradle multi-project build for the Enterprise Commerce Platform (ECP) backend — a Spring Modulith modular monolith. See [`docs/SA-docs/02-backend/Module Dependency Diagram.md`](docs/SA-docs/02-backend/Module%20Dependency%20Diagram.md) for the full architecture rationale.
 
-> Split out of the original `phuchoang2005/ecommerce` monorepo into its own repo under the `phuchoang-ecommerce-org` organization, with full git history preserved. Architecture/product/PM documentation lives in the sibling [`docs`](https://github.com/phuchoang-ecommerce-org/docs) repo, pulled in here as a git submodule at `docs/` (see that repo's README). The `../docs/...` links below still reflect the old monorepo layout and will be repointed at the submodule path.
+> Split out of the original `phuchoang2005/ecommerce` monorepo into its own repo under the `phuchoang-ecommerce-org` organization, with full git history preserved. Architecture/product/PM documentation lives in the sibling [`docs`](https://github.com/phuchoang-ecommerce-org/docs) repo, pulled in here as a git submodule at `docs/` (see that repo's README). Run `git submodule update --init --recursive` after cloning.
 
 ## Layout
 
@@ -12,7 +12,7 @@ Root project `ecp` with 14 subprojects:
 - `identity`, `catalog`, `inventory`, `cart`, `ordering`, `payment`, `shipping`, `promotion`, `review`, `notification`, `audit`, `reporting` — one Gradle subproject per bounded context. Each has `api/` (its public surface), `application/`, `domain/`, `infrastructure/` (internal).
 - `app` — the only subproject applying the Spring Boot plugin; composition root, produces the `bootJar`.
 
-Cross-module edges are limited to exactly what [`Module Dependency Diagram.md`](../docs/SA-docs/02-backend/Module%20Dependency%20Diagram.md) §3.1–§3.2 allows: `ordering → cart, inventory, promotion`; `cart → catalog, promotion`; every context → `identity`; every module → `shared-kernel`. This is enforced two ways — Gradle project dependencies (undeclared edge fails to compile) and `@ApplicationModule(allowedDependencies = {...})` on each module's `package-info.java` (declared-but-undeclared edge fails `ApplicationModules.verify()`).
+Cross-module edges are limited to exactly what [`Module Dependency Diagram.md`](docs/SA-docs/02-backend/Module%20Dependency%20Diagram.md) §3.1–§3.2 allows: `ordering → cart, inventory, promotion`; `cart → catalog, promotion`; every context → `identity`; every module → `shared-kernel`. This is enforced two ways — Gradle project dependencies (undeclared edge fails to compile) and `@ApplicationModule(allowedDependencies = {...})` on each module's `package-info.java` (declared-but-undeclared edge fails `ApplicationModules.verify()`).
 
 **Sprint 0 scope note:** `app` currently depends only on `spring-boot-starter-webmvc`, `spring-boot-starter-actuator`, and `spring-modulith-starter-core`. No persistence/messaging starters (JPA, Kafka, Redis, etc.) are wired yet — those are added to individual modules' `infrastructure` layer as real domain code lands in later sprints.
 
@@ -47,4 +47,4 @@ To demonstrate that a structural mistake fails the build (not just review), on t
 
 ### ArchUnit's four planted violations (`EN-GATE-1`)
 
-`app/src/test/java/org/phuchoang/ecp/ArchitectureTests.java` carries the layer and forbidden-edge rules of [`Module Dependency Diagram.md`](../docs/SA-docs/02-backend/Module%20Dependency%20Diagram.md) §6-§7, on top of the module-boundary check above. Four violations are rehearsed the same way (add → `./gradlew :app:test` fails → revert → passes): `review -> payment`, `inventory -> ordering` (caught by Gradle's own circular-dependency check before Modulith even runs, since `ordering -> inventory` is already a real edge), a `domain` class referencing `identity`, and a class reaching into another module's `application` package. See the Sprint 01 backlog's Review Notes for the exact failure messages each one produces.
+`app/src/test/java/org/phuchoang/ecp/ArchitectureTests.java` carries the layer and forbidden-edge rules of [`Module Dependency Diagram.md`](docs/SA-docs/02-backend/Module%20Dependency%20Diagram.md) §6-§7, on top of the module-boundary check above. Four violations are rehearsed the same way (add → `./gradlew :app:test` fails → revert → passes): `review -> payment`, `inventory -> ordering` (caught by Gradle's own circular-dependency check before Modulith even runs, since `ordering -> inventory` is already a real edge), a `domain` class referencing `identity`, and a class reaching into another module's `application` package. See the Sprint 01 backlog's Review Notes for the exact failure messages each one produces.
