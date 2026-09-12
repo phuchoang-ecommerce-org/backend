@@ -1,9 +1,12 @@
 package org.phuchoang.ecp.web;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.phuchoang.ecp.sharedkernel.api.RateLimiter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -23,6 +26,18 @@ class WireFormatWebTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    // RateLimitFilter (Sprint 03, EN-WIRE-2) is a servlet Filter bean, which @WebMvcTest always
+    // includes regardless of controller scope — it needs a RateLimiter, which this narrow slice
+    // otherwise has no bean for.
+    @MockitoBean
+    private RateLimiter rateLimiter;
+
+    @BeforeEach
+    void allowEveryRequest() {
+        org.mockito.BDDMockito.given(rateLimiter.tryConsume(org.mockito.ArgumentMatchers.anyString(),
+            org.mockito.ArgumentMatchers.anyString())).willReturn(new RateLimiter.Decision(true, 0));
+    }
 
     @Test
     void successResponseIsUnaffected() throws Exception {

@@ -36,7 +36,32 @@ services:
       - 'MONGO_INITDB_ROOT_USERNAME=root'
     ports:
       - '27017'
-  redis:
-    image: 'redis:latest'
+  # ADR-0034 — two Redis instances, split by what eviction would cost. redis-cache holds pure
+  # cache content (evictable, no persistence); redis-state holds correctness-bearing state —
+  # rate-limit counters, sessions — and must never silently evict (noeviction + AOF persistence).
+  redis-cache:
+    image: 'redis:7'
+    command: >-
+      redis-server
+      --maxmemory 1gb
+      --maxmemory-policy allkeys-lru
+      --maxmemory-samples 10
+      --save ""
+      --appendonly no
+      --timeout 300
+      --tcp-keepalive 60
     ports:
       - '6379'
+  redis-state:
+    image: 'redis:7'
+    command: >-
+      redis-server
+      --maxmemory 256mb
+      --maxmemory-policy noeviction
+      --appendonly yes
+      --appendfsync everysec
+      --save "900 1"
+      --timeout 300
+      --tcp-keepalive 60
+    ports:
+      - '6380:6379'

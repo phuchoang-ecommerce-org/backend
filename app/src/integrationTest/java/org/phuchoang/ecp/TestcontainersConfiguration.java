@@ -9,8 +9,10 @@ import org.testcontainers.utility.DockerImageName;
 /**
  * L4-L6 container wiring for the {@code integrationTest} source set (EN-DATA-1).
  * PostgreSQL only, matching {@code postgres:16} in {@code compose.yaml} — the production image and
- * version, per {@code ADR-0009} and {@code Deployment Diagram.md}. Elasticsearch, Kafka, MongoDB, and
- * Redis containers are not wired here; none of the four are yet used by any test in this repository.
+ * version, per {@code ADR-0009} and {@code Deployment Diagram.md}. The two Redis instances
+ * (`ADR-0034`, EN-WIRE-2) are started directly by tests that need them (e.g. {@code IdentityApiIT})
+ * via {@code @DynamicPropertySource}, which Spring only honours on the test class itself — not on
+ * an {@code @Import}ed configuration class such as this one.
  */
 @TestConfiguration(proxyBeanMethods = false)
 class TestcontainersConfiguration {

@@ -15,6 +15,37 @@ spring:
   jackson:
     default-property-inclusion: non_null
 
+ecp:
+  redis:
+    cache:
+      host: ${ECP_REDIS_CACHE_HOST:localhost}
+      port: ${ECP_REDIS_CACHE_PORT:6379}
+    state:
+      host: ${ECP_REDIS_STATE_HOST:localhost}
+      port: ${ECP_REDIS_STATE_PORT:6380}
+  jwt:
+    # [ASSUMPTION] Security.md §4.2 — RS256 fallback (not the EdDSA assumption) chosen for this
+    # sprint per Spring Security's NimbusJwtEncoder support. A dev keypair is generated in memory
+    # when no key path is configured (JwtKeysConfig) — never do this in a real environment.
+    private-key-path: ${ECP_JWT_PRIVATE_KEY_PATH:}
+    public-key-path: ${ECP_JWT_PUBLIC_KEY_PATH:}
+    issuer: ${ECP_JWT_ISSUER:ecp-api}
+    access-token-ttl-seconds: ${ECP_JWT_ACCESS_TTL_SECONDS:900}
+  password:
+    # [ASSUMPTION] Security.md §4.5 — Argon2id parameters; re-tunable without a schema change.
+    argon2-salt-length: 16
+    argon2-hash-length: 32
+    argon2-parallelism: 1
+    argon2-memory-kib: 19456
+    argon2-iterations: 2
+  rate-limit:
+    auth-strict:
+      limit: 10
+      window-seconds: 300
+    write:
+      limit: 120
+      window-seconds: 60
+
 management:
   endpoints:
     web:

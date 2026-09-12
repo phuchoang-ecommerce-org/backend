@@ -79,6 +79,14 @@ public class GlobalExceptionHandler {
             request, List.of());
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Problem> handleIllegalArgument(IllegalArgumentException exception, HttpServletRequest request) {
+        // A domain value object's constructor (e.g. EmailAddress) rejecting malformed input is a
+        // validation failure from the caller's point of view, not an unmapped 500.
+        return problemResponse(GenErrorCode.VALIDATION_FAILED.code(), GenErrorCode.VALIDATION_FAILED.title(),
+            GenErrorCode.VALIDATION_FAILED.httpStatus(), exception.getMessage(), request, List.of());
+    }
+
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<Problem> handleNotFound(NoResourceFoundException exception, HttpServletRequest request) {
         return problemResponse(GenErrorCode.NOT_FOUND.code(), GenErrorCode.NOT_FOUND.title(),

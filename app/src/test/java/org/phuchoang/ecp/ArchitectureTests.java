@@ -150,6 +150,44 @@ class ArchitectureTests {
         }
     }
 
+    private static final String[] IDENTITY_APPLICATION_SERVICES = {
+        "RegisterAccountService", "VerifyEmailService", "LoginService", "LogoutService"
+    };
+
+    @Test
+    void everyIdentityApplicationServiceDependsOnAuthorizationService() {
+        // ADR-0016 §5: "the most dangerous defect in this codebase is an @ApplicationService
+        // that forgets to call AuthorizationService" — this only checks that each of the four
+        // use-case services is *wired to* the OHS (a real ArchUnit call-graph check is out of
+        // scope this sprint); PermissionMatrixAuthorizationService itself and the
+        // IdentityApplicationService aggregator are deliberately excluded from this rule.
+        ArchRule rule = com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes()
+            .that().haveSimpleName(IDENTITY_APPLICATION_SERVICES[0])
+            .or().haveSimpleName(IDENTITY_APPLICATION_SERVICES[1])
+            .or().haveSimpleName(IDENTITY_APPLICATION_SERVICES[2])
+            .or().haveSimpleName(IDENTITY_APPLICATION_SERVICES[3])
+            .should().dependOnClassesThat().haveSimpleName("AuthorizationService")
+            .because("ADR-0016 §4 — every application service calls the AuthorizationService OHS "
+                + "before executing a command");
+        rule.check(mainClasses);
+    }
+
+    @Test
+    void onlyTheDeclaredRedisAdaptersTouchARedisClientType() {
+        // ADR-0034 §9 rule B4, narrowed to what ArchUnit can check structurally: Redis access is
+        // centralised in the connection-factory config and the two declared adapters, never
+        // ad-hoc elsewhere — the actual key-prefix-to-factory mapping is enforced by code review.
+        ArchRule rule = noClasses()
+            .that().resideOutsideOfPackages(
+                ROOT_PACKAGE + ".redis..",
+                ROOT_PACKAGE + ".identity.infrastructure..")
+            .should().dependOnClassesThat().resideInAPackage("org.springframework.data.redis..")
+            .because("Redis client types are confined to redis.RedisConfig and the identity.infrastructure "
+                + "adapters (ADR-0034 §9 rule B4)")
+            .allowEmptyShould(true);
+        rule.check(mainClasses);
+    }
+
     @Test
     void fastSuiteImportsNoTestcontainers() {
         JavaClasses testClasses = new ClassFileImporter()
