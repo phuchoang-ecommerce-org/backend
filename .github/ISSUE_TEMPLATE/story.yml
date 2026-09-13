@@ -1,0 +1,91 @@
+name: Story
+description: User-facing or business-capability work (US-*)
+title: "US-XXX-00/BE — "
+labels: [type:story]
+body:
+  - type: input
+    id: story-id
+    attributes:
+      label: "Story ID"
+      description: "The canonical id from the product backlog — e.g. `US-CAT-01`, `EN-WIRE-3`."
+      placeholder: "US-CAT-01"
+    validations:
+      required: true
+  - type: input
+    id: sprint-doc
+    attributes:
+      label: "Sprint doc"
+      description: "Link to the sprint backlog file this item is committed in."
+      placeholder: "https://github.com/phuchoang-ecommerce-org/docs/blob/main/PM-docs/sprint-backlogs/sprint-06-catalog-browse.md"
+  - type: textarea
+    id: ac
+    attributes:
+      label: "Acceptance Criteria"
+      description: "Given / When / Then, one per exception flow of the source use case as well as the main scenario."
+      value: |
+        - Given …, when …, then ….
+        - Given …, when …, then ….
+        - E1 — Given …, when …, then ….
+
+    validations:
+      required: true
+  - type: textarea
+    id: impl
+    attributes:
+      label: "Implementation Checklist"
+      description: "The behaviour is the issue; the classes are the checklist."
+      value: |
+        - [ ] Domain behaviour
+        - [ ] Application use case
+        - [ ] Persistence / integration adapter
+        - [ ] API endpoint
+        - [ ] Unit tests
+        - [ ] Integration tests
+        - [ ] Security behaviour verified
+
+    validations:
+      required: true
+  - type: textarea
+    id: contract
+    attributes:
+      label: "Contract surface"
+      description: "The `operationId`s and/or `ecp-web` routes this story touches."
+      placeholder: |
+        listCategories · getCategory
+        /c/[...slug]
+
+  - type: checkboxes
+    id: dod-lane
+    attributes:
+      label: "Definition of Done — §3 — Backend Slice"
+      description: "Adapt to the nature of the work; this is a quality gate, not a formality. Full text: https://github.com/phuchoang-ecommerce-org/docs/blob/main/PM-docs/definition-of-done.md"
+      options:
+      - label: "1 — Every business rule the story touches has an L1 test naming its `BR-` id"
+      - label: "2 — Every exception flow of a `Must` use case is covered, not only the main scenario"
+      - label: "3 — L2 architecture gate green: `ApplicationModules.verify()`, the `@ApplicationModule(allowedDependencies)` allow-list, ArchUnit layer rules"
+      - label: "4 — L3 web-slice test asserts response shape, problem+JSON mapping, pagination envelope"
+      - label: "5 — The operation appears in the contract test in **both** directions"
+      - label: "6 — Its permission-matrix cell is asserted (an operation with no cell fails the build)"
+      - label: "7 — An audit entry is written where `UC-AUD-01` requires one"
+      - label: "8 — Any Flyway migration is backward-compatible across a rolling restart"
+      - label: "9 — No foreign key crosses a module table prefix"
+      - label: "10 — Every domain event published has an L4 test asserting a consumer reacts idempotently"
+      - label: "11 — Structured log lines carry the correlation id; any new Micrometer meter is registered"
+      - label: "12 — No credential, key, or connection string in an image, log, audit entry, or repository"
+      - label: "＋ Concurrency guarantee only — an L5 test against Testcontainers PostgreSQL, not H2"
+  - type: checkboxes
+    id: dod-story
+    attributes:
+      label: "Definition of Done — the Story (§5)"
+      description: "Both slices must satisfy their lane's list, and then all of these. Enforced by the `Integrated` column — a merged, green slice waits there until the gate."
+      options:
+      - label: "1 — The Contract Sync checklist has passed for this story's domain"
+      - label: "2 — Demonstrated against the running system at a Sprint Review — not a screenshot, not a passing test"
+      - label: "3 — Every acceptance criterion satisfied, exception-flow criteria included"
+      - label: "4 — Any contract drift amended in `openapi.yaml`, not worked around"
+      - label: "5 — Nothing left as a `TODO` that the acceptance criteria required"
+  - type: markdown
+    attributes:
+      value: |
+        Set `Work Type`, `Module`, `Priority`, `Sprint`, `Release`, `Size`, `Risk` and `Layer` on the
+        **project item**, not with labels — the Project fields are the authoritative classification.

@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Product backlog
+    url: https://github.com/phuchoang-ecommerce-org/docs/blob/main/PM-docs/product-backlog.md
+    about: The 87 stories and every enabler, with MoSCoW priority, points and sprint.
+  - name: Sprint backlogs
+    url: https://github.com/phuchoang-ecommerce-org/docs/blob/main/PM-docs/sprint-backlogs
+    about: What each sprint committed to, and its Sprint Goal.
+  - name: Definition of Done
+    url: https://github.com/phuchoang-ecommerce-org/docs/blob/main/PM-docs/definition-of-done.md
+    about: Definition of Ready, both lane DoDs, the story DoD and the release DoD.
+  - name: Release plan
+    url: https://github.com/phuchoang-ecommerce-org/docs/blob/main/PM-docs/release-plan.md
+    about: R1-R3, the sprint sequence, and the G0-G15 contract-sync gates.

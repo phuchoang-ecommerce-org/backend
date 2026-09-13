@@ -1,0 +1,57 @@
+name: Tech Debt
+description: Existing technical deficiency that should be addressed
+title: "[Tech Debt] "
+labels: [type:tech-debt]
+body:
+  - type: textarea
+    id: deficiency
+    attributes:
+      label: "The deficiency"
+      description: "What is wrong now, and where."
+    validations:
+      required: true
+  - type: textarea
+    id: cost
+    attributes:
+      label: "Cost of carrying it"
+      description: "What it makes slower, riskier, or impossible. If nothing, this is not debt."
+    validations:
+      required: true
+  - type: textarea
+    id: remedy
+    attributes:
+      label: "Proposed remedy"
+    validations:
+      required: true
+  - type: textarea
+    id: impl
+    attributes:
+      label: "Implementation Checklist"
+      value: |
+        - [ ] 
+        - [ ] 
+
+  - type: checkboxes
+    id: dod-lane
+    attributes:
+      label: "Definition of Done — §3 — Backend Slice"
+      description: "Adapt to the nature of the work; this is a quality gate, not a formality. Full text: https://github.com/phuchoang-ecommerce-org/docs/blob/main/PM-docs/definition-of-done.md"
+      options:
+      - label: "1 — Every business rule the story touches has an L1 test naming its `BR-` id"
+      - label: "2 — Every exception flow of a `Must` use case is covered, not only the main scenario"
+      - label: "3 — L2 architecture gate green: `ApplicationModules.verify()`, the `@ApplicationModule(allowedDependencies)` allow-list, ArchUnit layer rules"
+      - label: "4 — L3 web-slice test asserts response shape, problem+JSON mapping, pagination envelope"
+      - label: "5 — The operation appears in the contract test in **both** directions"
+      - label: "6 — Its permission-matrix cell is asserted (an operation with no cell fails the build)"
+      - label: "7 — An audit entry is written where `UC-AUD-01` requires one"
+      - label: "8 — Any Flyway migration is backward-compatible across a rolling restart"
+      - label: "9 — No foreign key crosses a module table prefix"
+      - label: "10 — Every domain event published has an L4 test asserting a consumer reacts idempotently"
+      - label: "11 — Structured log lines carry the correlation id; any new Micrometer meter is registered"
+      - label: "12 — No credential, key, or connection string in an image, log, audit entry, or repository"
+      - label: "＋ Concurrency guarantee only — an L5 test against Testcontainers PostgreSQL, not H2"
+  - type: markdown
+    attributes:
+      value: |
+        Set `Work Type`, `Module`, `Priority`, `Sprint`, `Release`, `Size`, `Risk` and `Layer` on the
+        **project item**, not with labels — the Project fields are the authoritative classification.

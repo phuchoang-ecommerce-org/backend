@@ -1,0 +1,36 @@
+name: Hardening
+description: Reliability, security, consistency, performance, production readiness
+title: "[Hardening] "
+labels: [type:hardening]
+body:
+  - type: input
+    id: cycle
+    attributes:
+      label: "IH cycle / row"
+      description: "e.g. `IH-1 row 3`. A row is never marked passed on a local workaround."
+      placeholder: |
+        IH-1 row 3
+    validations:
+      required: true
+  - type: textarea
+    id: claim
+    attributes:
+      label: "The claim being verified"
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: "Evidence required"
+      description: "What would prove it, against the running system."
+    validations:
+      required: true
+  - type: textarea
+    id: gaps
+    attributes:
+      label: "Known gaps carried in"
+  - type: markdown
+    attributes:
+      value: |
+        Set `Work Type`, `Module`, `Priority`, `Sprint`, `Release`, `Size`, `Risk` and `Layer` on the
+        **project item**, not with labels — the Project fields are the authoritative classification.
