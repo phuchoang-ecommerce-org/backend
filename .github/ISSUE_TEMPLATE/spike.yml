@@ -1,0 +1,32 @@
+name: Spike
+description: Investigation or architectural/technical research
+title: "[Spike] "
+labels: [type:spike]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: "The question"
+      description: "One question with a decidable answer. A spike that cannot fail has not been framed."
+    validations:
+      required: true
+  - type: input
+    id: timebox
+    attributes:
+      label: "Timebox"
+      placeholder: |
+        2 days
+    validations:
+      required: true
+  - type: textarea
+    id: exit
+    attributes:
+      label: "Exit artefact"
+      description: "What is written down at the end — an ADR, a benchmark, a decision recorded in the sprint doc. A spike ends in a written answer, not in code."
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        Set `Work Type`, `Module`, `Priority`, `Sprint`, `Release`, `Size`, `Risk` and `Layer` on the
+        **project item**, not with labels — the Project fields are the authoritative classification.
