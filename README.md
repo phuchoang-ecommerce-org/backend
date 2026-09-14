@@ -6,7 +6,9 @@ Gradle multi-project build for the Enterprise Commerce Platform (ECP) backend �
 
 ## Layout
 
-Root project `ecp` with 14 subprojects:
+Root project `ecp` with 14 subprojects. The 13 library modules are grouped
+under [`modules/`](modules/); their Gradle project paths remain flat (for
+example, `modules/identity` is still `:identity`):
 
 - `shared-kernel` — value objects only (`Money`, typed IDs, `Address`); zero outbound dependencies.
 - `identity`, `catalog`, `inventory`, `cart`, `ordering`, `payment`, `shipping`, `promotion`, `review`, `notification`, `audit`, `reporting` — one Gradle subproject per bounded context. Each has `api/` (its public surface), `application/`, `domain/`, `infrastructure/` (internal).
@@ -40,10 +42,10 @@ Testcontainers reuse is a per-developer opt-in, not a repo setting — add `test
 
 To demonstrate that a structural mistake fails the build (not just review), on the running build:
 
-1. In `catalog/build.gradle.kts`, add `implementation(project(":payment"))` — an edge `catalog`'s `package-info.java` does not declare in `allowedDependencies`. (Don't pick `ordering` for this: `cart -> catalog -> ordering -> cart` is already a real edge set, so routing through `ordering` creates a genuine Gradle-level circular task dependency instead of the intended Modulith-level violation.)
+1. In `modules/catalog/build.gradle.kts`, add `implementation(project(":payment"))` — an edge `catalog`'s `package-info.java` does not declare in `allowedDependencies`. (Don't pick `ordering` for this: `cart -> catalog -> ordering -> cart` is already a real edge set, so routing through `ordering` creates a genuine Gradle-level circular task dependency instead of the intended Modulith-level violation.)
 2. Add a class in `payment.api` (e.g. `Marker`) and reference it from a new class in `catalog.api`.
 3. Run `./gradlew :app:test --tests ModularityTests` — it fails with a `org.springframework.modulith.core.Violations` report naming the undeclared `catalog -> payment` edge.
-4. Delete both added classes and revert `catalog/build.gradle.kts`, then re-run — it passes.
+4. Delete both added classes and revert `modules/catalog/build.gradle.kts`, then re-run — it passes.
 
 ### ArchUnit's four planted violations (`EN-GATE-1`)
 

@@ -1,7 +1,5 @@
 package org.phuchoang.ecp.web;
 
-import java.util.Base64;
-import java.nio.charset.StandardCharsets;
 
 /**
  * Cursor pagination helpers (Integration Contract.md §3.1–§3.2). Cursor, never offset: a
@@ -23,15 +21,4 @@ public final class Pagination {
         return Math.min(requested, MAX_SIZE);
     }
 
-    /**
-     * Encodes an opaque cursor. The encoding is deliberately not part of the contract — a client
-     * must treat the result as opaque and never construct or parse one (§3.1).
-     */
-    public static String encodeCursor(String raw) {
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(raw.getBytes(StandardCharsets.UTF_8));
-    }
-
-    public static String decodeCursor(String cursor) {
-        return new String(Base64.getUrlDecoder().decode(cursor), StandardCharsets.UTF_8);
-    }
 }

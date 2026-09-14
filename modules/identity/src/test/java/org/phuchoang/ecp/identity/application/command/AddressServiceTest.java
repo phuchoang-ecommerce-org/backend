@@ -1,0 +1,174 @@
+package org.phuchoang.ecp.identity.application.command;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.phuchoang.ecp.identity.application.CallerContext;
+import org.phuchoang.ecp.identity.application.mapper.AddressSummary;
+import org.phuchoang.ecp.identity.application.port.AddressRepository;
+import org.phuchoang.ecp.identity.application.port.AuthorizationService;
+import org.phuchoang.ecp.identity.domain.CustomerAddress;
+import org.phuchoang.ecp.identity.domain.RoleCode;
+import org.phuchoang.ecp.sharedkernel.api.Address;
+import org.phuchoang.ecp.sharedkernel.api.DomainException;
+import org.phuchoang.ecp.sharedkernel.api.CursorCodec;
+import org.phuchoang.ecp.sharedkernel.api.CursorContext;
+import org.phuchoang.ecp.sharedkernel.api.CursorSigningKey;
+import org.phuchoang.ecp.sharedkernel.api.CursorValue;
+import org.phuchoang.ecp.sharedkernel.api.HmacCursorCodec;
+import org.phuchoang.ecp.sharedkernel.api.InvalidCursorException;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyInt;
+
+/** L1 — `UC-CUS-09` (`US-CUS-09`): `BR-CUS-05` (exactly one default) and ownership → `404`. */
+@ExtendWith(MockitoExtension.class)
+class AddressServiceTest {
+
+    private final UUID accountId = UUID.randomUUID();
+
+    @Mock
+    private AddressRepository addressRepository;
+    @Mock
+    private AuthorizationService authorizationService;
+
+    private AddressService service() {
+        return new AddressService(addressRepository, authorizationService, codec());
+    }
+
+    private static Address anAddress() {
+        return new Address(null, "Jane Doe", "1 Main St", null, "Springfield", null, "12345", "US", null);
+    }
+
+    private CallerContext caller() {
+        return new CallerContext(accountId, Set.of(RoleCode.CUSTOMER));
+    }
+
+    @Test
+    void theFirstAddressAddedBecomesTheDefaultShippingAddress_BR_CUS_05() {
+        when(addressRepository.existsAnyForAccount(accountId)).thenReturn(false);
+        when(addressRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        AddressSummary summary = service().addOwnAddress(caller(), new AddressCommand(anAddress(), false, false));
+
+        assertThat(summary.isDefaultShipping()).isTrue();
+    }
+
+    @Test
+    void theFirstAddressDoesNotAutoBecomeTheDefaultBillingAddress() {
+        // BR-CUS-05 governs default *shipping* only — nothing in the spec extends the
+        // first-address auto-default to billing, which has no documented business rule.
+        when(addressRepository.existsAnyForAccount(accountId)).thenReturn(false);
+        when(addressRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        AddressSummary summary = service().addOwnAddress(caller(), new AddressCommand(anAddress(), false, false));
+
+        assertThat(summary.isDefaultBilling()).isFalse();
+    }
+
+    @Test
+    void isDefaultBillingIsStoredExactlyAsRequestedEvenForTheFirstAddress() {
+        when(addressRepository.existsAnyForAccount(accountId)).thenReturn(false);
+        when(addressRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        AddressSummary summary = service().addOwnAddress(caller(), new AddressCommand(anAddress(), false, true));
+
+        assertThat(summary.isDefaultBilling()).isTrue();
+    }
+
+    @Test
+    void nominatingANewDefaultClearsThePreviousOne_BR_CUS_05() {
+        when(addressRepository.existsAnyForAccount(accountId)).thenReturn(true);
+        CustomerAddress existingDefault = CustomerAddress.add(UUID.randomUUID(), accountId, anAddress(), true, false);
+        when(addressRepository.findAllByAccountId(accountId)).thenReturn(List.of(existingDefault));
+        when(addressRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        service().addOwnAddress(caller(), new AddressCommand(anAddress(), true, false));
+
+        assertThat(existingDefault.defaultShipping()).isFalse();
+        verify(addressRepository).save(existingDefault);
+    }
+
+    @Test
+    void gettingAnotherCustomersAddressIsNotFoundNeverForbidden_Integration_Contract_2_1() {
+        UUID addressId = UUID.randomUUID();
+        CustomerAddress othersAddress = CustomerAddress.add(addressId, UUID.randomUUID(), anAddress(), false, false);
+        when(addressRepository.findById(addressId)).thenReturn(Optional.of(othersAddress));
+
+        Throwable thrown = catchThrowable(() -> service().getOwnAddress(caller(), addressId));
+
+        assertThat(thrown).isInstanceOf(DomainException.class);
+    }
+
+    @Test
+    void removingAnAlreadyAbsentAddressIsIdempotent() {
+        UUID addressId = UUID.randomUUID();
+        when(addressRepository.findById(addressId)).thenReturn(Optional.empty());
+
+        service().removeOwnAddress(caller(), addressId);
+
+        verify(addressRepository, never()).delete(any());
+    }
+
+    @Test
+    void removingAnotherCustomersAddressDoesNothing() {
+        UUID addressId = UUID.randomUUID();
+        CustomerAddress othersAddress = CustomerAddress.add(addressId, UUID.randomUUID(), anAddress(), false, false);
+        when(addressRepository.findById(addressId)).thenReturn(Optional.of(othersAddress));
+
+        service().removeOwnAddress(caller(), addressId);
+
+        verify(addressRepository, never()).delete(any());
+    }
+
+    @Test
+    void addressListingUsesSignedAccountBoundLookAheadCursor() {
+        CustomerAddress first = CustomerAddress.add(UUID.randomUUID(), accountId, anAddress(), true, false);
+        CustomerAddress second = CustomerAddress.add(UUID.randomUUID(), accountId, anAddress(), false, false);
+        CustomerAddress lookAhead = CustomerAddress.add(UUID.randomUUID(), accountId, anAddress(), false, false);
+        AddressRepository.Cursor secondCursor = new AddressRepository.Cursor(Instant.parse("2026-09-14T10:00:00Z"), second.id());
+        when(addressRepository.findByAccountId(accountId, null, 3)).thenReturn(List.of(first, second, lookAhead));
+        when(addressRepository.cursorOf(second)).thenReturn(secondCursor);
+
+        var page = service().listOwnAddresses(caller(), null, 2);
+
+        assertThat(page.items()).hasSize(2);
+        assertThat(page.nextCursor()).isNotBlank();
+        CursorCodec codec = codec();
+        assertThat(codec.decode(page.nextCursor(), context(accountId)).sortValues())
+            .containsExactly(CursorValue.instant(secondCursor.createdAt()));
+        verify(addressRepository).findByAccountId(accountId, null, 3);
+    }
+
+    @Test
+    void addressCursorCannotBeReplayedAgainstAnotherAccount() {
+        UUID otherAccount = UUID.randomUUID();
+        String cursor = codec().encode(context(accountId), List.of(CursorValue.instant(Instant.parse("2026-09-14T10:00:00Z"))),
+            UUID.randomUUID());
+
+        assertThat(catchThrowable(() -> service().listOwnAddresses(new CallerContext(otherAccount, Set.of(RoleCode.CUSTOMER)),
+            cursor, 2))).isInstanceOf(InvalidCursorException.class);
+        verify(addressRepository, never()).findByAccountId(eq(otherAccount), any(), anyInt());
+    }
+
+    private static CursorCodec codec() {
+        return new HmacCursorCodec(CursorSigningKey.utf8("test-key", "01234567890123456789012345678901"), null);
+    }
+
+    private static CursorContext context(UUID accountId) {
+        return new CursorContext("identity.own-addresses", accountId.toString(), "createdAt:desc", java.util.Map.of());
+    }
+}

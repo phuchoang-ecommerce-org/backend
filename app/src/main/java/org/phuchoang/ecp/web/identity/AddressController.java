@@ -50,10 +50,8 @@ class AddressController {
             @RequestParam(required = false) String cursor, @RequestParam(required = false) Integer size) {
         QueryParams.rejectUnknown(request, LIST_QUERY_PARAMS);
         int pageSize = Pagination.clampSize(size);
-        String decodedCursor = cursor == null ? null : Pagination.decodeCursor(cursor);
-        AddressPageView page = identityFacade.listOwnAddresses(actorOf(jwt), decodedCursor, pageSize);
-        String next = page.nextCursor() == null ? null : Pagination.encodeCursor(page.nextCursor());
-        return new PageEnvelope<>(page.items(), new Page(page.items().size(), next, null));
+        AddressPageView page = identityFacade.listOwnAddresses(actorOf(jwt), cursor, pageSize);
+        return new PageEnvelope<>(page.items(), new Page(page.items().size(), page.nextCursor(), null));
     }
 
     @PostMapping("/api/v1/accounts/me/addresses")

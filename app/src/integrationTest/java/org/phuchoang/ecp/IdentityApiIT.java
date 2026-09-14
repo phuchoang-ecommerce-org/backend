@@ -55,6 +55,7 @@ class IdentityApiIT {
         registry.add("ecp.redis.cache.port", () -> REDIS_CACHE.getMappedPort(6379));
         registry.add("ecp.redis.state.host", REDIS_STATE::getHost);
         registry.add("ecp.redis.state.port", () -> REDIS_STATE.getMappedPort(6379));
+        registry.add("ecp.cursor.active-key", () -> "integration-test-cursor-secret-0001");
         // Every test method in this class shares one Spring context, one Redis instance, and one
         // caller address (TestRestTemplate's loopback) — the production auth-strict limit (10 per
         // 5 minutes, NFR-SEC-05) exists to stop credential-guessing from one caller, not to bound
