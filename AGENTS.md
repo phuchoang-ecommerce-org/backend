@@ -6,7 +6,9 @@ This is the ECP backend: a Java 21 Gradle multi-project Spring Modulith modular 
 
 Respect the declared Gradle and `@ApplicationModule` boundaries. Do not depend on another module's internal packages; expose required behavior through that module's `api` package.
 
-You can find the document implementation plan in [docs](../docs-extract/)
+You can find the document implementation plan in [Docs](../docs-extract/)
+
+You can find the Sprint plan of this project in [Plan](docs/scrum-plan)
 
 ## Build, Test, and Development Commands
 

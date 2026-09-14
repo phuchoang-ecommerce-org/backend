@@ -27,6 +27,13 @@ public interface CatalogBrowsePort {
      */
     boolean publishedProductExists(UUID id);
     /**
+     * Loads the complete published product projection with ordered children.
+     *
+     * @param id product identifier
+     * @return product detail, or empty for absent and non-published products alike
+     */
+    Optional<CatalogBrowseModel.ProductDetail> product(UUID id);
+    /**
      * Loads one category and its breadcrumb chain.
      *
      * @param id category identifier

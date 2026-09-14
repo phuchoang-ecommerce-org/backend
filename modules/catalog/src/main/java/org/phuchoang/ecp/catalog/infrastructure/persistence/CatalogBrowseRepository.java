@@ -9,6 +9,8 @@ import org.phuchoang.ecp.catalog.application.query.CatalogBrowseModel.CategoryRe
 import org.phuchoang.ecp.catalog.application.query.CatalogBrowseModel.ListingQuery;
 import org.phuchoang.ecp.catalog.application.query.CatalogBrowseModel.Money;
 import org.phuchoang.ecp.catalog.application.query.CatalogBrowseModel.ProductPage;
+import org.phuchoang.ecp.catalog.application.query.CatalogBrowseModel.ProductDetail;
+import org.phuchoang.ecp.catalog.application.query.CatalogBrowseModel.ProductImage;
 import org.phuchoang.ecp.catalog.application.query.CatalogBrowseModel.ProductSummary;
 import org.phuchoang.ecp.catalog.application.query.CatalogBrowseModel.Variant;
 import org.phuchoang.ecp.sharedkernel.api.CursorCodec;
@@ -43,7 +45,7 @@ public class CatalogBrowseRepository implements CatalogBrowsePort {
       WITH product_rows AS (
           SELECT p.id, p.name, p.slug, p.brand, p.publication_status, p.average_rating, p.review_count, p.created_at,
                  MIN(v.list_price_amount) AS price_from, MAX(v.list_price_amount) AS price_to,
-                 MIN(v.list_price_currency) AS currency,
+                 MIN(v.list_price_currency) AS currency, BOOL_OR(v.advisory_in_stock) AS in_stock,
                  (SELECT i.url FROM catalog_product_image i WHERE i.product_id = p.id ORDER BY i.sort_order, i.id LIMIT 1) AS image_url
           FROM catalog_product p
           LEFT JOIN catalog_variant v ON v.product_id = p.id AND v.is_active
@@ -55,6 +57,8 @@ public class CatalogBrowseRepository implements CatalogBrowsePort {
 
   /** Jackson type token for a variant's string-valued option map. */
   private static final TypeReference<Map<String, String>> STRING_MAP = new TypeReference<>() {
+  };
+  private static final TypeReference<Map<String, Object>> OBJECT_MAP = new TypeReference<>() {
   };
 
   /** JDBC access to catalog-owned PostgreSQL tables. */
@@ -89,6 +93,24 @@ public class CatalogBrowseRepository implements CatalogBrowsePort {
     return Boolean.TRUE.equals(jdbc.queryForObject("""
         SELECT EXISTS (SELECT 1 FROM catalog_product WHERE id = ? AND publication_status = 'PUBLISHED')
         """, Boolean.class, id));
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public Optional<ProductDetail> product(UUID id) {
+    List<ProductDetailRow> products = jdbc.query("""
+        SELECT p.id, p.name, p.slug, p.description, p.brand, p.publication_status, p.published_at, p.attributes,
+               p.average_rating, p.review_count, c.id AS category_id, c.name AS category_name, c.slug AS category_slug
+        FROM catalog_product p JOIN catalog_category c ON c.id = p.category_id
+        WHERE p.id = ? AND p.publication_status = 'PUBLISHED'
+        """, this::productDetailRow, id);
+    if (products.isEmpty()) {
+      return Optional.empty();
+    }
+    ProductDetailRow row = products.getFirst();
+    return Optional.of(new ProductDetail(row.id(), row.name(), row.slug(), row.description(), row.brand(), row.status(),
+        row.publishedAt(), List.of(new CategoryRef(row.categoryId(), row.categoryName(), row.categorySlug())),
+        objectMap(row.attributes()), images(id), variants(id, Map.of()), row.averageRating(), row.reviewCount()));
   }
 
   /** {@inheritDoc} */
@@ -166,18 +188,22 @@ public class CatalogBrowseRepository implements CatalogBrowsePort {
   /** {@inheritDoc} */
   @Override
   public List<Variant> variants(UUID productId, Map<String, String> selected) {
-    return jdbc.query("""
-        SELECT id, sku, name, list_price_amount, list_price_currency, options, weight_grams, is_active
+    String sql = selected.isEmpty() ? """
+        SELECT id, sku, name, list_price_amount, list_price_currency, options, weight_grams, is_active, advisory_in_stock
         FROM catalog_variant WHERE product_id = ? ORDER BY sku
-        """, this::variantRow, productId).stream()
-        .filter(variant -> variant.options().entrySet().containsAll(selected.entrySet())).toList();
+        """ : """
+        SELECT id, sku, name, list_price_amount, list_price_currency, options, weight_grams, is_active, advisory_in_stock
+        FROM catalog_variant WHERE product_id = ? AND options @> ?::jsonb ORDER BY sku
+        """;
+    return selected.isEmpty() ? jdbc.query(sql, this::variantRow, productId)
+        : jdbc.query(sql, this::variantRow, productId, json(selected));
   }
 
   /** {@inheritDoc} */
   @Override
   public Optional<Variant> variant(UUID productId, UUID variantId) {
     List<Variant> variants = jdbc.query("""
-        SELECT id, sku, name, list_price_amount, list_price_currency, options, weight_grams, is_active
+        SELECT id, sku, name, list_price_amount, list_price_currency, options, weight_grams, is_active, advisory_in_stock
         FROM catalog_variant WHERE product_id = ? AND id = ?
         """, this::variantRow, productId, variantId);
     return variants.stream().findFirst();
@@ -199,6 +225,10 @@ public class CatalogBrowseRepository implements CatalogBrowsePort {
     if (query.priceTo() != null) {
       filters.append(" AND price_from <= ?");
       parameters.add(query.priceTo());
+    }
+    if (query.inStock() != null) {
+      filters.append(" AND in_stock = ?");
+      parameters.add(query.inStock());
     }
     String countFilters = filters.toString();
     List<Object> countParameters = List.copyOf(parameters);
@@ -347,7 +377,15 @@ public class CatalogBrowseRepository implements CatalogBrowsePort {
         rs.getString("publication_status"), rs.getString("image_url"), rs.getBigDecimal("price_from"),
         rs.getBigDecimal("price_to"),
         rs.getString("currency"), (Double) rs.getObject("average_rating"), rs.getInt("review_count"),
-        rs.getObject("created_at", OffsetDateTime.class));
+        rs.getObject("in_stock", Boolean.class), rs.getObject("created_at", OffsetDateTime.class));
+  }
+
+  private ProductDetailRow productDetailRow(ResultSet rs, int ignored) throws SQLException {
+    return new ProductDetailRow(rs.getObject("id", UUID.class), rs.getString("name"), rs.getString("slug"),
+        rs.getString("description"), rs.getString("brand"), rs.getString("publication_status"),
+        rs.getObject("published_at", OffsetDateTime.class), rs.getString("attributes"),
+        (Double) rs.getObject("average_rating"), rs.getInt("review_count"), rs.getObject("category_id", UUID.class),
+        rs.getString("category_name"), rs.getString("category_slug"));
   }
 
   /**
@@ -360,9 +398,9 @@ public class CatalogBrowseRepository implements CatalogBrowsePort {
    */
   private Variant variantRow(ResultSet rs, int ignored) throws SQLException {
     return new Variant(rs.getObject("id", UUID.class), rs.getString("sku"), rs.getString("name"),
-        new Money(rs.getBigDecimal("list_price_amount"), rs.getString("list_price_currency")),
+        new Money(rs.getBigDecimal("list_price_amount"), rs.getString("list_price_currency")), null,
         stringMap(rs.getString("options")), rs.getObject("weight_grams", Integer.class), rs.getBoolean("is_active"),
-        null);
+        rs.getObject("advisory_in_stock", Boolean.class));
   }
 
   /**
@@ -378,6 +416,30 @@ public class CatalogBrowseRepository implements CatalogBrowsePort {
     } catch (Exception exception) {
       throw new IllegalStateException("catalog_variant options is not a string map", exception);
     }
+  }
+
+  private Map<String, Object> objectMap(String json) {
+    try {
+      return objectMapper.readValue(json, OBJECT_MAP);
+    } catch (Exception exception) {
+      throw new IllegalStateException("catalog_product attributes is not an object", exception);
+    }
+  }
+
+  private String json(Map<String, String> values) {
+    try {
+      return objectMapper.writeValueAsString(values);
+    } catch (Exception exception) {
+      throw new IllegalStateException("catalog variant option filter cannot be serialized", exception);
+    }
+  }
+
+  private List<ProductImage> images(UUID productId) {
+    return jdbc.query("""
+        SELECT id, url, alt_text, sort_order FROM catalog_product_image
+        WHERE product_id = ? ORDER BY sort_order, id
+        """, (rs, ignored) -> new ProductImage(rs.getObject("id", UUID.class), rs.getString("url"),
+        rs.getString("alt_text"), rs.getInt("sort_order")), productId);
   }
 
   /**
@@ -418,7 +480,7 @@ public class CatalogBrowseRepository implements CatalogBrowsePort {
     Money from = row.priceFrom == null ? null : new Money(row.priceFrom, row.currency);
     Money to = row.priceTo == null ? null : new Money(row.priceTo, row.currency);
     return new ProductSummary(row.id, row.name, row.slug, row.brand, row.status, row.imageUrl, from, to,
-        row.averageRating, row.reviewCount, null);
+        row.averageRating, row.reviewCount, row.inStock);
   }
 
   /**
@@ -453,7 +515,12 @@ public class CatalogBrowseRepository implements CatalogBrowsePort {
    */
   private record ProductRow(UUID id, String name, String slug, String brand, String status, String imageUrl,
       BigDecimal priceFrom, BigDecimal priceTo, String currency, Double averageRating,
-      int reviewCount, OffsetDateTime createdAt) {
+      int reviewCount, Boolean inStock, OffsetDateTime createdAt) {
+  }
+
+  private record ProductDetailRow(UUID id, String name, String slug, String description, String brand, String status,
+      OffsetDateTime publishedAt, String attributes, Double averageRating, int reviewCount, UUID categoryId,
+      String categoryName, String categorySlug) {
   }
 
   /** Parameterized SQL fragments shared by the full-count and seek-page queries. */

@@ -121,7 +121,8 @@ public class CatalogBrowseFacadeAdapter implements CatalogBrowseFacade {
      * @return public variant view
      */
     private VariantView variant(CatalogBrowseModel.Variant value) {
-        return new VariantView(value.id(), value.sku(), value.name(), money(value.listPrice()), value.options(),
-            value.weightGrams(), value.active(), value.inStock());
+        return new VariantView(value.id(), value.sku(), value.name(), money(value.listPrice()),
+            money(value.promotionalPrice()), value.options(), value.weightGrams(), value.active(),
+            value.inStock() == null ? null : new AdvisoryAvailabilityView(value.inStock()));
     }
 }
