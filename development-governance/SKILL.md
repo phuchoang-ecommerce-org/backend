@@ -17,7 +17,7 @@ documentation and Git. GitHub synchronization requires GitHub CLI (`gh`) or
 equivalent GitHub integration with permission to read and update Issues and
 Projects.
 metadata:
-version: "1.0.0"
+version: "1.1.0"
 category: "development-governance"
 ----------------------------------
 
@@ -378,6 +378,22 @@ Implementation alone does not necessarily constitute completion.
 Tests, documentation, migration work, review, or other acceptance criteria may
 still remain.
 
+## Sprint Checklist Evidence
+
+When a Sprint Plan uses Markdown checkboxes, tick a checkbox only when the
+specific criterion is complete and supported by implementation, documentation,
+or recorded validation evidence. Leave partially implemented criteria and
+criteria awaiting integration, contract, or environment validation unchecked.
+
+Do not convert an item to checked merely because related code exists. Preserve
+the wording and unchecked items so the Sprint Plan remains an accurate record
+of remaining work.
+
+If a checked-in Sprint Plan says it is generated, update the canonical source
+and regenerate it when that workflow is available. An explicit user request to
+edit the generated view authorizes that direct edit; record the limitation if
+the canonical generator cannot be run.
+
 # Development Workflow
 
 For every implementation task, execute the following workflow.
@@ -562,17 +578,19 @@ Documentation must describe the intended project state.
 
 # Git Commit Discipline
 
-When appropriate, include related documentation synchronization with the
-implementation that required it.
+The user is the only person authorized to create commits. Never run `git
+commit`, amend a commit, create a commit through another tool, or otherwise
+write Git history, even when the implementation is complete.
 
-Do not commit a specification-changing implementation while leaving its
-approved documentation update for an unspecified later task.
+Prepare and validate the working-tree changes, then report the files and
+validation to the user for their manual commit. Do not stage changes unless the
+user explicitly asks; staging is not a substitute for the user's commit.
 
-Before committing, inspect the diff and verify that no accidental unrelated
-changes are included.
+Before handoff, inspect the diff and identify any unrelated pre-existing
+changes so the user can commit deliberately.
 
-Follow repository-specific commit conventions from `AGENTS.md` or other project
-instructions.
+Repository commit-message conventions remain guidance for the user's manual
+commit; they do not authorize the agent to commit.
 
 # Conflict Resolution
 
