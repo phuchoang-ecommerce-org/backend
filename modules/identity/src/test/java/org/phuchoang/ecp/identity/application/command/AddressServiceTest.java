@@ -12,7 +12,14 @@ import org.phuchoang.ecp.identity.domain.CustomerAddress;
 import org.phuchoang.ecp.identity.domain.RoleCode;
 import org.phuchoang.ecp.sharedkernel.api.Address;
 import org.phuchoang.ecp.sharedkernel.api.DomainException;
+import org.phuchoang.ecp.sharedkernel.api.CursorCodec;
+import org.phuchoang.ecp.sharedkernel.api.CursorContext;
+import org.phuchoang.ecp.sharedkernel.api.CursorSigningKey;
+import org.phuchoang.ecp.sharedkernel.api.CursorValue;
+import org.phuchoang.ecp.sharedkernel.api.HmacCursorCodec;
+import org.phuchoang.ecp.sharedkernel.api.InvalidCursorException;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -24,6 +31,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyInt;
 
 /** L1 — `UC-CUS-09` (`US-CUS-09`): `BR-CUS-05` (exactly one default) and ownership → `404`. */
 @ExtendWith(MockitoExtension.class)
@@ -37,7 +46,7 @@ class AddressServiceTest {
     private AuthorizationService authorizationService;
 
     private AddressService service() {
-        return new AddressService(addressRepository, authorizationService);
+        return new AddressService(addressRepository, authorizationService, codec());
     }
 
     private static Address anAddress() {
@@ -123,5 +132,43 @@ class AddressServiceTest {
         service().removeOwnAddress(caller(), addressId);
 
         verify(addressRepository, never()).delete(any());
+    }
+
+    @Test
+    void addressListingUsesSignedAccountBoundLookAheadCursor() {
+        CustomerAddress first = CustomerAddress.add(UUID.randomUUID(), accountId, anAddress(), true, false);
+        CustomerAddress second = CustomerAddress.add(UUID.randomUUID(), accountId, anAddress(), false, false);
+        CustomerAddress lookAhead = CustomerAddress.add(UUID.randomUUID(), accountId, anAddress(), false, false);
+        AddressRepository.Cursor secondCursor = new AddressRepository.Cursor(Instant.parse("2026-09-14T10:00:00Z"), second.id());
+        when(addressRepository.findByAccountId(accountId, null, 3)).thenReturn(List.of(first, second, lookAhead));
+        when(addressRepository.cursorOf(second)).thenReturn(secondCursor);
+
+        var page = service().listOwnAddresses(caller(), null, 2);
+
+        assertThat(page.items()).hasSize(2);
+        assertThat(page.nextCursor()).isNotBlank();
+        CursorCodec codec = codec();
+        assertThat(codec.decode(page.nextCursor(), context(accountId)).sortValues())
+            .containsExactly(CursorValue.instant(secondCursor.createdAt()));
+        verify(addressRepository).findByAccountId(accountId, null, 3);
+    }
+
+    @Test
+    void addressCursorCannotBeReplayedAgainstAnotherAccount() {
+        UUID otherAccount = UUID.randomUUID();
+        String cursor = codec().encode(context(accountId), List.of(CursorValue.instant(Instant.parse("2026-09-14T10:00:00Z"))),
+            UUID.randomUUID());
+
+        assertThat(catchThrowable(() -> service().listOwnAddresses(new CallerContext(otherAccount, Set.of(RoleCode.CUSTOMER)),
+            cursor, 2))).isInstanceOf(InvalidCursorException.class);
+        verify(addressRepository, never()).findByAccountId(eq(otherAccount), any(), anyInt());
+    }
+
+    private static CursorCodec codec() {
+        return new HmacCursorCodec(CursorSigningKey.utf8("test-key", "01234567890123456789012345678901"), null);
+    }
+
+    private static CursorContext context(UUID accountId) {
+        return new CursorContext("identity.own-addresses", accountId.toString(), "createdAt:desc", java.util.Map.of());
     }
 }

@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Import;
  * {@code DataSource} and runs every migration at startup, which needs a real PostgreSQL — the
  * fast suite must not (ArchUnit's {@code fastSuiteImportsNoTestcontainers} rule).
  */
-@SpringBootTest
+@SpringBootTest(properties = "ecp.cursor.active-key=integration-test-cursor-secret-0001")
 @Import(TestcontainersConfiguration.class)
 class EcpApplicationIT {
 

@@ -32,15 +32,5 @@ public interface AddressRepository {
     boolean existsAnyForAccount(UUID accountId);
 
     record Cursor(Instant createdAt, UUID id) {
-
-        @Override
-        public String toString() {
-            return createdAt.toString() + "|" + id;
-        }
-
-        public static Cursor parse(String raw) {
-            String[] parts = raw.split("\\|", 2);
-            return new Cursor(Instant.parse(parts[0]), UUID.fromString(parts[1]));
-        }
     }
 }

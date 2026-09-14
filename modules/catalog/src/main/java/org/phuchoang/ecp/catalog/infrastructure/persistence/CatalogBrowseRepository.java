@@ -11,6 +11,11 @@ import org.phuchoang.ecp.catalog.application.query.CatalogBrowseModel.Money;
 import org.phuchoang.ecp.catalog.application.query.CatalogBrowseModel.ProductPage;
 import org.phuchoang.ecp.catalog.application.query.CatalogBrowseModel.ProductSummary;
 import org.phuchoang.ecp.catalog.application.query.CatalogBrowseModel.Variant;
+import org.phuchoang.ecp.sharedkernel.api.CursorCodec;
+import org.phuchoang.ecp.sharedkernel.api.CursorContext;
+import org.phuchoang.ecp.sharedkernel.api.CursorPosition;
+import org.phuchoang.ecp.sharedkernel.api.CursorValue;
+import org.phuchoang.ecp.sharedkernel.api.InvalidCursorException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -19,8 +24,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -35,6 +38,21 @@ import java.util.UUID;
 @Repository
 public class CatalogBrowseRepository implements CatalogBrowsePort {
 
+  /** Aggregates the variant-dependent fields once before filtering and paging the listing. */
+  private static final String PRODUCT_ROWS_CTE = """
+      WITH product_rows AS (
+          SELECT p.id, p.name, p.slug, p.brand, p.publication_status, p.average_rating, p.review_count, p.created_at,
+                 MIN(v.list_price_amount) AS price_from, MAX(v.list_price_amount) AS price_to,
+                 MIN(v.list_price_currency) AS currency,
+                 (SELECT i.url FROM catalog_product_image i WHERE i.product_id = p.id ORDER BY i.sort_order, i.id LIMIT 1) AS image_url
+          FROM catalog_product p
+          LEFT JOIN catalog_variant v ON v.product_id = p.id AND v.is_active
+          JOIN catalog_category c ON c.id = p.category_id
+          WHERE p.publication_status = 'PUBLISHED' AND c.path LIKE ? || '%'
+          GROUP BY p.id, p.name, p.slug, p.brand, p.publication_status, p.average_rating, p.review_count, p.created_at
+      )
+      """;
+
   /** Jackson type token for a variant's string-valued option map. */
   private static final TypeReference<Map<String, String>> STRING_MAP = new TypeReference<>() {
   };
@@ -43,6 +61,8 @@ public class CatalogBrowseRepository implements CatalogBrowsePort {
   private final JdbcTemplate jdbc;
   /** JSON mapper used to materialize variant option maps. */
   private final ObjectMapper objectMapper;
+  /** Shared opaque-token codec; signing keys belong to the composition root. */
+  private final CursorCodec cursorCodec;
 
   /**
    * Creates the PostgreSQL browse adapter.
@@ -50,9 +70,10 @@ public class CatalogBrowseRepository implements CatalogBrowsePort {
    * @param jdbc JDBC template for catalog queries
    * @param objectMapper mapper for JSON option data
    */
-  public CatalogBrowseRepository(JdbcTemplate jdbc, ObjectMapper objectMapper) {
+  public CatalogBrowseRepository(JdbcTemplate jdbc, ObjectMapper objectMapper, CursorCodec cursorCodec) {
     this.jdbc = jdbc;
     this.objectMapper = objectMapper;
+    this.cursorCodec = cursorCodec;
   }
 
   /** {@inheritDoc} */
@@ -127,28 +148,19 @@ public class CatalogBrowseRepository implements CatalogBrowsePort {
   @Override
   public ProductPage products(UUID categoryId, ListingQuery query) {
     String path = jdbc.queryForObject("SELECT path FROM catalog_category WHERE id = ?", String.class, categoryId);
-    List<ProductRow> candidates = jdbc.query(
-        """
-            SELECT p.id, p.name, p.slug, p.brand, p.publication_status, p.average_rating, p.review_count, p.created_at,
-                   MIN(v.list_price_amount) AS price_from, MAX(v.list_price_amount) AS price_to,
-                   MIN(v.list_price_currency) AS currency,
-                   (SELECT i.url FROM catalog_product_image i WHERE i.product_id = p.id ORDER BY i.sort_order, i.id LIMIT 1) AS image_url
-            FROM catalog_product p
-            LEFT JOIN catalog_variant v ON v.product_id = p.id AND v.is_active
-            JOIN catalog_category c ON c.id = p.category_id
-            WHERE p.publication_status = 'PUBLISHED' AND c.path LIKE ? || '%'
-            GROUP BY p.id, p.name, p.slug, p.brand, p.publication_status, p.average_rating, p.review_count, p.created_at
-            """,
-        this::productRow, path);
-    candidates = candidates.stream().filter(row -> matches(row, query)).sorted(order(query.sort())).toList();
-    int start = offset(query.cursor(), query.sort());
-    if (start >= candidates.size() && !candidates.isEmpty()) {
-      start = Math.max(0, candidates.size() - query.size());
+    ProductListingSql listing = productListingSql(path, categoryId, query);
+    long total = jdbc.queryForObject(PRODUCT_ROWS_CTE + "SELECT COUNT(*) FROM product_rows" + listing.countFilters(),
+        Long.class, listing.countParameters().toArray());
+    List<Object> pageParameters = new ArrayList<>(listing.pageParameters());
+    pageParameters.add(query.size() + 1);
+    List<ProductRow> rows = jdbc.query(PRODUCT_ROWS_CTE + "SELECT * FROM product_rows" + listing.pageFilters()
+            + " ORDER BY " + listing.orderBy() + " LIMIT ?", this::productRow, pageParameters.toArray());
+    boolean hasMore = rows.size() > query.size();
+    if (hasMore) {
+      rows = rows.subList(0, query.size());
     }
-    int end = Math.min(start + query.size(), candidates.size());
-    List<ProductSummary> items = candidates.subList(start, end).stream().map(this::productView).toList();
-    String next = end < candidates.size() ? encodeCursor(query.sort() + "|" + end) : null;
-    return new ProductPage(items, next, candidates.size());
+    String next = hasMore ? encodeCursor(categoryId, query, rows.getLast()) : null;
+    return new ProductPage(rows.stream().map(this::productView).toList(), next, total);
   }
 
   /** {@inheritDoc} */
@@ -171,86 +183,141 @@ public class CatalogBrowseRepository implements CatalogBrowsePort {
     return variants.stream().findFirst();
   }
 
-  /**
-   * Applies in-memory listing filters after the descendant query. Inventory is intentionally not
-   * joined: until the inventory module exists, availability is represented as unknown rather than
-   * suppressing a browse result.
-   *
-   * @param row candidate product row
-   * @param query normalized listing filters
-   * @return {@code true} when the row satisfies the currently implementable filters
-   */
-  private boolean matches(ProductRow row, ListingQuery query) {
-    if (!query.brands().isEmpty() && (row.brand == null || !query.brands().contains(row.brand)))
-      return false;
-    if (query.priceFrom() != null && (row.priceFrom == null || row.priceFrom.compareTo(query.priceFrom()) < 0))
-      return false;
-    if (query.priceTo() != null && (row.priceFrom == null || row.priceFrom.compareTo(query.priceTo()) > 0))
-      return false;
-    // Inventory is intentionally not joined: until Sprint 11 the only honest browse
-    // state is unknown.
-    // An unavailable inventory dependency must not suppress the listing (UC-CAT-02
-    // E3).
-    return true;
+  /** Builds the parameterized database filter and stable ordering for a product listing. */
+  private ProductListingSql productListingSql(String path, UUID categoryId, ListingQuery query) {
+    List<Object> parameters = new ArrayList<>();
+    parameters.add(path);
+    StringBuilder filters = new StringBuilder(" WHERE 1 = 1");
+    if (!query.brands().isEmpty()) {
+      filters.append(" AND brand IN (").append("?, ".repeat(query.brands().size() - 1)).append("?)");
+      parameters.addAll(query.brands());
+    }
+    if (query.priceFrom() != null) {
+      filters.append(" AND price_from >= ?");
+      parameters.add(query.priceFrom());
+    }
+    if (query.priceTo() != null) {
+      filters.append(" AND price_from <= ?");
+      parameters.add(query.priceTo());
+    }
+    String countFilters = filters.toString();
+    List<Object> countParameters = List.copyOf(parameters);
+    Cursor cursor = decodeCursor(categoryId, query);
+    if (cursor != null) {
+      appendSeekPredicate(filters, parameters, query.sort(), cursor);
+    }
+    return new ProductListingSql(countFilters, countParameters, filters.toString(), List.copyOf(parameters), orderBy(query.sort()));
   }
 
-  /**
-   * Builds the comparator for a supported listing sort expression.
-   *
-   * @param sort normalized sort expression
-   * @return comparator with name-and-identifier ordering as the default
-   */
-  private static Comparator<ProductRow> order(String sort) {
+  /** Returns a fixed SQL order expression for each supported sort, including an ID tie-breaker. */
+  private static String orderBy(String sort) {
     return switch (sort) {
-      case "price:asc" -> Comparator.comparing(row -> row.priceFrom, Comparator.nullsLast(Comparator.naturalOrder()));
-      case "price:desc" -> Comparator.comparing((ProductRow row) -> row.priceFrom,
-          Comparator.nullsLast(Comparator.reverseOrder()));
-      case "createdAt:asc" -> Comparator.comparing(row -> row.createdAt);
-      case "createdAt:desc" -> Comparator.comparing((ProductRow row) -> row.createdAt).reversed();
-      case "popularity:asc" -> Comparator.comparingInt(row -> row.reviewCount);
-      case "popularity:desc" -> Comparator.comparingInt((ProductRow row) -> row.reviewCount).reversed();
-      default -> Comparator.comparing((ProductRow row) -> row.name).thenComparing(row -> row.id);
+      case "price:asc" -> "price_from ASC NULLS LAST, id ASC";
+      case "price:desc" -> "price_from DESC NULLS LAST, id ASC";
+      case "createdAt:asc" -> "created_at ASC, id ASC";
+      case "createdAt:desc" -> "created_at DESC, id ASC";
+      case "popularity:asc" -> "review_count ASC, id ASC";
+      case "popularity:desc" -> "review_count DESC, id ASC";
+      default -> "name ASC, id ASC";
     };
   }
 
-  /**
-   * Decodes the offset cursor only when it belongs to the requested sort order.
-   *
-   * @param cursor opaque Base64 cursor, or {@code null}
-   * @param sort current normalized sort expression
-   * @return non-negative list offset, or zero for an absent, invalid, or mismatched cursor
-   */
-  private static int offset(String cursor, String sort) {
-    if (cursor == null || cursor.isBlank())
-      return 0;
+  /** Adds the keyset predicate immediately after the sort position encoded in the cursor. */
+  private static void appendSeekPredicate(StringBuilder filters, List<Object> parameters, String sort, Cursor cursor) {
+    UUID lastId = cursor.productId();
+    if (sort.startsWith("price:")) {
+      BigDecimal lastPrice = cursor.sortValue().type() == CursorValue.Type.NULL ? null : cursor.sortValue().decimalValue();
+      if (lastPrice == null) {
+        filters.append(" AND (price_from IS NULL AND id > ?)");
+        parameters.add(lastId);
+      } else {
+        String comparison = sort.endsWith(":desc") ? "<" : ">";
+        filters.append(" AND (price_from IS NULL OR price_from ").append(comparison)
+            .append(" ? OR (price_from = ? AND id > ?))");
+        parameters.add(lastPrice);
+        parameters.add(lastPrice);
+        parameters.add(lastId);
+      }
+      return;
+    }
+    Object lastValue = switch (sort) {
+      case "createdAt:asc", "createdAt:desc" -> OffsetDateTime.ofInstant(cursor.sortValue().instantValue(), java.time.ZoneOffset.UTC);
+      case "popularity:asc", "popularity:desc" -> cursor.sortValue().integerValue();
+      default -> cursor.sortValue().textValue();
+    };
+    String column = switch (sort) {
+      case "createdAt:asc", "createdAt:desc" -> "created_at";
+      case "popularity:asc", "popularity:desc" -> "review_count";
+      default -> "name";
+    };
+    String comparison = sort.endsWith(":desc") ? "<" : ">";
+    filters.append(" AND (").append(column).append(" ").append(comparison)
+        .append(" ? OR (").append(column).append(" = ? AND id > ?))");
+    parameters.add(lastValue);
+    parameters.add(lastValue);
+    parameters.add(lastId);
+  }
+
+  /** Encodes the typed sort position and product ID for a continuation request. */
+  private String encodeCursor(UUID categoryId, ListingQuery query, ProductRow row) {
+    return cursorCodec.encode(cursorContext(categoryId, query), List.of(sortValue(query.sort(), row)), row.id());
+  }
+
+  /** Decodes and validates a cursor before it is used to construct a seek predicate. */
+  private Cursor decodeCursor(UUID categoryId, ListingQuery query) {
+    if (query.cursor() == null || query.cursor().isBlank()) {
+      return null;
+    }
+    CursorPosition position = cursorCodec.decode(query.cursor(), cursorContext(categoryId, query));
+    if (position.sortValues().size() != 1) {
+      throw new InvalidCursorException();
+    }
+    CursorValue sortValue = position.sortValues().getFirst();
+    validateSortValue(query.sort(), sortValue);
+    return new Cursor(sortValue, position.tieBreaker());
+  }
+
+  /** Binds a token to every input that selects or orders category-product results. */
+  private static CursorContext cursorContext(UUID categoryId, ListingQuery query) {
+    String brands = query.brands().stream().distinct().sorted()
+        .map(brand -> java.util.Base64.getUrlEncoder().withoutPadding()
+            .encodeToString(brand.getBytes(java.nio.charset.StandardCharsets.UTF_8)))
+        .collect(java.util.stream.Collectors.joining(","));
+    return new CursorContext("catalog.category-products", categoryId.toString(), query.sort(), Map.of(
+        "brands", brands,
+        "priceFrom", normalizedDecimal(query.priceFrom()),
+        "priceTo", normalizedDecimal(query.priceTo()),
+        "inStock", query.inStock() == null ? "" : query.inStock().toString()));
+  }
+
+  private static String normalizedDecimal(BigDecimal value) {
+    return value == null ? "" : value.stripTrailingZeros().toPlainString();
+  }
+
+  /** Validates the cursor's typed sort value before it reaches JDBC. */
+  private static void validateSortValue(String sort, CursorValue value) {
+    if (sort.startsWith("price:") && value.type() == CursorValue.Type.NULL) {
+      return;
+    }
     try {
-      String[] parts = decodeCursor(cursor).split("\\|", 2);
-      return parts.length == 2 && parts[0].equals(sort) ? Math.max(0, Integer.parseInt(parts[1])) : 0;
-    } catch (IllegalArgumentException ignored) {
-      return 0;
+      switch (sort) {
+        case "price:asc", "price:desc" -> value.decimalValue();
+        case "createdAt:asc", "createdAt:desc" -> value.instantValue();
+        case "popularity:asc", "popularity:desc" -> value.integerValue();
+        default -> value.textValue();
+      }
+    } catch (RuntimeException exception) {
+      throw new InvalidCursorException();
     }
   }
 
-  /**
-   * Encodes the repository's internal cursor payload as URL-safe Base64.
-   *
-   * @param raw sort and offset payload
-   * @return opaque cursor value
-   */
-  private static String encodeCursor(String raw) {
-    return Base64.getUrlEncoder().withoutPadding()
-        .encodeToString(raw.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-  }
-
-  /**
-   * Decodes a URL-safe Base64 cursor payload.
-   *
-   * @param cursor opaque cursor value
-   * @return decoded payload
-   * @throws IllegalArgumentException when the cursor is not valid Base64
-   */
-  private static String decodeCursor(String cursor) {
-    return new String(Base64.getUrlDecoder().decode(cursor), java.nio.charset.StandardCharsets.UTF_8);
+  private static CursorValue sortValue(String sort, ProductRow row) {
+    return switch (sort) {
+      case "price:asc", "price:desc" -> CursorValue.decimal(row.priceFrom());
+      case "createdAt:asc", "createdAt:desc" -> CursorValue.instant(row.createdAt().toInstant());
+      case "popularity:asc", "popularity:desc" -> CursorValue.integer(row.reviewCount());
+      default -> CursorValue.text(row.name());
+    };
   }
 
   /**
@@ -387,6 +454,15 @@ public class CatalogBrowseRepository implements CatalogBrowsePort {
   private record ProductRow(UUID id, String name, String slug, String brand, String status, String imageUrl,
       BigDecimal priceFrom, BigDecimal priceTo, String currency, Double averageRating,
       int reviewCount, OffsetDateTime createdAt) {
+  }
+
+  /** Parameterized SQL fragments shared by the full-count and seek-page queries. */
+  private record ProductListingSql(String countFilters, List<Object> countParameters, String pageFilters,
+      List<Object> pageParameters, String orderBy) {
+  }
+
+  /** Last row of a keyset cursor, represented by its active sort value and unique product ID. */
+  private record Cursor(CursorValue sortValue, UUID productId) {
   }
 
   /** Mutable intermediate node used to assemble an ordered recursive category tree. */

@@ -39,8 +39,7 @@ class OrderController {
             @RequestParam(required = false) UUID customerId) {
         QueryParams.rejectUnknown(request, LIST_QUERY_PARAMS);
         int pageSize = Pagination.clampSize(size);
-        String decodedCursor = cursor == null ? null : Pagination.decodeCursor(cursor);
-        OrderPageView page = orderFacade.listOrders(callerOf(jwt), decodedCursor, pageSize, customerId);
+        OrderPageView page = orderFacade.listOrders(callerOf(jwt), cursor, pageSize, customerId);
         return new PageEnvelope<>(page.items(), new Page(page.items().size(), page.nextCursor(), null));
     }
 

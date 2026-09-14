@@ -16,6 +16,13 @@ spring:
     default-property-inclusion: non_null
 
 ecp:
+  cursor:
+    # Secrets are supplied only by the runtime environment. Keep the previous pair populated
+    # during a key rotation so already-issued continuation tokens remain valid.
+    active-key-id: ${ECP_CURSOR_ACTIVE_KEY_ID:cursor-v1}
+    active-key: ${ECP_CURSOR_ACTIVE_KEY:}
+    previous-key-id: ${ECP_CURSOR_PREVIOUS_KEY_ID:}
+    previous-key: ${ECP_CURSOR_PREVIOUS_KEY:}
   redis:
     cache:
       host: ${ECP_REDIS_CACHE_HOST:localhost}
@@ -71,4 +78,3 @@ logging:
   structured:
     format:
       console: logstash
-

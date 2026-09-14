@@ -8,7 +8,12 @@ import org.phuchoang.ecp.identity.application.port.AuthorizationService;
 import org.phuchoang.ecp.identity.application.query.AddressPageResult;
 import org.phuchoang.ecp.identity.domain.CustomerAddress;
 import org.phuchoang.ecp.sharedkernel.api.DomainException;
+import org.phuchoang.ecp.sharedkernel.api.CursorCodec;
+import org.phuchoang.ecp.sharedkernel.api.CursorContext;
+import org.phuchoang.ecp.sharedkernel.api.CursorPosition;
+import org.phuchoang.ecp.sharedkernel.api.CursorValue;
 import org.phuchoang.ecp.sharedkernel.api.GenErrorCode;
+import org.phuchoang.ecp.sharedkernel.api.InvalidCursorException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,21 +33,24 @@ public class AddressService {
 
     private final AddressRepository addressRepository;
     private final AuthorizationService authorizationService;
+    private final CursorCodec cursorCodec;
 
-    public AddressService(AddressRepository addressRepository, AuthorizationService authorizationService) {
+    public AddressService(AddressRepository addressRepository, AuthorizationService authorizationService,
+            CursorCodec cursorCodec) {
         this.addressRepository = addressRepository;
         this.authorizationService = authorizationService;
+        this.cursorCodec = cursorCodec;
     }
 
     @Transactional(readOnly = true)
     public AddressPageResult listOwnAddresses(CallerContext caller, String cursor, int size) {
         authorizationService.assertAuthorized(caller, PermissionMatrix.LIST_OWN_ADDRESSES);
 
-        AddressRepository.Cursor after = cursor == null ? null : AddressRepository.Cursor.parse(cursor);
-        List<CustomerAddress> page = addressRepository.findByAccountId(caller.accountId(), after, size);
-        String nextCursor = page.size() < size || page.isEmpty()
-            ? null
-            : addressRepository.cursorOf(page.get(page.size() - 1)).toString();
+        AddressRepository.Cursor after = decodeCursor(caller.accountId(), cursor);
+        List<CustomerAddress> rows = addressRepository.findByAccountId(caller.accountId(), after, size + 1);
+        boolean hasMore = rows.size() > size;
+        List<CustomerAddress> page = hasMore ? rows.subList(0, size) : rows;
+        String nextCursor = hasMore ? encodeCursor(caller.accountId(), addressRepository.cursorOf(page.getLast())) : null;
         return new AddressPageResult(page.stream().map(AddressSummary::of).toList(), nextCursor);
     }
 
@@ -105,6 +113,25 @@ public class AddressService {
         return addressRepository.findById(addressId)
             .filter(a -> a.isOwnedBy(accountId))
             .orElseThrow(() -> new DomainException(GenErrorCode.NOT_FOUND, "Address not found."));
+    }
+
+    private AddressRepository.Cursor decodeCursor(UUID accountId, String cursor) {
+        if (cursor == null || cursor.isBlank()) {
+            return null;
+        }
+        CursorPosition position = cursorCodec.decode(cursor, cursorContext(accountId));
+        if (position.sortValues().size() != 1 || position.sortValues().getFirst().type() != CursorValue.Type.INSTANT) {
+            throw new InvalidCursorException();
+        }
+        return new AddressRepository.Cursor(position.sortValues().getFirst().instantValue(), position.tieBreaker());
+    }
+
+    private String encodeCursor(UUID accountId, AddressRepository.Cursor cursor) {
+        return cursorCodec.encode(cursorContext(accountId), List.of(CursorValue.instant(cursor.createdAt())), cursor.id());
+    }
+
+    private static CursorContext cursorContext(UUID accountId) {
+        return new CursorContext("identity.own-addresses", accountId.toString(), "createdAt:desc", java.util.Map.of());
     }
 
     private void clearPreviousDefaultShipping(UUID accountId) {
