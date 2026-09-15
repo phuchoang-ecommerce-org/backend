@@ -1,4 +1,4 @@
-package org.phuchoang.ecp.identity.infrastructure.persistence;
+package org.phuchoang.ecp.identity.infrastructure.persistence.address;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

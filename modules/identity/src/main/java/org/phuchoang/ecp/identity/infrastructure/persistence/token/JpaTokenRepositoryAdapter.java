@@ -1,4 +1,4 @@
-package org.phuchoang.ecp.identity.infrastructure.persistence;
+package org.phuchoang.ecp.identity.infrastructure.persistence.token;
 
 import org.phuchoang.ecp.identity.application.port.TokenRepository;
 import org.phuchoang.ecp.identity.domain.IdentityToken;

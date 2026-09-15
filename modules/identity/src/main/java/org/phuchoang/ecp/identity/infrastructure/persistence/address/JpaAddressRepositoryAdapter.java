@@ -1,4 +1,4 @@
-package org.phuchoang.ecp.identity.infrastructure.persistence;
+package org.phuchoang.ecp.identity.infrastructure.persistence.address;
 
 import org.phuchoang.ecp.identity.application.port.AddressRepository;
 import org.phuchoang.ecp.identity.domain.CustomerAddress;

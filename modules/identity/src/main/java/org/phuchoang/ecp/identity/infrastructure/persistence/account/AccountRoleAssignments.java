@@ -1,4 +1,4 @@
-package org.phuchoang.ecp.identity.infrastructure.persistence;
+package org.phuchoang.ecp.identity.infrastructure.persistence.account;
 
 import org.phuchoang.ecp.identity.domain.RoleCode;
 import org.springframework.jdbc.core.JdbcTemplate;
