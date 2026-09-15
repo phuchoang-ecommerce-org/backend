@@ -1,4 +1,4 @@
-package org.phuchoang.ecp.catalog.infrastructure.persistence;
+package org.phuchoang.ecp.catalog.infrastructure.persistence.browse;
 
 import org.junit.jupiter.api.Test;
 import org.phuchoang.ecp.catalog.application.query.CatalogBrowseModel.ListingQuery;
@@ -11,7 +11,6 @@ import org.phuchoang.ecp.sharedkernel.api.HmacCursorCodec;
 import org.phuchoang.ecp.sharedkernel.api.InvalidCursorException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -27,7 +26,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class CatalogBrowseRepositoryTest {
+class CatalogProductListingQueriesTest {
 
   @Test
   void appliesFiltersSortAndSeekCursorInDatabaseQuery() {
@@ -45,7 +44,7 @@ class CatalogBrowseRepositoryTest {
     when(jdbc.query(argThat(sql -> sql.startsWith("WITH product_rows")), any(RowMapper.class),
         any(Object[].class))).thenReturn(List.of());
 
-    ProductPage page = new CatalogBrowseRepository(jdbc, mock(ObjectMapper.class), codec()).products(categoryId, query);
+    ProductPage page = new CatalogProductListingQueries(jdbc, codec()).products(categoryId, query);
 
     assertThat(page.total()).isEqualTo(5);
     assertThat(page.nextCursor()).isNull();
@@ -64,7 +63,7 @@ class CatalogBrowseRepositoryTest {
     when(jdbc.queryForObject("SELECT path FROM catalog_category WHERE id = ?", String.class, categoryId))
         .thenReturn("/electronics/");
 
-    assertThatThrownBy(() -> new CatalogBrowseRepository(jdbc, mock(ObjectMapper.class), codec()).products(categoryId,
+    assertThatThrownBy(() -> new CatalogProductListingQueries(jdbc, codec()).products(categoryId,
         new ListingQuery("not-a-cursor", 20, "default", List.of(), null, null, null)))
         .isInstanceOf(InvalidCursorException.class)
         .hasMessage("Cursor is malformed or incompatible with this request.");

@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
  * an empty page — the sprint-05 backlog's Integration Risk note names this explicitly: the
  * envelope and cursor shape are the deliverable, not that rows come back. Authorisation still goes
  * through the real {@code identity.api.AuthorizationService}, the same cross-module Open Host
- * Service call {@code catalog}'s Sprint 04 {@code GetProductService} demonstrates (`BR-AUD-02`) —
+ * Service calls centralize their authorization decisions (`BR-AUD-02`) —
  * the decision must be identical regardless of which module makes it.
  */
 @Service

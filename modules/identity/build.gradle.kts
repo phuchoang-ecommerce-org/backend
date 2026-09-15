@@ -15,6 +15,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.security:spring-security-oauth2-jose")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation("io.micrometer:micrometer-core")
     // Argon2PasswordEncoder (Security.md §4.5) needs a real Argon2 implementation at runtime;
     // Spring Security Crypto only declares the dependency as optional.
     runtimeOnly("org.bouncycastle:bcprov-jdk18on:1.79")
@@ -46,4 +47,3 @@ val integrationTestTask = tasks.register<Test>("integrationTest") {
 tasks.check {
     dependsOn(integrationTestTask)
 }
-

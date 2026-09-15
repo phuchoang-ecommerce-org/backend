@@ -1,6 +1,7 @@
 package org.phuchoang.ecp.catalog.application.query;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -118,6 +119,21 @@ public final class CatalogBrowseModel {
      * @param active whether the variant is active
      * @param inStock advisory availability, or {@code null} when unknown
      */
-    public record Variant(UUID id, String sku, String name, Money listPrice, Map<String, String> options,
-                          Integer weightGrams, boolean active, Boolean inStock) { }
+    public record Variant(UUID id, String sku, String name, Money listPrice, Money promotionalPrice,
+                          Map<String, String> options, Integer weightGrams, boolean active, Boolean inStock) { }
+
+    /** One ordered product image. */
+    public record ProductImage(UUID id, String url, String altText, int sortOrder) { }
+
+    /** Complete product read model; reviews and recommendations deliberately do not belong here yet. */
+    public record ProductDetail(UUID id, String name, String slug, String description, String brand,
+                                String publicationStatus, OffsetDateTime publishedAt, List<CategoryRef> categories,
+                                Map<String, Object> attributes, List<ProductImage> images, List<Variant> variants,
+                                Double averageRating, int reviewCount) { }
+
+    /** Stable rating response while the Review-owned projection is unavailable. */
+    public record RatingSummary(Double averageRating, int reviewCount, Map<String, Integer> distribution) {
+        public static final RatingSummary EMPTY = new RatingSummary(null, 0,
+            Map.of("1", 0, "2", 0, "3", 0, "4", 0, "5", 0));
+    }
 }

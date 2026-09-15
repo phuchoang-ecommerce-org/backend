@@ -1,4 +1,4 @@
-package org.phuchoang.ecp.identity.infrastructure.persistence;
+package org.phuchoang.ecp.identity.infrastructure.persistence.account;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceException;

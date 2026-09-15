@@ -1,5 +1,6 @@
 package org.phuchoang.ecp.identity.infrastructure.redis;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.phuchoang.ecp.sharedkernel.api.CacheAside;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,9 +26,12 @@ class RedisCacheAside implements CacheAside {
     private static final Logger log = LoggerFactory.getLogger(RedisCacheAside.class);
 
     private final RedisTemplate<String, Object> cacheRedisTemplate;
+    private final MeterRegistry meterRegistry;
 
-    RedisCacheAside(@Qualifier("cacheRedisTemplate") RedisTemplate<String, Object> cacheRedisTemplate) {
+    RedisCacheAside(@Qualifier("cacheRedisTemplate") RedisTemplate<String, Object> cacheRedisTemplate,
+                    MeterRegistry meterRegistry) {
         this.cacheRedisTemplate = cacheRedisTemplate;
+        this.meterRegistry = meterRegistry;
     }
 
     @Override
@@ -35,9 +39,12 @@ class RedisCacheAside implements CacheAside {
         try {
             Object cached = cacheRedisTemplate.opsForValue().get(key);
             if (type.isInstance(cached)) {
+                recordCatalogAccess(key, "hit");
                 return type.cast(cached);
             }
+            recordCatalogAccess(key, "miss");
         } catch (DataAccessException e) {
+            recordCatalogAccess(key, "error");
             log.warn("redis-cache read failed for {}; falling through to loader (a cache error is a miss)", key, e);
         }
 
@@ -57,6 +64,13 @@ class RedisCacheAside implements CacheAside {
             cacheRedisTemplate.delete(key);
         } catch (DataAccessException e) {
             log.warn("redis-cache DEL failed for {}", key, e);
+        }
+    }
+
+    private void recordCatalogAccess(String key, String result) {
+        if (key.equals("category-tree") || key.startsWith("category-listing:") || key.startsWith("variant:")
+                || key.startsWith("cat:product:")) {
+            meterRegistry.counter("ecp.catalog.cache.accesses", "cache", "catalog", "result", result).increment();
         }
     }
 }
