@@ -1,6 +1,6 @@
 package org.phuchoang.ecp.catalog.domain;
 
-import org.phuchoang.ecp.identity.api.AuthorizationService;
+import org.phuchoang.ecp.identity.api.authorization.AuthorizationService;
 
 /**
  * A permanent, test-only fixture (never shipped in {@code catalog}'s own main sources) proving

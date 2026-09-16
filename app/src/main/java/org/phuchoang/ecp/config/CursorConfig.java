@@ -1,8 +1,8 @@
 package org.phuchoang.ecp.config;
 
-import org.phuchoang.ecp.sharedkernel.api.CursorCodec;
-import org.phuchoang.ecp.sharedkernel.api.CursorSigningKey;
-import org.phuchoang.ecp.sharedkernel.api.HmacCursorCodec;
+import org.phuchoang.ecp.sharedkernel.api.cursor.CursorCodec;
+import org.phuchoang.ecp.sharedkernel.api.cursor.CursorSigningKey;
+import org.phuchoang.ecp.sharedkernel.api.cursor.HmacCursorCodec;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

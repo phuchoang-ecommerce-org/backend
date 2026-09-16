@@ -1,13 +1,13 @@
 package org.phuchoang.ecp.web.identity;
 
-import org.phuchoang.ecp.identity.api.Actor;
-import org.phuchoang.ecp.identity.api.ChangePasswordRequest;
-import org.phuchoang.ecp.identity.api.IdentityFacade;
-import org.phuchoang.ecp.identity.api.PasswordResetCompletionRequest;
-import org.phuchoang.ecp.identity.api.PasswordResetRequestRequest;
-import org.phuchoang.ecp.sharedkernel.api.FieldErrorCodes;
-import org.phuchoang.ecp.web.FieldError;
-import org.phuchoang.ecp.web.ValidationException;
+import org.phuchoang.ecp.identity.api.authorization.Actor;
+import org.phuchoang.ecp.identity.api.facade.IdentityFacade;
+import org.phuchoang.ecp.identity.api.request.ChangePasswordRequest;
+import org.phuchoang.ecp.identity.api.request.PasswordResetCompletionRequest;
+import org.phuchoang.ecp.identity.api.request.PasswordResetRequestRequest;
+import org.phuchoang.ecp.sharedkernel.api.error.FieldErrorCodes;
+import org.phuchoang.ecp.web.error.FieldError;
+import org.phuchoang.ecp.web.error.ValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;

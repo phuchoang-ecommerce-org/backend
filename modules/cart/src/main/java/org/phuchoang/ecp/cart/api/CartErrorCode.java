@@ -1,6 +1,6 @@
 package org.phuchoang.ecp.cart.api;
 
-import org.phuchoang.ecp.sharedkernel.api.ErrorCode;
+import org.phuchoang.ecp.sharedkernel.api.error.ErrorCode;
 
 /**
  * The {@code CRT} domain (Error Codes.md §3.6). {@code ECP-CRT-4090} is never silently capped — the

@@ -29,21 +29,21 @@ The frontend lane spends the sprint **a full sprint ahead of the backend**, buil
 **The outbox table and the write in the same transaction**
 - [ ] Flyway migration for the outbox table under the Sprint 02 prefix convention
 - [ ] The domain write and the outbox insert commit **in one transaction**. An L5 test kills the connection between them and asserts neither survives — this is the whole guarantee, and it is the one test that must exist
-- [ ] No module writes to the outbox through another module's repository; the write goes through `shared-kernel`'s port, and ArchUnit asserts it
+- [x] No module writes to the outbox through another module's repository; the write goes through `shared-kernel`'s port, and ArchUnit asserts it
 
 **The polling relay**
-- [ ] Poll → publish → mark-dispatched, with the mark committed only after the broker acknowledges
-- [ ] **At-least-once, explicitly.** A crash between publish and mark republishes; that is correct and consumers must tolerate it (which `EN-EVENT-2` in Sprint 09 makes them do)
+- [x] Poll → publish → mark-dispatched, with the mark committed only after the broker acknowledges
+- [x] **At-least-once, explicitly.** A crash between publish and mark republishes; that is correct and consumers must tolerate it (which `EN-EVENT-2` in Sprint 09 makes them do)
 - [ ] Claim/lease so two application instances do not relay the same row — proved with two relays racing one table
-- [ ] Backlog depth and relay lag exposed as Micrometer meters, joining the `EN-OBS-2` set
+- [x] Backlog depth and relay lag exposed as Micrometer meters, joining the `EN-OBS-2` set
 
 **The envelope**
-- [ ] One envelope schema for every event: event id, type, version, aggregate id, occurred-at, **correlation id** carried from the originating request (`NFR-OBS-03`)
-- [ ] The envelope is versioned from the first event, not from the first breaking change
+- [x] One envelope schema for every event: event id, type, version, aggregate id, occurred-at, **correlation id** carried from the originating request (`NFR-OBS-03`)
+- [x] The envelope is versioned from the first event, not from the first breaking change
 
 **The topic catalogue**
-- [ ] Topic names, partitioning key, and retention documented per topic in one place that later sprints extend rather than invent alongside
-- [ ] Partition key chosen so per-aggregate ordering holds — the property Sprint 09's ordering guards and Sprint 18's `EN-EVENT-5` both rely on
+- [x] Topic names, partitioning key, and retention documented per topic in one place that later sprints extend rather than invent alongside
+- [x] Partition key chosen so per-aggregate ordering holds — the property Sprint 09's ordering guards and Sprint 18's `EN-EVENT-5` both rely on
 - [ ] Kafka topics created via `compose.yaml` (stood up by `EN-DATA-1` in Sprint 01), not auto-created at first publish
 
 **Demonstration, not assertion**

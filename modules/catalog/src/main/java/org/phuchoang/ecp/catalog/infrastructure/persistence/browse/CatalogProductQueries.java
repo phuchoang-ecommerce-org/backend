@@ -7,6 +7,7 @@ import org.phuchoang.ecp.catalog.application.query.CatalogBrowseModel.Money;
 import org.phuchoang.ecp.catalog.application.query.CatalogBrowseModel.ProductDetail;
 import org.phuchoang.ecp.catalog.application.query.CatalogBrowseModel.ProductImage;
 import org.phuchoang.ecp.catalog.application.query.CatalogBrowseModel.Variant;
+import org.phuchoang.ecp.catalog.infrastructure.persistence.JdbcQuerySupport;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -20,38 +21,37 @@ import java.util.UUID;
 
 /** Catalog-owned published-product, image, and variant queries. */
 @Component
-class CatalogProductQueries {
+class CatalogProductQueries extends JdbcQuerySupport {
 
   private static final TypeReference<Map<String, String>> STRING_MAP = new TypeReference<>() {
   };
   private static final TypeReference<Map<String, Object>> OBJECT_MAP = new TypeReference<>() {
   };
 
-  private final JdbcTemplate jdbc;
   private final ObjectMapper objectMapper;
 
   CatalogProductQueries(JdbcTemplate jdbc, ObjectMapper objectMapper) {
-    this.jdbc = jdbc;
+    super(jdbc);
     this.objectMapper = objectMapper;
   }
 
   boolean publishedExists(UUID id) {
-    return Boolean.TRUE.equals(jdbc.queryForObject("""
+    return exists("""
         SELECT EXISTS (SELECT 1 FROM catalog_product WHERE id = ? AND publication_status = 'PUBLISHED')
-        """, Boolean.class, id));
+        """, id);
   }
 
   Optional<ProductDetail> product(UUID id) {
-    List<ProductDetailRow> products = jdbc.query("""
+    Optional<ProductDetailRow> product = optional("""
         SELECT p.id, p.name, p.slug, p.description, p.brand, p.publication_status, p.published_at, p.attributes,
                p.average_rating, p.review_count, c.id AS category_id, c.name AS category_name, c.slug AS category_slug
         FROM catalog_product p JOIN catalog_category c ON c.id = p.category_id
         WHERE p.id = ? AND p.publication_status = 'PUBLISHED'
         """, this::productDetailRow, id);
-    if (products.isEmpty()) {
+    if (product.isEmpty()) {
       return Optional.empty();
     }
-    ProductDetailRow row = products.getFirst();
+    ProductDetailRow row = product.get();
     return Optional.of(new ProductDetail(row.id(), row.name(), row.slug(), row.description(), row.brand(), row.status(),
         row.publishedAt(), List.of(new CategoryRef(row.categoryId(), row.categoryName(), row.categorySlug())),
         objectMap(row.attributes()), images(id), variants(id, Map.of()), row.averageRating(), row.reviewCount()));

@@ -1,6 +1,6 @@
 package org.phuchoang.ecp.inventory.api;
 
-import org.phuchoang.ecp.sharedkernel.api.ErrorCode;
+import org.phuchoang.ecp.sharedkernel.api.error.ErrorCode;
 
 /**
  * The {@code INV} domain (Error Codes.md §3.5). {@code ECP-INV-4091} is the visible surface of the

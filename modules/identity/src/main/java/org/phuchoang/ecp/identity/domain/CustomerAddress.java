@@ -2,7 +2,7 @@ package org.phuchoang.ecp.identity.domain;
 
 import org.jmolecules.ddd.annotation.AggregateRoot;
 import org.jmolecules.ddd.annotation.Identity;
-import org.phuchoang.ecp.sharedkernel.api.Address;
+import org.phuchoang.ecp.sharedkernel.api.address.Address;
 
 import java.util.Objects;
 import java.util.UUID;

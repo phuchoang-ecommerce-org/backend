@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.data.redis.autoconfigure.DataRedisAutoConfiguration;
 import org.springframework.boot.data.redis.autoconfigure.DataRedisReactiveAutoConfiguration;
 import org.springframework.boot.data.redis.autoconfigure.DataRedisRepositoriesAutoConfiguration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * The three {@code DataRedis*AutoConfiguration} classes are excluded because they each assume a
@@ -18,6 +19,7 @@ import org.springframework.boot.data.redis.autoconfigure.DataRedisRepositoriesAu
     DataRedisReactiveAutoConfiguration.class,
     DataRedisRepositoriesAutoConfiguration.class
 })
+@EnableScheduling
 public class EcpApplication {
 
     public static void main(String[] args) {

@@ -1,6 +1,6 @@
 package org.phuchoang.ecp.promotion.api;
 
-import org.phuchoang.ecp.sharedkernel.api.ErrorCode;
+import org.phuchoang.ecp.sharedkernel.api.error.ErrorCode;
 
 /**
  * The {@code PRM} domain (Error Codes.md §3.10). {@code ECP-PRM-4090} is, like

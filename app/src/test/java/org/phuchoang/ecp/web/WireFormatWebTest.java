@@ -2,7 +2,7 @@ package org.phuchoang.ecp.web;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.phuchoang.ecp.sharedkernel.api.RateLimiter;
+import org.phuchoang.ecp.sharedkernel.api.ratelimit.RateLimiter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;

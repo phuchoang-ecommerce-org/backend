@@ -1,8 +1,8 @@
 package org.phuchoang.ecp.web.identity;
 
-import org.phuchoang.ecp.identity.api.EmailVerificationRequest;
-import org.phuchoang.ecp.identity.api.IdentityFacade;
-import org.phuchoang.ecp.identity.api.VerificationResendRequest;
+import org.phuchoang.ecp.identity.api.facade.IdentityFacade;
+import org.phuchoang.ecp.identity.api.request.EmailVerificationRequest;
+import org.phuchoang.ecp.identity.api.request.VerificationResendRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

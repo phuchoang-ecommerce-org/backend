@@ -1,8 +1,8 @@
 package org.phuchoang.ecp.web.catalog;
 
-import org.phuchoang.ecp.catalog.api.CatalogProductFacade;
-import org.phuchoang.ecp.catalog.api.ProductDetailView;
-import org.phuchoang.ecp.catalog.api.RatingSummaryView;
+import org.phuchoang.ecp.catalog.api.facade.CatalogProductFacade;
+import org.phuchoang.ecp.catalog.api.view.product.ProductDetailView;
+import org.phuchoang.ecp.catalog.api.view.product.RatingSummaryView;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;

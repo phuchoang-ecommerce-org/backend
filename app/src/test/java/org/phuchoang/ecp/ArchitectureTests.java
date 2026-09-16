@@ -232,6 +232,25 @@ class ArchitectureTests {
     }
 
     @Test
+    void kafkaProducerApisAreConfinedToTheCompositionRoot() {
+        ArchRule rule = noClasses()
+            .that().resideOutsideOfPackage(ROOT_PACKAGE + ".events..")
+            .should().dependOnClassesThat().resideInAnyPackage("org.springframework.kafka..", "org.apache.kafka..")
+            .because("bounded contexts write their own outbox through shared-kernel's OutboxWriter; only app relays to Kafka")
+            .allowEmptyShould(true);
+        rule.check(mainClasses);
+    }
+
+    @Test
+    void catalogWritesThroughTheSharedOutboxPort() {
+        ArchRule rule = com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes()
+            .that().haveSimpleName("CreateCategoryService")
+            .should().dependOnClassesThat().haveFullyQualifiedName("org.phuchoang.ecp.sharedkernel.api.event.OutboxWriter")
+            .because("a module records its event through the shared port, never another module's outbox adapter");
+        rule.check(mainClasses);
+    }
+
+    @Test
     void fastSuiteImportsNoTestcontainers() {
         JavaClasses testClasses = new ClassFileImporter()
             .importPath(Paths.get("build", "classes", "java", "test"));

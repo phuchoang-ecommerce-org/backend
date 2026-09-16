@@ -1,11 +1,11 @@
 package org.phuchoang.ecp.web.identity;
 
-import org.phuchoang.ecp.identity.api.Actor;
-import org.phuchoang.ecp.identity.api.IdentityFacade;
-import org.phuchoang.ecp.identity.api.LoginRequest;
-import org.phuchoang.ecp.identity.api.LogoutRequest;
-import org.phuchoang.ecp.identity.api.RenewSessionRequest;
-import org.phuchoang.ecp.identity.api.SessionResponse;
+import org.phuchoang.ecp.identity.api.authorization.Actor;
+import org.phuchoang.ecp.identity.api.facade.IdentityFacade;
+import org.phuchoang.ecp.identity.api.request.LoginRequest;
+import org.phuchoang.ecp.identity.api.request.LogoutRequest;
+import org.phuchoang.ecp.identity.api.request.RenewSessionRequest;
+import org.phuchoang.ecp.identity.api.view.SessionResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

@@ -12,6 +12,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("org.springframework.boot:spring-boot-starter-kafka")
     implementation("org.springframework.modulith:spring-modulith-starter-core")
     // spring-boot-starter-flyway, not raw flyway-core: Boot 4's modularised
     // autoconfiguration puts FlywayAutoConfiguration in spring-boot-flyway,
@@ -51,6 +52,7 @@ dependencies {
     testImplementation(libs.archunit.junit5)
     testImplementation(libs.jmolecules.archunit)
     testImplementation(libs.jmolecules.ddd)
+    testImplementation("com.networknt:json-schema-validator:1.5.9")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
@@ -73,6 +75,7 @@ dependencies {
     "integrationTestImplementation"(libs.flyway.core)
     "integrationTestImplementation"(libs.flyway.postgresql)
     "integrationTestImplementation"("org.testcontainers:testcontainers")
+    "integrationTestImplementation"("org.testcontainers:kafka")
     "integrationTestImplementation"("org.springframework.boot:spring-boot-resttestclient")
     "integrationTestImplementation"("org.springframework.boot:spring-boot-restclient")
 }

@@ -1,9 +1,9 @@
 package org.phuchoang.ecp.catalog.application.query;
 
 import org.phuchoang.ecp.catalog.application.port.CatalogBrowsePort;
-import org.phuchoang.ecp.sharedkernel.api.CacheAside;
-import org.phuchoang.ecp.sharedkernel.api.DomainException;
-import org.phuchoang.ecp.sharedkernel.api.GenErrorCode;
+import org.phuchoang.ecp.sharedkernel.api.cache.CacheAside;
+import org.phuchoang.ecp.sharedkernel.api.error.DomainException;
+import org.phuchoang.ecp.sharedkernel.api.error.GenErrorCode;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;

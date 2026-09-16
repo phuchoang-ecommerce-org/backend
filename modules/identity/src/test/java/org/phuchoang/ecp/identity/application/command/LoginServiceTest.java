@@ -16,7 +16,7 @@ import org.phuchoang.ecp.identity.domain.AccountStatus;
 import org.phuchoang.ecp.identity.domain.CredentialHash;
 import org.phuchoang.ecp.identity.domain.EmailAddress;
 import org.phuchoang.ecp.identity.domain.RoleCode;
-import org.phuchoang.ecp.sharedkernel.api.DomainException;
+import org.phuchoang.ecp.sharedkernel.api.error.DomainException;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.Clock;

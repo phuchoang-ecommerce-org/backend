@@ -3,11 +3,11 @@ package org.phuchoang.ecp.web.identity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
-import org.phuchoang.ecp.identity.api.AddressPageView;
-import org.phuchoang.ecp.identity.api.AddressView;
-import org.phuchoang.ecp.identity.api.AddressWriteRequest;
-import org.phuchoang.ecp.identity.api.IdentityFacade;
-import org.phuchoang.ecp.sharedkernel.api.RateLimiter;
+import org.phuchoang.ecp.identity.api.facade.IdentityFacade;
+import org.phuchoang.ecp.identity.api.request.AddressWriteRequest;
+import org.phuchoang.ecp.identity.api.view.AddressPageView;
+import org.phuchoang.ecp.identity.api.view.AddressView;
+import org.phuchoang.ecp.sharedkernel.api.ratelimit.RateLimiter;
 import org.phuchoang.ecp.security.JwtKeysConfig;
 import org.phuchoang.ecp.security.SecurityConfig;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +24,7 @@ import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
-import static org.phuchoang.ecp.sharedkernel.api.GenErrorCode.NOT_FOUND;
+import static org.phuchoang.ecp.sharedkernel.api.error.GenErrorCode.NOT_FOUND;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -108,7 +108,7 @@ class AddressControllerTest {
     @Test
     void gettingAnotherCustomersAddressIs404NeverForbidden() throws Exception {
         UUID addressId = UUID.randomUUID();
-        doThrow(new org.phuchoang.ecp.sharedkernel.api.DomainException(NOT_FOUND, "Address not found."))
+        doThrow(new org.phuchoang.ecp.sharedkernel.api.error.DomainException(NOT_FOUND, "Address not found."))
             .when(identityFacade).getOwnAddress(any(), org.mockito.ArgumentMatchers.eq(addressId));
 
         mockMvc.perform(get("/api/v1/accounts/me/addresses/" + addressId).with(customerJwt()))

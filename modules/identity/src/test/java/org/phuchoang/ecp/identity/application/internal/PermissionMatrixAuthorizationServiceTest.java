@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.phuchoang.ecp.identity.application.CallerContext;
 import org.phuchoang.ecp.identity.application.port.AuthorizationService;
 import org.phuchoang.ecp.identity.domain.RoleCode;
-import org.phuchoang.ecp.sharedkernel.api.DomainException;
+import org.phuchoang.ecp.sharedkernel.api.error.DomainException;
 
 import java.util.EnumSet;
 import java.util.Set;

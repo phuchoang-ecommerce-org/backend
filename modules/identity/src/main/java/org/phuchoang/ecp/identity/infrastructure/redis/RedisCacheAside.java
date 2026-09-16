@@ -1,7 +1,7 @@
 package org.phuchoang.ecp.identity.infrastructure.redis;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import org.phuchoang.ecp.sharedkernel.api.CacheAside;
+import org.phuchoang.ecp.sharedkernel.api.cache.CacheAside;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;

@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 import org.phuchoang.ecp.ordering.api.OrderFacade;
 import org.phuchoang.ecp.ordering.api.OrderPageView;
-import org.phuchoang.ecp.sharedkernel.api.RateLimiter;
+import org.phuchoang.ecp.sharedkernel.api.ratelimit.RateLimiter;
 import org.phuchoang.ecp.security.JwtKeysConfig;
 import org.phuchoang.ecp.security.SecurityConfig;
 import org.springframework.beans.factory.annotation.Autowired;

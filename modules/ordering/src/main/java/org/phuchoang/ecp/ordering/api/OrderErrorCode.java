@@ -1,6 +1,6 @@
 package org.phuchoang.ecp.ordering.api;
 
-import org.phuchoang.ecp.sharedkernel.api.ErrorCode;
+import org.phuchoang.ecp.sharedkernel.api.error.ErrorCode;
 
 /**
  * The {@code ORD} domain (Error Codes.md §3.7).

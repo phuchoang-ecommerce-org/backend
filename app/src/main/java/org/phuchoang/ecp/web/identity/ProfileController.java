@@ -1,9 +1,9 @@
 package org.phuchoang.ecp.web.identity;
 
-import org.phuchoang.ecp.identity.api.AccountView;
-import org.phuchoang.ecp.identity.api.Actor;
-import org.phuchoang.ecp.identity.api.IdentityFacade;
-import org.phuchoang.ecp.identity.api.ProfileUpdateRequest;
+import org.phuchoang.ecp.identity.api.authorization.Actor;
+import org.phuchoang.ecp.identity.api.facade.IdentityFacade;
+import org.phuchoang.ecp.identity.api.request.ProfileUpdateRequest;
+import org.phuchoang.ecp.identity.api.view.AccountView;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;

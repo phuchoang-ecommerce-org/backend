@@ -1,6 +1,6 @@
 package org.phuchoang.ecp.identity.infrastructure.redis;
 
-import org.phuchoang.ecp.sharedkernel.api.RateLimiter;
+import org.phuchoang.ecp.sharedkernel.api.ratelimit.RateLimiter;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.RedisTemplate;

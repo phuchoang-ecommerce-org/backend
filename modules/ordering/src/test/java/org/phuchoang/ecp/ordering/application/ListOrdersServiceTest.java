@@ -4,9 +4,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.phuchoang.ecp.identity.api.AuthorizationService;
-import org.phuchoang.ecp.identity.api.CallerContext;
-import org.phuchoang.ecp.sharedkernel.api.DomainException;
+import org.phuchoang.ecp.identity.api.authorization.AuthorizationService;
+import org.phuchoang.ecp.identity.api.authorization.CallerContext;
+import org.phuchoang.ecp.sharedkernel.api.error.DomainException;
 
 import java.util.Set;
 import java.util.UUID;

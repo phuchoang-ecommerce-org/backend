@@ -3,12 +3,12 @@ package org.phuchoang.ecp.catalog.infrastructure.persistence.browse;
 import org.junit.jupiter.api.Test;
 import org.phuchoang.ecp.catalog.application.query.CatalogBrowseModel.ListingQuery;
 import org.phuchoang.ecp.catalog.application.query.CatalogBrowseModel.ProductPage;
-import org.phuchoang.ecp.sharedkernel.api.CursorCodec;
-import org.phuchoang.ecp.sharedkernel.api.CursorContext;
-import org.phuchoang.ecp.sharedkernel.api.CursorSigningKey;
-import org.phuchoang.ecp.sharedkernel.api.CursorValue;
-import org.phuchoang.ecp.sharedkernel.api.HmacCursorCodec;
-import org.phuchoang.ecp.sharedkernel.api.InvalidCursorException;
+import org.phuchoang.ecp.sharedkernel.api.cursor.CursorCodec;
+import org.phuchoang.ecp.sharedkernel.api.cursor.CursorContext;
+import org.phuchoang.ecp.sharedkernel.api.cursor.CursorSigningKey;
+import org.phuchoang.ecp.sharedkernel.api.cursor.CursorValue;
+import org.phuchoang.ecp.sharedkernel.api.cursor.HmacCursorCodec;
+import org.phuchoang.ecp.sharedkernel.api.cursor.InvalidCursorException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 

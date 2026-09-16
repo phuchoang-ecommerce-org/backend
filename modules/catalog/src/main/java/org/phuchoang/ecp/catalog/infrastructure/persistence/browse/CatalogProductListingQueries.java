@@ -4,11 +4,12 @@ import org.phuchoang.ecp.catalog.application.query.CatalogBrowseModel.ListingQue
 import org.phuchoang.ecp.catalog.application.query.CatalogBrowseModel.Money;
 import org.phuchoang.ecp.catalog.application.query.CatalogBrowseModel.ProductPage;
 import org.phuchoang.ecp.catalog.application.query.CatalogBrowseModel.ProductSummary;
-import org.phuchoang.ecp.sharedkernel.api.CursorCodec;
-import org.phuchoang.ecp.sharedkernel.api.CursorContext;
-import org.phuchoang.ecp.sharedkernel.api.CursorPosition;
-import org.phuchoang.ecp.sharedkernel.api.CursorValue;
-import org.phuchoang.ecp.sharedkernel.api.InvalidCursorException;
+import org.phuchoang.ecp.catalog.infrastructure.persistence.JdbcQuerySupport;
+import org.phuchoang.ecp.sharedkernel.api.cursor.CursorCodec;
+import org.phuchoang.ecp.sharedkernel.api.cursor.CursorContext;
+import org.phuchoang.ecp.sharedkernel.api.cursor.CursorPosition;
+import org.phuchoang.ecp.sharedkernel.api.cursor.CursorValue;
+import org.phuchoang.ecp.sharedkernel.api.cursor.InvalidCursorException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -24,7 +25,7 @@ import java.util.UUID;
 
 /** Catalog category-product listing queries, including keyset cursor handling. */
 @Component
-class CatalogProductListingQueries {
+class CatalogProductListingQueries extends JdbcQuerySupport {
 
   private static final String PRODUCT_ROWS_CTE = """
       WITH product_rows AS (
@@ -40,16 +41,15 @@ class CatalogProductListingQueries {
       )
       """;
 
-  private final JdbcTemplate jdbc;
   private final CursorCodec cursorCodec;
 
   CatalogProductListingQueries(JdbcTemplate jdbc, CursorCodec cursorCodec) {
-    this.jdbc = jdbc;
+    super(jdbc);
     this.cursorCodec = cursorCodec;
   }
 
   ProductPage products(UUID categoryId, ListingQuery query) {
-    String path = jdbc.queryForObject("SELECT path FROM catalog_category WHERE id = ?", String.class, categoryId);
+    String path = required("SELECT path FROM catalog_category WHERE id = ?", String.class, categoryId);
     ProductListingSql listing = productListingSql(path, categoryId, query);
     long total = jdbc.queryForObject(PRODUCT_ROWS_CTE + "SELECT COUNT(*) FROM product_rows" + listing.countFilters(),
         Long.class, listing.countParameters().toArray());

@@ -2,7 +2,7 @@ package org.phuchoang.ecp.identity.infrastructure.persistence.address;
 
 import org.phuchoang.ecp.identity.application.port.AddressRepository;
 import org.phuchoang.ecp.identity.domain.CustomerAddress;
-import org.phuchoang.ecp.sharedkernel.api.Address;
+import org.phuchoang.ecp.sharedkernel.api.address.Address;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 

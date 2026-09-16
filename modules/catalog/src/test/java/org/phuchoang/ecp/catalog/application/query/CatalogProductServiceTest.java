@@ -2,8 +2,8 @@ package org.phuchoang.ecp.catalog.application.query;
 
 import org.junit.jupiter.api.Test;
 import org.phuchoang.ecp.catalog.application.port.CatalogBrowsePort;
-import org.phuchoang.ecp.sharedkernel.api.CacheAside;
-import org.phuchoang.ecp.sharedkernel.api.DomainException;
+import org.phuchoang.ecp.sharedkernel.api.cache.CacheAside;
+import org.phuchoang.ecp.sharedkernel.api.error.DomainException;
 
 import java.time.Duration;
 import java.util.Map;

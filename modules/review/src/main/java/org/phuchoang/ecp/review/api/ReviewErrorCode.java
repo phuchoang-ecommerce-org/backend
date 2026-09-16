@@ -1,6 +1,6 @@
 package org.phuchoang.ecp.review.api;
 
-import org.phuchoang.ecp.sharedkernel.api.ErrorCode;
+import org.phuchoang.ecp.sharedkernel.api.error.ErrorCode;
 
 /**
  * The {@code REV} domain (Error Codes.md §3.11). Unbypassable by any role — the verified-purchase

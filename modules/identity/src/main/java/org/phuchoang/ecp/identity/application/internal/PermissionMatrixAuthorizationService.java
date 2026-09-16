@@ -3,8 +3,8 @@ package org.phuchoang.ecp.identity.application.internal;
 import org.phuchoang.ecp.identity.application.CallerContext;
 import org.phuchoang.ecp.identity.application.port.AuthorizationService;
 import org.phuchoang.ecp.identity.domain.RoleCode;
-import org.phuchoang.ecp.sharedkernel.api.DomainException;
-import org.phuchoang.ecp.sharedkernel.api.GenErrorCode;
+import org.phuchoang.ecp.sharedkernel.api.error.DomainException;
+import org.phuchoang.ecp.sharedkernel.api.error.GenErrorCode;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;

@@ -1,9 +1,9 @@
 package org.phuchoang.ecp.ordering.application;
 
-import org.phuchoang.ecp.identity.api.AuthorizationService;
-import org.phuchoang.ecp.identity.api.CallerContext;
-import org.phuchoang.ecp.sharedkernel.api.DomainException;
-import org.phuchoang.ecp.sharedkernel.api.GenErrorCode;
+import org.phuchoang.ecp.identity.api.authorization.AuthorizationService;
+import org.phuchoang.ecp.identity.api.authorization.CallerContext;
+import org.phuchoang.ecp.sharedkernel.api.error.DomainException;
+import org.phuchoang.ecp.sharedkernel.api.error.GenErrorCode;
 import org.springframework.stereotype.Service;
 
 /**

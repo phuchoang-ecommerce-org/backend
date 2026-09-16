@@ -3,6 +3,7 @@ package org.phuchoang.ecp.catalog.infrastructure.persistence.browse;
 import org.phuchoang.ecp.catalog.application.query.CatalogBrowseModel.Category;
 import org.phuchoang.ecp.catalog.application.query.CatalogBrowseModel.CategoryNode;
 import org.phuchoang.ecp.catalog.application.query.CatalogBrowseModel.CategoryRef;
+import org.phuchoang.ecp.catalog.infrastructure.persistence.JdbcQuerySupport;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -17,28 +18,25 @@ import java.util.UUID;
 
 /** Catalog-owned category existence, hierarchy, and breadcrumb queries. */
 @Component
-class CatalogCategoryQueries {
-
-  private final JdbcTemplate jdbc;
+class CatalogCategoryQueries extends JdbcQuerySupport {
 
   CatalogCategoryQueries(JdbcTemplate jdbc) {
-    this.jdbc = jdbc;
+    super(jdbc);
   }
 
   boolean exists(UUID id) {
-    return Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS (SELECT 1 FROM catalog_category WHERE id = ?)",
-        Boolean.class, id));
+    return exists("SELECT EXISTS (SELECT 1 FROM catalog_category WHERE id = ?)", id);
   }
 
   Optional<Category> category(UUID id) {
-    List<CategoryRow> rows = jdbc.query("""
+    Optional<CategoryRow> category = optional("""
         SELECT id, parent_id, name, slug, path, depth, sort_order
         FROM catalog_category WHERE id = ?
         """, this::categoryRow, id);
-    if (rows.isEmpty()) {
+    if (category.isEmpty()) {
       return Optional.empty();
     }
-    CategoryRow row = rows.getFirst();
+    CategoryRow row = category.get();
     return Optional.of(new Category(row.id, row.parentId, row.name, row.slug, row.depth, row.sortOrder, null, false,
         ancestors(row)));
   }

@@ -1,6 +1,6 @@
 package org.phuchoang.ecp.payment.api;
 
-import org.phuchoang.ecp.sharedkernel.api.ErrorCode;
+import org.phuchoang.ecp.sharedkernel.api.error.ErrorCode;
 
 /**
  * The {@code PAY} domain (Error Codes.md §3.8).
