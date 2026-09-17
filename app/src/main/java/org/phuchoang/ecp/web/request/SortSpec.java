@@ -1,6 +1,8 @@
 package org.phuchoang.ecp.web.request;
 
 import org.phuchoang.ecp.sharedkernel.api.error.FieldErrorCodes;
+import org.phuchoang.ecp.web.error.FieldError;
+import org.phuchoang.ecp.web.error.ValidationException;
 
 import java.util.List;
 import java.util.Set;

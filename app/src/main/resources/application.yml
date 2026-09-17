@@ -1,6 +1,10 @@
 spring:
   application:
     name: ecp
+  modulith:
+    # The composition root has web/config/events packages; only explicitly annotated bounded
+    # contexts are application modules. This keeps those packages outside the module graph.
+    detection-strategy: explicitly-annotated
   threads:
     virtual:
       enabled: true
@@ -12,6 +16,11 @@ spring:
     enabled: true
     baseline-on-migrate: false
     clean-disabled: true
+  jpa:
+    # Flyway owns the schema. Hibernate validates entity mappings but never changes tables.
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
   jackson:
     default-property-inclusion: non_null
   kafka:
@@ -73,6 +82,10 @@ ecp:
     read:
       limit: 600
       window-seconds: 60
+  revalidation:
+    url: ${ECP_REVALIDATION_URL:}
+    secret: ${ECP_REVALIDATE_SECRET:}
+    consumer-group: ${ECP_REVALIDATION_CONSUMER_GROUP:ecp.web-revalidation}
 
 management:
   server:

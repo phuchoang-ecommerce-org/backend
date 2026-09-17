@@ -1,8 +1,8 @@
 package org.phuchoang.ecp.ordering.api;
 
 import org.phuchoang.ecp.identity.api.authorization.CallerContext;
-import org.phuchoang.ecp.ordering.application.ListOrdersQuery;
-import org.phuchoang.ecp.ordering.application.ListOrdersService;
+import org.phuchoang.ecp.ordering.internal.application.ListOrdersQuery;
+import org.phuchoang.ecp.ordering.internal.application.ListOrdersService;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;

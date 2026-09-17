@@ -67,7 +67,7 @@ class EventEnvelopeJsonTest {
         return new OutboxRecord(1L, EVENT_ID, "CategoryChanged", 1, Instant.parse("2026-09-15T00:00:00Z"),
             "Category", CATEGORY_ID, CORRELATION_ID, null, null,
             "{\"id\":\"" + CATEGORY_ID + "\",\"parentId\":null,\"name\":\"Shoes\",\"slug\":\"shoes\","
-                + "\"path\":\"/" + CATEGORY_ID + "/\",\"depth\":0,\"sortOrder\":0}",
+                + "\"path\":\"/" + CATEGORY_ID + "/\",\"depth\":0,\"sortOrder\":0,\"affectedCategorySlugs\":[\"shoes\"]}",
             "ecp.catalog.category.v1");
     }
 

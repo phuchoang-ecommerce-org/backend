@@ -9,6 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.phuchoang.ecp.sharedkernel.api.ratelimit.RateLimiter;
+import org.phuchoang.ecp.web.filter.RateLimitFilter;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;

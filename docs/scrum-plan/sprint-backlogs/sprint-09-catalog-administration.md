@@ -28,23 +28,23 @@ This is also the last sprint before IH-1.
 
 ### `US-ADM-01` Manage Products (8 pts) — `createProduct`, `updateProduct`, `deleteProduct`, `setProductPublication`, `addProductVariant`, `removeProductVariant`, `changeVariantPrice`, `addProductImage`, `removeProductImage`, `amendProductsInBulk`
 - [ ] `BR-CAT-01` — SKU uniqueness enforced at the database, not only in the service; `E1` returns the conflict **named**
-- [ ] `E2` — actor lacking authority is refused by the server via the `identity` `AuthorizationService`, and the attempt recorded. Repricing is `P16`'s worked example
+- [x] `E2` — actor lacking authority is refused by the server via the `identity` `AuthorizationService`, and the attempt recorded. Repricing is `P16`'s worked example
 - [ ] `E3` — removal of a product with stock or open orders is declined and unpublishing offered instead. **Neither `inventory` nor `ordering` exists yet**: implement the check against the ports they will provide, return the declined outcome for the cases that are decidable today, and record the gap here rather than marking it done
 - [ ] `E4` — validation failure applies nothing; the whole submission is one transaction
-- [ ] `E5` — **audit entry cannot be written → the change is not applied** (`BR-AUD-01`, `UC-AUD-01` E1). Audit is still the Sprint 03/04 stub listener; wire the *refusal path* now so `US-AUD-01` in Sprint 12 replaces a stub rather than adding a behaviour
-- [ ] `E6` — search propagation failure lets the change **stand**; retried, not rolled back (`P4`)
-- [ ] `amendProductsInBulk` is atomic per the contract's documented semantics; a partial bulk result is `P7`
+- [x] `E5` — **audit entry cannot be written → the change is not applied** (`BR-AUD-01`, `UC-AUD-01` E1). Audit is still the Sprint 03/04 stub listener; wire the *refusal path* now so `US-AUD-01` in Sprint 12 replaces a stub rather than adding a behaviour
+- [x] `E6` — search propagation failure lets the change **stand**; retried, not rolled back (`P4`)
+- [x] `amendProductsInBulk` is atomic per the contract's documented semantics; a partial bulk result is `P7`
 - [ ] Permission-matrix cell asserted per operation
 
 ### `US-ADM-02` Manage Categories (5 pts) — `createCategory`, `updateCategory`, `deleteCategory`
-- [ ] `BR-CAT-03` — `E1` cycle detection on reparent, enforced server-side; the Sprint 06 read-side invariant and this write-side check share one implementation
-- [ ] `E2` — removal while holding products or children is declined **with the counts**, so the operator knows what to reassign
-- [ ] `E3` authority; `E4` audit-write failure declines the change
+- [x] `BR-CAT-03` — `E1` cycle detection on reparent, enforced server-side; the Sprint 06 read-side invariant and this write-side check share one implementation
+- [x] `E2` — removal while holding products or children is declined **with the counts**, so the operator knows what to reassign
+- [x] `E3` authority; `E4` audit-write failure declines the change
 - [ ] Cache invalidation fires on the Sprint 06 `EN-WIRE-3` key namespaces
 
 ### `EN-EVENT-2` Catalog events published; consumer idempotency and ordering guards (8 pts)
 - [ ] Every catalog write publishes through the Sprint 08 outbox — **never directly to Kafka**, and ArchUnit asserts no module holds a producer
-- [ ] Event types and payloads registered in the Sprint 08 topic catalogue
+- [x] Event types and payloads registered in the Sprint 08 topic catalogue
 - [ ] **Consumer idempotency**: the same event delivered twice produces one effect. Proved by replaying the same envelope, not by inspecting code
 - [ ] **Ordering guards**: two events for one aggregate apply in order; an out-of-order arrival is detected and handled rather than silently applied. This is what the Sprint 08 partition key buys, and it is verified here
 - [ ] Correlation id survives write → outbox → Kafka → consumer (`NFR-OBS-03`), which IH-1 row 8 then extends to the projection
@@ -64,7 +64,10 @@ Every item satisfies the [backend Definition of Done](../definition-of-done.md) 
 
 ## Review Notes
 
-<!-- filled at Sprint Review -->
+Implementation progress recorded 2026-09-16: product/category command paths, RBAC, transactional audit stub,
+outbox event publication, topic registration, and the revalidation consumer are implemented. The remaining
+unchecked items require the deferred Inventory/Ordering ports or explicit replay, ordering, contract, and
+end-to-end verification before they can be claimed complete.
 
 ## Retrospective
 

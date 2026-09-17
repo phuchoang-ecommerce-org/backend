@@ -7,7 +7,14 @@ dependencies {
     implementation(project(":identity"))
     implementation("org.springframework.modulith:spring-modulith-starter-core")
     implementation(libs.jmolecules.ddd)
-    implementation("org.springframework.boot:spring-boot-starter-jdbc")
+    implementation(libs.jmolecules.events)
+    implementation(libs.mapstruct)
+    annotationProcessor(libs.mapstruct.processor)
+    // Command aggregates use JPA; explicit query views use JdbcClient.  Spring Data JDBC is
+    // available for simple relational projection persistence, not as a replacement for SQL
+    // views that need joins, keyset pagination, or guarded upserts.
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-json")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")

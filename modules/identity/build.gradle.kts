@@ -7,6 +7,9 @@ dependencies {
     implementation("org.springframework.modulith:spring-modulith-starter-core")
     implementation("org.springframework.modulith:spring-modulith-events-api")
     implementation(libs.jmolecules.ddd)
+    implementation(libs.jmolecules.events)
+    implementation(libs.mapstruct)
+    annotationProcessor(libs.mapstruct.processor)
 
     // identity.infrastructure: JPA persistence adapters, Argon2 password hashing, JWT issuance
     // (JwtEncoder/JwtDecoder beans are configured in :app, per ADR-0034/Security.md §5.5), and the

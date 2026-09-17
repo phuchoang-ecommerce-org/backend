@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
@@ -58,8 +60,8 @@ class ArchitectureTests {
         for (String module : MODULES) {
             String base = ROOT_PACKAGE + "." + module;
             ArchRule rule = noClasses()
-                .that().resideInAPackage(base + ".application..")
-                .should().dependOnClassesThat().resideInAnyPackage(base + ".infrastructure..", base + ".api..")
+                .that().resideInAPackage(base + ".internal.application..")
+                .should().dependOnClassesThat().resideInAnyPackage(base + ".internal.infrastructure..", base + ".api..")
                 .because("application may depend on domain and ports only, never its own module's "
                     + "infrastructure or api (Module Dependency Diagram.md §6)")
                 .allowEmptyShould(true);
@@ -72,7 +74,7 @@ class ArchitectureTests {
         for (String module : MODULES) {
             String base = ROOT_PACKAGE + "." + module;
             ArchRule rule = noClasses()
-                .that().resideInAPackage(base + ".infrastructure..")
+                .that().resideInAPackage(base + ".internal.infrastructure..")
                 .should().dependOnClassesThat().resideInAPackage(base + ".api..")
                 .because("infrastructure may depend on domain and application, never its own module's api "
                     + "(Module Dependency Diagram.md §6)")
@@ -87,7 +89,7 @@ class ArchitectureTests {
             String base = ROOT_PACKAGE + "." + module;
             ArchRule rule = noClasses()
                 .that().resideInAPackage(base + ".api..")
-                .should().dependOnClassesThat().resideInAnyPackage(base + ".domain..", base + ".infrastructure..")
+                .should().dependOnClassesThat().resideInAnyPackage(base + ".internal.domain..", base + ".internal.infrastructure..")
                 .because("api may depend on application only, never domain internals or infrastructure "
                     + "(Module Dependency Diagram.md §6)");
             rule.check(mainClasses);
@@ -100,7 +102,7 @@ class ArchitectureTests {
             .that().resideInAPackage(ROOT_PACKAGE + ".sharedkernel..")
             .should().dependOnClassesThat().resideOutsideOfPackages(
                 ROOT_PACKAGE + ".sharedkernel..", "java..", "javax..", "jakarta.annotation..", "lombok..",
-                "org.springframework.modulith..")
+                "org.springframework.modulith..", "org.jmolecules.ddd.annotation..")
             .because("shared-kernel must sit structurally beneath every module — zero outbound dependencies "
                 + "on a bounded context. Spring Modulith's own annotations (@ApplicationModule, "
                 + "@NamedInterface) are structural package metadata, not a context dependency "
@@ -120,6 +122,46 @@ class ArchitectureTests {
     }
 
     @Test
+    void aggregateRootsHaveExactlyOneDomainRepository() {
+        Set<String> aggregateRoots = mainClasses.stream()
+            .filter(type -> type.isAnnotatedWith(AggregateRoot.class))
+            .map(type -> type.getFullName())
+            .collect(Collectors.toUnmodifiableSet());
+        Set<String> repositories = mainClasses.stream()
+            .filter(type -> type.isAnnotatedWith(Repository.class))
+            .map(type -> type.getFullName())
+            .collect(Collectors.toUnmodifiableSet());
+
+        org.assertj.core.api.Assertions.assertThat(aggregateRoots).containsExactlyInAnyOrder(
+            "org.phuchoang.ecp.identity.internal.domain.model.Account",
+            "org.phuchoang.ecp.catalog.internal.domain.model.Product",
+            "org.phuchoang.ecp.catalog.internal.domain.model.Category");
+        org.assertj.core.api.Assertions.assertThat(repositories).containsExactlyInAnyOrder(
+            "org.phuchoang.ecp.identity.internal.domain.repository.AccountRepository",
+            "org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository",
+            "org.phuchoang.ecp.catalog.internal.domain.repository.CategoryRepository");
+
+        ArchRule locationRule = com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes()
+            .that().areAnnotatedWith(Repository.class)
+            .should().beInterfaces()
+            .andShould().resideInAPackage("..internal.domain.repository..");
+        locationRule.check(mainClasses);
+    }
+
+    @Test
+    void implementationTypesStayBelowTheModuleInternalNamespace() {
+        for (String module : MODULES) {
+            String base = ROOT_PACKAGE + "." + module;
+            ArchRule rule = noClasses()
+                .that().resideInAPackage(base + "..")
+                .and().resideOutsideOfPackages(base + ".api..", base + ".internal..")
+                .should().bePublic()
+                .because("api is the only exposed module surface; implementation belongs below internal");
+            rule.check(mainClasses);
+        }
+    }
+
+    @Test
     void domainDoesNotNameAnotherModule() {
         for (String module : MODULES) {
             if (module.equals("sharedkernel")) {
@@ -128,7 +170,7 @@ class ArchitectureTests {
             String base = ROOT_PACKAGE + "." + module;
             String[] otherModules = otherModulePackages(module);
             ArchRule rule = noClasses()
-                .that().resideInAPackage(base + ".domain..")
+                .that().resideInAPackage(base + ".internal.domain..")
                 .should().dependOnClassesThat().resideInAnyPackage(otherModules)
                 .because("a domain package must not name identity or any other module — authorisation and "
                     + "cross-context coordination are application concerns (Module Dependency Diagram.md §6-7)")
@@ -143,7 +185,7 @@ class ArchitectureTests {
             String base = ROOT_PACKAGE + "." + module;
             ArchRule rule = noClasses()
                 .that().resideOutsideOfPackage(base + "..")
-                .should().dependOnClassesThat().resideInAPackage(base + ".application..")
+                .should().dependOnClassesThat().resideInAPackage(base + ".internal.application..")
                 .because("a module's application package is internal; the only reachable surface is its api "
                     + "(Module Dependency Diagram.md §7)");
             rule.check(mainClasses);
@@ -171,7 +213,7 @@ class ArchitectureTests {
             }
             String base = ROOT_PACKAGE + "." + module;
             ArchRule rule = noClasses()
-                .that().resideInAPackage(base + ".domain..")
+                .that().resideInAPackage(base + ".internal.domain..")
                 .should().dependOnClassesThat().resideInAPackage(ROOT_PACKAGE + ".identity..")
                 .because("a domain object must not name identity — authorisation is an application "
                     + "concern (Domain Model.md §5.2, ADR-0016 §4, US-AUD-03)")
@@ -183,14 +225,14 @@ class ArchitectureTests {
     @Test
     void thePlantedDomainImportOfIdentityFailsTheConfinementRule_US_AUD_03() {
         // Permanent evidence (not a one-time manual step) that the rule above actually catches a
-        // violation: catalog.domain.PlantedIdentityDomainImport (this module's test sources only
+        // violation: catalog.internal.domain.PlantedIdentityDomainImport (this module's test sources only
         // — never shipped in catalog's own main sources) imports identity.api.AuthorizationService
         // directly from a domain package. This test proves the rule fails on it, then discards
         // the result — the fixture's only job is to be caught.
         JavaClasses testFixtureClasses = new ClassFileImporter()
             .importPath(Paths.get("build", "classes", "java", "test"));
         ArchRule rule = noClasses()
-            .that().resideInAPackage(ROOT_PACKAGE + ".catalog.domain..")
+            .that().resideInAPackage(ROOT_PACKAGE + ".catalog.internal.domain..")
             .should().dependOnClassesThat().resideInAPackage(ROOT_PACKAGE + ".identity..")
             .because("planted-violation proof for identityIsNotNamedFromAnotherModulesDomainPackage");
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> rule.check(testFixtureClasses))
@@ -223,9 +265,9 @@ class ArchitectureTests {
         ArchRule rule = noClasses()
             .that().resideOutsideOfPackages(
                 ROOT_PACKAGE + ".redis..",
-                ROOT_PACKAGE + ".identity.infrastructure..")
+                ROOT_PACKAGE + ".identity.internal.infrastructure..")
             .should().dependOnClassesThat().resideInAPackage("org.springframework.data.redis..")
-            .because("Redis client types are confined to redis.RedisConfig and the identity.infrastructure "
+            .because("Redis client types are confined to redis.RedisConfig and the identity.internal.infrastructure "
                 + "adapters (ADR-0034 §9 rule B4)")
             .allowEmptyShould(true);
         rule.check(mainClasses);
@@ -247,6 +289,17 @@ class ArchitectureTests {
             .that().haveSimpleName("CreateCategoryService")
             .should().dependOnClassesThat().haveFullyQualifiedName("org.phuchoang.ecp.sharedkernel.api.event.OutboxWriter")
             .because("a module records its event through the shared port, never another module's outbox adapter");
+        rule.check(mainClasses);
+    }
+
+    @Test
+    void jdbcTemplateIsReservedForOutboxRelayCoordination() {
+        ArchRule rule = noClasses()
+            .that().doNotHaveFullyQualifiedName(ROOT_PACKAGE + ".events.OutboxRepository")
+            .should().dependOnClassesThat().haveFullyQualifiedName("org.springframework.jdbc.core.JdbcTemplate")
+            .because("ordinary SQL uses JdbcClient; JdbcTemplate is retained only for the relay's batch/locking "
+                + "coordination primitives (ADR-0010 persistence-tool matrix)")
+            .allowEmptyShould(true);
         rule.check(mainClasses);
     }
 

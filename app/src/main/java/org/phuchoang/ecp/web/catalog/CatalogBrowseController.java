@@ -2,6 +2,7 @@ package org.phuchoang.ecp.web.catalog;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.phuchoang.ecp.catalog.api.facade.CatalogBrowseFacade;
+import org.phuchoang.ecp.catalog.api.query.CatalogListingQuery;
 import org.phuchoang.ecp.catalog.api.view.category.CategoryNodeView;
 import org.phuchoang.ecp.catalog.api.view.category.CategoryView;
 import org.phuchoang.ecp.catalog.api.view.product.ProductPageView;
@@ -71,7 +72,7 @@ class CatalogBrowseController {
         : toSort(SortSpec.parse(sort,
             Set.of("price", "createdAt", "popularity")));
     ProductPageView page = catalog.listCategoryProducts(categoryId,
-        new CatalogBrowseFacade.CatalogListingQuery(cursor, Pagination.clampSize(size), resolvedSort,
+        new CatalogListingQuery(cursor, Pagination.clampSize(size), resolvedSort,
             brands == null ? List.of() : List.copyOf(brands), priceFrom, priceTo, inStock));
     return new PageEnvelope<>(new ArrayList<>(page.items()),
         new Page(page.items().size(), page.nextCursor(), page.total()));

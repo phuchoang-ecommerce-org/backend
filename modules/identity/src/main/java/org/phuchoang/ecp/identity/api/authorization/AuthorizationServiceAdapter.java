@@ -18,9 +18,9 @@ import org.springframework.stereotype.Component;
 @Component
 final class AuthorizationServiceAdapter implements AuthorizationService {
 
-    private final org.phuchoang.ecp.identity.application.port.AuthorizationService delegate;
+    private final org.phuchoang.ecp.identity.internal.application.port.AuthorizationService delegate;
 
-    AuthorizationServiceAdapter(org.phuchoang.ecp.identity.application.port.AuthorizationService delegate) {
+    AuthorizationServiceAdapter(org.phuchoang.ecp.identity.internal.application.port.AuthorizationService delegate) {
         this.delegate = delegate;
     }
 
@@ -29,8 +29,8 @@ final class AuthorizationServiceAdapter implements AuthorizationService {
         delegate.assertAuthorized(toApplicationCallerContext(caller), operationId);
     }
 
-    private static org.phuchoang.ecp.identity.application.CallerContext toApplicationCallerContext(
+    private static org.phuchoang.ecp.identity.internal.application.CallerContext toApplicationCallerContext(
             CallerContext caller) {
-        return org.phuchoang.ecp.identity.application.CallerContext.of(caller.accountId(), caller.roleNames());
+        return org.phuchoang.ecp.identity.internal.application.CallerContext.of(caller.accountId(), caller.roleNames());
     }
 }

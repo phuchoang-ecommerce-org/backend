@@ -1,7 +1,7 @@
 package org.phuchoang.ecp.catalog.api.facade;
 
-import org.phuchoang.ecp.catalog.application.query.CatalogBrowseModel;
-import org.phuchoang.ecp.catalog.application.query.CatalogProductService;
+import org.phuchoang.ecp.catalog.internal.application.query.CatalogBrowseModel;
+import org.phuchoang.ecp.catalog.internal.application.query.CatalogProductService;
 import org.phuchoang.ecp.catalog.api.view.category.CategoryRefView;
 import org.phuchoang.ecp.catalog.api.view.common.MoneyView;
 import org.phuchoang.ecp.catalog.api.view.product.AdvisoryAvailabilityView;
@@ -17,37 +17,20 @@ import java.util.UUID;
 @Component
 public class CatalogProductFacadeAdapter implements CatalogProductFacade {
     private final CatalogProductService service;
+    private final CatalogDtoMapper mapper;
 
-    public CatalogProductFacadeAdapter(CatalogProductService service) {
+    public CatalogProductFacadeAdapter(CatalogProductService service, CatalogDtoMapper mapper) {
         this.service = service;
+        this.mapper = mapper;
     }
 
     @Override
     public ProductDetailView getProduct(UUID productId) {
-        return detail(service.getProduct(productId));
+        return mapper.productDetailView(service.getProduct(productId));
     }
 
     @Override
     public RatingSummaryView getProductRatingSummary(UUID productId) {
-        CatalogBrowseModel.RatingSummary summary = service.getProductRatingSummary(productId);
-        return new RatingSummaryView(summary.averageRating(), summary.reviewCount(), summary.distribution());
-    }
-
-    private ProductDetailView detail(CatalogBrowseModel.ProductDetail value) {
-        return new ProductDetailView(value.id(), value.name(), value.slug(), value.description(), value.brand(),
-            value.publicationStatus(), value.publishedAt(),
-            value.categories().stream().map(category -> new CategoryRefView(category.id(), category.name(), category.slug())).toList(),
-            value.attributes(), value.images().stream().map(image -> new ProductImageView(image.id(), image.url(), image.altText(), image.sortOrder())).toList(),
-            value.variants().stream().map(this::variant).toList(), value.averageRating(), value.reviewCount());
-    }
-
-    private VariantView variant(CatalogBrowseModel.Variant value) {
-        return new VariantView(value.id(), value.sku(), value.name(), money(value.listPrice()), money(value.promotionalPrice()),
-            value.options(), value.weightGrams(), value.active(),
-            value.inStock() == null ? null : new AdvisoryAvailabilityView(value.inStock()));
-    }
-
-    private MoneyView money(CatalogBrowseModel.Money value) {
-        return value == null ? null : new MoneyView(value.amount(), value.currency());
+        return mapper.ratingSummaryView(service.getProductRatingSummary(productId));
     }
 }

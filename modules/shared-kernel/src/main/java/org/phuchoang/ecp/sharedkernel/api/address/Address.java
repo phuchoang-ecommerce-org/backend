@@ -1,5 +1,7 @@
 package org.phuchoang.ecp.sharedkernel.api.address;
 
+import org.jmolecules.ddd.annotation.ValueObject;
+
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -12,6 +14,7 @@ import java.util.regex.Pattern;
  * <p>{@code label}, {@code line2}, {@code region}, and {@code phone} are optional; every other
  * field is required, matching the OpenAPI schema's {@code required} list exactly.
  */
+@ValueObject
 public record Address(String label, String recipientName, String line1, String line2, String city, String region,
         String postalCode, String countryCode, String phone) {
 
