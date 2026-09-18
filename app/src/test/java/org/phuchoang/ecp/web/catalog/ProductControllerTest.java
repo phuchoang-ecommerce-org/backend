@@ -9,8 +9,9 @@ import org.phuchoang.ecp.catalog.api.view.product.RatingSummaryView;
 import org.phuchoang.ecp.sharedkernel.api.error.DomainException;
 import org.phuchoang.ecp.sharedkernel.api.error.GenErrorCode;
 import org.phuchoang.ecp.sharedkernel.api.ratelimit.RateLimiter;
-import org.phuchoang.ecp.security.JwtKeysConfig;
-import org.phuchoang.ecp.security.SecurityConfig;
+import org.phuchoang.ecp.configuration.security.JwtKeysConfig;
+import org.phuchoang.ecp.configuration.security.SecurityConfig;
+import org.phuchoang.ecp.web.common.security.JwtRequestContextResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -28,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = ProductController.class)
-@Import({SecurityConfig.class, JwtKeysConfig.class})
+@Import({SecurityConfig.class, JwtKeysConfig.class, JwtRequestContextResolver.class})
 class ProductControllerTest {
     @Autowired private MockMvc mockMvc;
     @MockitoBean private CatalogProductFacade catalog;

@@ -3,7 +3,7 @@ package org.phuchoang.ecp.web.identity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
-import org.phuchoang.ecp.identity.api.authorization.Actor;
+import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.identity.api.facade.IdentityFacade;
 import org.phuchoang.ecp.identity.api.request.LoginRequest;
 import org.phuchoang.ecp.identity.api.view.AccountView;
@@ -11,8 +11,9 @@ import org.phuchoang.ecp.identity.api.view.SessionResponse;
 import org.phuchoang.ecp.sharedkernel.api.error.DomainException;
 import org.phuchoang.ecp.sharedkernel.api.error.GenErrorCode;
 import org.phuchoang.ecp.sharedkernel.api.ratelimit.RateLimiter;
-import org.phuchoang.ecp.security.JwtKeysConfig;
-import org.phuchoang.ecp.security.SecurityConfig;
+import org.phuchoang.ecp.configuration.security.JwtKeysConfig;
+import org.phuchoang.ecp.configuration.security.SecurityConfig;
+import org.phuchoang.ecp.web.common.security.JwtRequestContextResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -39,7 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * {@code LoginServiceTest}; this only confirms the controller doesn't add anything on top.
  */
 @WebMvcTest(controllers = SessionController.class)
-@Import({SecurityConfig.class, JwtKeysConfig.class})
+@Import({SecurityConfig.class, JwtKeysConfig.class, JwtRequestContextResolver.class})
 class SessionControllerTest {
 
     @Autowired
@@ -116,7 +117,7 @@ class SessionControllerTest {
             .andExpect(status().isNoContent());
 
         verify(identityFacade).logOut(
-            org.mockito.ArgumentMatchers.eq(new Actor(java.util.UUID.fromString(accountId), Set.of("CUSTOMER"))),
+            org.mockito.ArgumentMatchers.eq(new IdentityActor(java.util.UUID.fromString(accountId), Set.of("CUSTOMER"))),
             org.mockito.ArgumentMatchers.eq("some-refresh-token"));
     }
 }

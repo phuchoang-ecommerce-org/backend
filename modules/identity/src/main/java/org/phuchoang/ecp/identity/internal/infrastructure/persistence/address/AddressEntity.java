@@ -1,6 +1,8 @@
 package org.phuchoang.ecp.identity.internal.infrastructure.persistence.address;
 
 import jakarta.persistence.Column;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -40,7 +42,8 @@ class AddressEntity {
     @Column(name = "postal_code", nullable = false)
     private String postalCode;
 
-    @Column(name = "country_code", nullable = false)
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(name = "country_code", nullable = false, length = 2)
     private String countryCode;
 
     @Column

@@ -27,8 +27,11 @@ public interface AddressStore {
     /** The cursor of {@code address}, for building the next page's {@code next} value. */
     Cursor cursorOf(CustomerAddress address);
 
-    /** All of the account's addresses, unpaged — used to find and clear the previous default (`BR-CUS-05`). */
-    List<CustomerAddress> findAllByAccountId(UUID accountId);
+    /** Clears the account's current default shipping address, if any, in one update (`BR-CUS-05`). */
+    void clearDefaultShipping(UUID accountId);
+
+    /** Clears the account's current default billing address, if any, in one update. */
+    void clearDefaultBilling(UUID accountId);
 
     void delete(UUID id);
 

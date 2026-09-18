@@ -8,8 +8,9 @@ import org.phuchoang.ecp.identity.api.request.AddressWriteRequest;
 import org.phuchoang.ecp.identity.api.view.AddressPageView;
 import org.phuchoang.ecp.identity.api.view.AddressView;
 import org.phuchoang.ecp.sharedkernel.api.ratelimit.RateLimiter;
-import org.phuchoang.ecp.security.JwtKeysConfig;
-import org.phuchoang.ecp.security.SecurityConfig;
+import org.phuchoang.ecp.configuration.security.JwtKeysConfig;
+import org.phuchoang.ecp.configuration.security.SecurityConfig;
+import org.phuchoang.ecp.web.common.security.JwtRequestContextResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -35,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /** L3 — `listOwnAddresses`/`addOwnAddress`/`getOwnAddress` (`UC-CUS-09`). */
 @WebMvcTest(controllers = AddressController.class)
-@Import({SecurityConfig.class, JwtKeysConfig.class})
+@Import({SecurityConfig.class, JwtKeysConfig.class, JwtRequestContextResolver.class})
 class AddressControllerTest {
 
     @Autowired

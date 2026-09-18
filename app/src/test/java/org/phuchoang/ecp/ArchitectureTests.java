@@ -192,16 +192,12 @@ class ArchitectureTests {
         }
     }
 
-    private static final String[] IDENTITY_APPLICATION_SERVICES = {
-        "RegisterAccountService", "VerifyEmailService", "LoginService", "LogoutService", "RenewSessionService"
-    };
-
     @Test
     void identityIsNotNamedFromAnotherModulesDomainPackage() {
         // US-AUD-03 (Sprint 04): a domain object asking who the caller is would make
         // authorisation part of a business invariant, forbidden by Domain Model.md §5.2 — the
         // concrete violation the sprint backlog's "identity named only from application" language
-        // is about. identity.api types (CallerContext, AuthorizationService) legitimately pass
+        // is about. identity.api types (IdentityActor, IdentityAuthorization) legitimately pass
         // through another module's api/infrastructure as plumbing (a facade parameter, an
         // adapter's argument) on their way to that module's application layer, which is where
         // the actual authorisation call happens — domainDoesNotNameAnotherModule already forbids
@@ -226,7 +222,7 @@ class ArchitectureTests {
     void thePlantedDomainImportOfIdentityFailsTheConfinementRule_US_AUD_03() {
         // Permanent evidence (not a one-time manual step) that the rule above actually catches a
         // violation: catalog.internal.domain.PlantedIdentityDomainImport (this module's test sources only
-        // — never shipped in catalog's own main sources) imports identity.api.AuthorizationService
+        // — never shipped in catalog's own main sources) imports identity.api.IdentityAuthorization
         // directly from a domain package. This test proves the rule fails on it, then discards
         // the result — the fixture's only job is to be caught.
         JavaClasses testFixtureClasses = new ClassFileImporter()
@@ -240,19 +236,17 @@ class ArchitectureTests {
     }
 
     @Test
-    void everyIdentityApplicationServiceDependsOnAuthorizationService() {
+    void everyIdentityUseCaseDependsOnThePermissionChecker() {
         // ADR-0016 §5: "the most dangerous defect in this codebase is an @ApplicationService
-        // that forgets to call AuthorizationService" — this only checks that each of the four
-        // use-case services is *wired to* the OHS (a real ArchUnit call-graph check is out of
-        // scope this sprint); PermissionMatrixAuthorizationService itself and the
-        // IdentityApplicationService aggregator are deliberately excluded from this rule.
+        // that forgets to call AuthorizationService" — every capability-oriented use-case class in
+        // identity's application layer must be *wired to* the PermissionChecker port (a real
+        // ArchUnit call-graph check is out of scope); the checker implementation and the token
+        // managers are not use cases and are not covered.
         ArchRule rule = com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes()
-            .that().haveSimpleName(IDENTITY_APPLICATION_SERVICES[0])
-            .or().haveSimpleName(IDENTITY_APPLICATION_SERVICES[1])
-            .or().haveSimpleName(IDENTITY_APPLICATION_SERVICES[2])
-            .or().haveSimpleName(IDENTITY_APPLICATION_SERVICES[3])
-            .should().dependOnClassesThat().haveSimpleName("AuthorizationService")
-            .because("ADR-0016 §4 — every application service calls the AuthorizationService OHS "
+            .that().resideInAPackage(ROOT_PACKAGE + ".identity.internal.application..")
+            .and().haveSimpleNameEndingWith("UseCases")
+            .should().dependOnClassesThat().haveSimpleName("PermissionChecker")
+            .because("ADR-0016 §4 — every application service calls the authorization port "
                 + "before executing a command");
         rule.check(mainClasses);
     }
@@ -264,10 +258,10 @@ class ArchitectureTests {
         // ad-hoc elsewhere — the actual key-prefix-to-factory mapping is enforced by code review.
         ArchRule rule = noClasses()
             .that().resideOutsideOfPackages(
-                ROOT_PACKAGE + ".redis..",
+                ROOT_PACKAGE + ".configuration.redis..",
                 ROOT_PACKAGE + ".identity.internal.infrastructure..")
             .should().dependOnClassesThat().resideInAPackage("org.springframework.data.redis..")
-            .because("Redis client types are confined to redis.RedisConfig and the identity.internal.infrastructure "
+            .because("Redis client types are confined to configuration.redis.RedisConfig and the identity.internal.infrastructure "
                 + "adapters (ADR-0034 §9 rule B4)")
             .allowEmptyShould(true);
         rule.check(mainClasses);
@@ -276,7 +270,7 @@ class ArchitectureTests {
     @Test
     void kafkaProducerApisAreConfinedToTheCompositionRoot() {
         ArchRule rule = noClasses()
-            .that().resideOutsideOfPackage(ROOT_PACKAGE + ".events..")
+            .that().resideOutsideOfPackage(ROOT_PACKAGE + ".messaging..")
             .should().dependOnClassesThat().resideInAnyPackage("org.springframework.kafka..", "org.apache.kafka..")
             .because("bounded contexts write their own outbox through shared-kernel's OutboxWriter; only app relays to Kafka")
             .allowEmptyShould(true);
@@ -285,21 +279,52 @@ class ArchitectureTests {
 
     @Test
     void catalogWritesThroughTheSharedOutboxPort() {
-        ArchRule rule = com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes()
-            .that().haveSimpleName("CreateCategoryService")
+        ArchRule publisherRule = com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes()
+            .that().haveSimpleName("CatalogEventPublisher")
             .should().dependOnClassesThat().haveFullyQualifiedName("org.phuchoang.ecp.sharedkernel.api.event.OutboxWriter")
             .because("a module records its event through the shared port, never another module's outbox adapter");
+        publisherRule.check(mainClasses);
+
+        ArchRule adapterRule = noClasses()
+            .that().resideOutsideOfPackage(ROOT_PACKAGE + ".catalog.internal.infrastructure..")
+            .should().dependOnClassesThat().haveSimpleName("JdbcCatalogOutboxWriter")
+            .because("the outbox adapter is reachable only through the OutboxWriter port");
+        adapterRule.check(mainClasses);
+    }
+
+    @Test
+    void catalogApplicationNeverSeesPersistenceTechnology() {
+        // ADR-0010 / catalog refactor: constraint violations are translated inside the persistence
+        // adapter (DuplicateSkuException), so no Spring DAO or JPA type may leak into use cases.
+        ArchRule rule = noClasses()
+            .that().resideInAPackage(ROOT_PACKAGE + ".catalog.internal.application..")
+            .should().dependOnClassesThat().resideInAnyPackage("org.springframework.dao..", "jakarta.persistence..",
+                "org.springframework.jdbc..")
+            .because("the application layer speaks in Catalog concepts, never persistence exceptions or clients")
+            .allowEmptyShould(true);
         rule.check(mainClasses);
     }
 
     @Test
     void jdbcTemplateIsReservedForOutboxRelayCoordination() {
         ArchRule rule = noClasses()
-            .that().doNotHaveFullyQualifiedName(ROOT_PACKAGE + ".events.OutboxRepository")
+            .that().doNotHaveFullyQualifiedName(ROOT_PACKAGE + ".messaging.outbox.JdbcOutboxStore")
             .should().dependOnClassesThat().haveFullyQualifiedName("org.springframework.jdbc.core.JdbcTemplate")
             .because("ordinary SQL uses JdbcClient; JdbcTemplate is retained only for the relay's batch/locking "
                 + "coordination primitives (ADR-0010 persistence-tool matrix)")
             .allowEmptyShould(true);
+        rule.check(mainClasses);
+    }
+
+    @Test
+    void theKafkaListenerIsATransportEdgeOnly() {
+        // refactor-plan-app §4: the listener receives, decodes and delegates — SQL, cache keys,
+        // HMAC and HTTP each live behind their own boundary in messaging.revalidation.
+        ArchRule rule = noClasses()
+            .that().haveSimpleName("CatalogRevalidationListener")
+            .should().dependOnClassesThat().resideInAnyPackage("org.springframework.jdbc..", "javax.crypto..",
+                "java.net.http..", "org.phuchoang.ecp.catalog..", "org.phuchoang.ecp.sharedkernel.api.cache..")
+            .because("the Kafka listener contains no SQL, no cache keys, no HMAC and no HTTP client");
         rule.check(mainClasses);
     }
 

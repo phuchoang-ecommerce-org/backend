@@ -34,7 +34,7 @@ public record Product(
     String slug,
     String description,
     String brand,
-    String publicationStatus,
+    PublicationStatus publicationStatus,
     Instant publishedAt,
     Map<String, Object> attributes,
     List<Variant> variants,
@@ -50,17 +50,27 @@ public record Product(
     /** Creates the initial draft aggregate for a catalog administration command. */
     public static Product create(UUID id, UUID categoryId, String name, String description, String brand,
             Map<String, Object> attributes) {
-        return new Product(id, categoryId, name, slug(name, id), description, brand, "DRAFT", null, attributes,
-            List.of(), List.of());
+        return new Product(id, categoryId, name, slug(name, id), description, brand, PublicationStatus.DRAFT, null,
+            attributes, List.of(), List.of());
     }
 
-    /** Applies the mutable product fields represented by an administration command. */
+    /** Applies the mutable merchandising fields of an administration command; publication is untouched. */
     public Product change(UUID updatedCategoryId, String updatedName, String updatedDescription, String updatedBrand,
-            Map<String, Object> updatedAttributes, String requestedPublicationStatus, Instant now) {
-        String status = requestedPublicationStatus == null ? publicationStatus : requestedPublicationStatus;
-        Instant firstPublishedAt = "PUBLISHED".equals(status) && publishedAt == null ? now : publishedAt;
-        return new Product(id, updatedCategoryId, updatedName, slug, updatedDescription, updatedBrand, status,
-            firstPublishedAt, updatedAttributes, variants, images);
+            Map<String, Object> updatedAttributes) {
+        return new Product(id, updatedCategoryId, updatedName, slug, updatedDescription, updatedBrand, publicationStatus,
+            publishedAt, updatedAttributes, variants, images);
+    }
+
+    /**
+     * Moves the product to {@code status}. The first transition to {@code PUBLISHED} stamps
+     * {@code publishedAt}; later re-publications keep the original timestamp. Every transition is
+     * currently permitted — none is forbidden by the SRS — so this is the single place a rule would
+     * be added.
+     */
+    public Product transitionTo(PublicationStatus status, Instant now) {
+        Instant firstPublishedAt = status == PublicationStatus.PUBLISHED && publishedAt == null ? now : publishedAt;
+        return new Product(id, categoryId, name, slug, description, brand, status, firstPublishedAt, attributes,
+            variants, images);
     }
 
     /** Adds an aggregate-owned variant. */
@@ -99,14 +109,25 @@ public record Product(
         return variants.stream().filter(variant -> variant.id().equals(variantId)).findFirst().orElse(null);
     }
 
+    public Image image(UUID imageId) {
+        return images.stream().filter(image -> image.id().equals(imageId)).findFirst().orElse(null);
+    }
+
+    public List<UUID> variantIds() {
+        return variants.stream().map(Variant::id).toList();
+    }
+
+    public List<String> variantSkus() {
+        return variants.stream().map(Variant::sku).toList();
+    }
+
     private Product withChildren(List<Variant> updatedVariants, List<Image> updatedImages) {
         return new Product(id, categoryId, name, slug, description, brand, publicationStatus, publishedAt, attributes,
             updatedVariants, updatedImages);
     }
 
     private static String slug(String name, UUID id) {
-        return name.toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("(^-|-$)", "") + "-"
-            + id.toString().substring(0, 8);
+        return Slugs.normalize(name) + "-" + id.toString().substring(0, 8);
     }
 
     /** A purchasable configuration owned by a product. */

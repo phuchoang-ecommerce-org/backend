@@ -11,17 +11,10 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Public read surface for Sprint 06 catalog browsing. All cache keys are owned here so the
- * backend invalidation contract and the storefront's revalidation tags cannot silently drift.
+ * Public read surface for catalog browsing. Cache keys are an implementation detail owned by the
+ * module; invalidation is requested semantically through {@link CatalogCacheInvalidator}.
  */
 public interface CatalogBrowseFacade {
-
-    /** Shared namespace for the complete category tree. */
-    String CATEGORY_TREE_CACHE_KEY = "category-tree";
-    /** Prefix for category-listing cache entries; implementations append an identifier and query fingerprint. */
-    String CATEGORY_LISTING_CACHE_KEY_PREFIX = "category-listing:";
-    /** Prefix for a single variant cache entry; implementations append the variant identifier. */
-    String VARIANT_CACHE_KEY_PREFIX = "variant:";
 
     /**
      * Returns a category tree or the requested subtree.

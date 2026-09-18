@@ -10,13 +10,13 @@ import org.phuchoang.ecp.identity.api.request.RegisterAccountRequest;
 import org.phuchoang.ecp.identity.api.view.AccountView;
 import org.phuchoang.ecp.identity.api.view.AddressView;
 import org.phuchoang.ecp.identity.api.view.SessionResponse;
-import org.phuchoang.ecp.identity.internal.application.command.model.AddressCommand;
-import org.phuchoang.ecp.identity.internal.application.command.model.LoginCommand;
-import org.phuchoang.ecp.identity.internal.application.command.model.RegisterAccountCommand;
-import org.phuchoang.ecp.identity.internal.application.command.model.UpdateProfileCommand;
-import org.phuchoang.ecp.identity.internal.application.mapper.AccountSummary;
-import org.phuchoang.ecp.identity.internal.application.mapper.AddressSummary;
-import org.phuchoang.ecp.identity.internal.application.mapper.LoginResult;
+import org.phuchoang.ecp.identity.internal.application.address.AddressCommand;
+import org.phuchoang.ecp.identity.internal.application.address.AddressSummary;
+import org.phuchoang.ecp.identity.internal.application.authentication.LoginCommand;
+import org.phuchoang.ecp.identity.internal.application.authentication.LoginResult;
+import org.phuchoang.ecp.identity.internal.application.profile.AccountSummary;
+import org.phuchoang.ecp.identity.internal.application.profile.UpdateProfileCommand;
+import org.phuchoang.ecp.identity.internal.application.registration.RegisterAccountCommand;
 import org.phuchoang.ecp.sharedkernel.api.address.Address;
 
 /** Maps identity's API records to application commands and application results to API views. */

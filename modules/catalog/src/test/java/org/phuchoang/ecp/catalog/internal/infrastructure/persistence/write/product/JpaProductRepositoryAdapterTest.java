@@ -57,6 +57,23 @@ class JpaProductRepositoryAdapterTest {
         verify(products).flush();
     }
 
+    @Test
+    void aSkuConstraintViolationSurfacesAsTheCatalogsOwnDuplicateSkuException() {
+        CatalogProductJpaRepository products = mock(CatalogProductJpaRepository.class);
+        UUID id = UUID.randomUUID();
+        when(products.findAggregateById(id)).thenReturn(Optional.empty());
+        when(products.save(any(CatalogProductEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        org.mockito.Mockito.doThrow(new org.springframework.dao.DataIntegrityViolationException("ux_catalog_variant_sku"))
+            .when(products).flush();
+        Product product = Product.create(id, UUID.randomUUID(), "Travel Mug", null, null, Map.of())
+            .addVariant(new Product.Variant(UUID.randomUUID(), "MUG-001", "Blue", new BigDecimal("12.50"), "USD",
+                Map.of(), null, true));
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> adapter(products).save(product))
+            .isInstanceOf(org.phuchoang.ecp.catalog.internal.domain.repository.DuplicateSkuException.class)
+            .hasMessage("SKU 'MUG-001' is already in use or retired.");
+    }
+
     private static JpaProductRepositoryAdapter adapter(CatalogProductJpaRepository products) {
         ProductJpaMapper mapper = new ProductJpaMapper(new ObjectMapper());
         return new JpaProductRepositoryAdapter(products, mapper, new ProductChildSynchronizer(mapper, CLOCK), CLOCK);

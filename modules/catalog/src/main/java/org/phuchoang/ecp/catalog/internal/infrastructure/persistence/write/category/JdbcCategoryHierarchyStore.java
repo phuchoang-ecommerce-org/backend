@@ -1,6 +1,7 @@
 package org.phuchoang.ecp.catalog.internal.infrastructure.persistence.write.category;
 
 import jakarta.persistence.EntityManager;
+import org.phuchoang.ecp.catalog.internal.domain.model.SubtreeCategory;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
@@ -32,12 +33,14 @@ class JdbcCategoryHierarchyStore {
         entityManager.clear();
     }
 
-    List<String> findSlugsInSubtree(UUID categoryId) {
+    List<SubtreeCategory> findSubtree(UUID categoryId) {
         return jdbc.sql("""
-            SELECT slug FROM catalog_category
+            SELECT id, slug FROM catalog_category
             WHERE path IN (SELECT path FROM catalog_category WHERE id = :id)
                OR path LIKE (SELECT path || '%' FROM catalog_category WHERE id = :id)
             ORDER BY depth
-            """).param("id", categoryId).query(String.class).list();
+            """).param("id", categoryId)
+            .query((rs, ignored) -> new SubtreeCategory(rs.getObject("id", UUID.class), rs.getString("slug")))
+            .list();
     }
 }

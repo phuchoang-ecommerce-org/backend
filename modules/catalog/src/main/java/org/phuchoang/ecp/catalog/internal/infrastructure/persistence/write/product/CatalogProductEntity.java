@@ -72,19 +72,16 @@ class CatalogProductEntity {
         this.updatedAt = now;
     }
 
+    /** Copies the aggregate's state verbatim — publication rules (first-publish stamping) belong to {@code Product}. */
     void update(String name, String description, String brand, UUID categoryId, String attributes,
-            String publicationStatus, Instant now) {
+            String publicationStatus, Instant publishedAt, Instant now) {
         this.name = name;
         this.description = description;
         this.brand = brand;
         this.categoryId = categoryId;
         this.attributes = attributes;
-        if (publicationStatus != null) {
-            this.publicationStatus = publicationStatus;
-            if ("PUBLISHED".equals(publicationStatus) && publishedAt == null) {
-                this.publishedAt = now;
-            }
-        }
+        this.publicationStatus = publicationStatus;
+        this.publishedAt = publishedAt;
         this.updatedAt = now;
     }
 

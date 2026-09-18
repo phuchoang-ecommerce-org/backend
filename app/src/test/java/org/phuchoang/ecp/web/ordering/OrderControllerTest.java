@@ -6,8 +6,9 @@ import org.mockito.BDDMockito;
 import org.phuchoang.ecp.ordering.api.OrderFacade;
 import org.phuchoang.ecp.ordering.api.OrderPageView;
 import org.phuchoang.ecp.sharedkernel.api.ratelimit.RateLimiter;
-import org.phuchoang.ecp.security.JwtKeysConfig;
-import org.phuchoang.ecp.security.SecurityConfig;
+import org.phuchoang.ecp.configuration.security.JwtKeysConfig;
+import org.phuchoang.ecp.configuration.security.SecurityConfig;
+import org.phuchoang.ecp.web.common.security.JwtRequestContextResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -26,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /** L3 — `listOrders` (`UC-CUS-10`): always an empty page this sprint (see `ListOrdersService`). */
 @WebMvcTest(controllers = OrderController.class)
-@Import({SecurityConfig.class, JwtKeysConfig.class})
+@Import({SecurityConfig.class, JwtKeysConfig.class, JwtRequestContextResolver.class})
 class OrderControllerTest {
 
     @Autowired

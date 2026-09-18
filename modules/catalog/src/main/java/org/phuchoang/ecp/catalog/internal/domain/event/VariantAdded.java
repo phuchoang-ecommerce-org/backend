@@ -6,7 +6,8 @@ import java.util.UUID;
 
 /** Records the addition of a uniquely identified purchasable variant to a Product. */
 @DomainEvent
-public record VariantAdded(UUID productId, Product.Variant variant) implements CatalogDomainEvent {
+/** {@code categoryId} names the listings the new variant affects. */
+public record VariantAdded(UUID productId, UUID categoryId, Product.Variant variant) implements CatalogDomainEvent {
     @Override public String eventType() { return "VariantAdded"; }
     @Override public String aggregateType() { return "Product"; }
     @Override public UUID aggregateId() { return productId; }

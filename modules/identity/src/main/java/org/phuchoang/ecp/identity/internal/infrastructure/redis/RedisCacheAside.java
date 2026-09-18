@@ -6,10 +6,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 
@@ -24,6 +28,7 @@ import java.util.function.Supplier;
 class RedisCacheAside implements CacheAside {
 
     private static final Logger log = LoggerFactory.getLogger(RedisCacheAside.class);
+    private static final int SCAN_BATCH = 500;
 
     private final RedisTemplate<String, Object> cacheRedisTemplate;
     private final MeterRegistry meterRegistry;
@@ -64,6 +69,26 @@ class RedisCacheAside implements CacheAside {
             cacheRedisTemplate.delete(key);
         } catch (DataAccessException e) {
             log.warn("redis-cache DEL failed for {}", key, e);
+        }
+    }
+
+    @Override
+    public void invalidateByPrefix(String prefix) {
+        ScanOptions options = ScanOptions.scanOptions().match(prefix + "*").count(SCAN_BATCH).build();
+        try (Cursor<String> cursor = cacheRedisTemplate.scan(options)) {
+            List<String> batch = new ArrayList<>(SCAN_BATCH);
+            while (cursor.hasNext()) {
+                batch.add(cursor.next());
+                if (batch.size() == SCAN_BATCH) {
+                    cacheRedisTemplate.unlink(batch);
+                    batch.clear();
+                }
+            }
+            if (!batch.isEmpty()) {
+                cacheRedisTemplate.unlink(batch);
+            }
+        } catch (DataAccessException e) {
+            log.warn("redis-cache SCAN/UNLINK failed for prefix {}", prefix, e);
         }
     }
 

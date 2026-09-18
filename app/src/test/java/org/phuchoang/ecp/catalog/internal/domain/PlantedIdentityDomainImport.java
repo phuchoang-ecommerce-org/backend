@@ -1,6 +1,6 @@
 package org.phuchoang.ecp.catalog.internal.domain;
 
-import org.phuchoang.ecp.identity.api.authorization.AuthorizationService;
+import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
 
 /**
  * A permanent, test-only fixture (never shipped in {@code catalog}'s own main sources) proving
@@ -12,5 +12,5 @@ import org.phuchoang.ecp.identity.api.authorization.AuthorizationService;
 @SuppressWarnings("unused")
 class PlantedIdentityDomainImport {
 
-    private AuthorizationService authorizationService;
+    private IdentityAuthorization authorizationService;
 }

@@ -52,7 +52,7 @@ public record Category(
     public Category change(UUID updatedParentId, String updatedName, String updatedImageUrl, int updatedSortOrder,
             boolean updatedFeatured, Category parent) {
         if (!mayMoveBelow(parent)) {
-            throw new IllegalArgumentException("A category cannot be moved beneath itself or a descendant.");
+            throw new CategoryHierarchyViolation("A category cannot be moved beneath itself or a descendant.");
         }
         String updatedPath = parent == null ? "/" + id + "/" : parent.path + id + "/";
         int updatedDepth = parent == null ? 0 : parent.depth + 1;

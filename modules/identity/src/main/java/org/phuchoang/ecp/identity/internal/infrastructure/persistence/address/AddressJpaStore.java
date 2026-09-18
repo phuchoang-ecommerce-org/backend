@@ -2,6 +2,7 @@ package org.phuchoang.ecp.identity.internal.infrastructure.persistence.address;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -12,7 +13,15 @@ import java.util.UUID;
 /** Account-scoped address persistence with the descending keyset order used by cursor pagination. */
 interface AddressJpaStore extends JpaRepository<AddressEntity, UUID> {
 
-    List<AddressEntity> findAllByAccountId(UUID accountId);
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("update AddressEntity a set a.defaultShipping = false "
+        + "where a.accountId = :accountId and a.defaultShipping = true")
+    int clearDefaultShipping(@Param("accountId") UUID accountId);
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("update AddressEntity a set a.defaultBilling = false "
+        + "where a.accountId = :accountId and a.defaultBilling = true")
+    int clearDefaultBilling(@Param("accountId") UUID accountId);
 
     boolean existsByAccountId(UUID accountId);
 

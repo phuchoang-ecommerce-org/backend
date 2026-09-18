@@ -1,13 +1,13 @@
 package org.phuchoang.ecp.web.ordering;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.phuchoang.ecp.identity.api.authorization.CallerContext;
 import org.phuchoang.ecp.ordering.api.OrderFacade;
 import org.phuchoang.ecp.ordering.api.OrderPageView;
-import org.phuchoang.ecp.web.pagination.Page;
-import org.phuchoang.ecp.web.pagination.PageEnvelope;
-import org.phuchoang.ecp.web.pagination.Pagination;
-import org.phuchoang.ecp.web.request.QueryParams;
+import org.phuchoang.ecp.web.common.pagination.Page;
+import org.phuchoang.ecp.web.common.pagination.PageEnvelope;
+import org.phuchoang.ecp.web.common.pagination.Pagination;
+import org.phuchoang.ecp.web.common.request.QueryParams;
+import org.phuchoang.ecp.web.common.security.RequestContextResolver;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,9 +28,11 @@ class OrderController {
         "cursor", "size", "sort", "status", "placedAfter", "placedBefore", "orderNumber", "customerId");
 
     private final OrderFacade orderFacade;
+    private final RequestContextResolver requestContext;
 
-    OrderController(OrderFacade orderFacade) {
+    OrderController(OrderFacade orderFacade, RequestContextResolver requestContext) {
         this.orderFacade = orderFacade;
+        this.requestContext = requestContext;
     }
 
     @GetMapping("/api/v1/orders")
@@ -39,15 +41,9 @@ class OrderController {
             @RequestParam(required = false) UUID customerId) {
         QueryParams.rejectUnknown(request, LIST_QUERY_PARAMS);
         int pageSize = Pagination.clampSize(size);
-        OrderPageView page = orderFacade.listOrders(callerOf(jwt), cursor, pageSize, customerId);
-        return new PageEnvelope<>(page.items(), new Page(page.items().size(), page.nextCursor(), null));
-    }
 
-    private static CallerContext callerOf(Jwt jwt) {
-        if (jwt == null) {
-            return CallerContext.GUEST;
-        }
-        Set<String> roles = Set.copyOf(jwt.getClaimAsStringList("roles"));
-        return new CallerContext(UUID.fromString(jwt.getSubject()), roles);
+        OrderPageView page = orderFacade.listOrders(requestContext.resolve(jwt).caller(), cursor, pageSize, customerId);
+
+        return new PageEnvelope<>(page.items(), new Page(page.items().size(), page.nextCursor(), null));
     }
 }

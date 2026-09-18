@@ -2,11 +2,13 @@ package org.phuchoang.ecp.catalog.internal.infrastructure.persistence.browse;
 
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
-import org.phuchoang.ecp.catalog.internal.application.query.CatalogBrowseModel.CategoryRef;
-import org.phuchoang.ecp.catalog.internal.application.query.CatalogBrowseModel.Money;
-import org.phuchoang.ecp.catalog.internal.application.query.CatalogBrowseModel.ProductDetail;
-import org.phuchoang.ecp.catalog.internal.application.query.CatalogBrowseModel.ProductImage;
-import org.phuchoang.ecp.catalog.internal.application.query.CatalogBrowseModel.Variant;
+import org.phuchoang.ecp.catalog.internal.application.port.ProductDetailPort;
+import org.phuchoang.ecp.catalog.internal.application.port.VariantBrowsePort;
+import org.phuchoang.ecp.catalog.internal.application.query.model.category.CategoryRef;
+import org.phuchoang.ecp.catalog.internal.application.query.model.common.MoneyValue;
+import org.phuchoang.ecp.catalog.internal.application.query.model.product.ProductDetail;
+import org.phuchoang.ecp.catalog.internal.application.query.model.product.ProductImage;
+import org.phuchoang.ecp.catalog.internal.application.query.model.variant.VariantDetail;
 import org.phuchoang.ecp.catalog.internal.infrastructure.persistence.JdbcQuerySupport;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
@@ -21,7 +23,7 @@ import java.util.UUID;
 
 /** Catalog-owned published-product, image, and variant queries. */
 @Component
-class CatalogProductQueries extends JdbcQuerySupport {
+class CatalogProductQueries extends JdbcQuerySupport implements ProductDetailPort, VariantBrowsePort {
 
   private static final TypeReference<Map<String, String>> STRING_MAP = new TypeReference<>() {
   };
@@ -35,13 +37,15 @@ class CatalogProductQueries extends JdbcQuerySupport {
     this.objectMapper = objectMapper;
   }
 
-  boolean publishedExists(UUID id) {
+  @Override
+  public boolean publishedProductExists(UUID id) {
     return exists("""
         SELECT EXISTS (SELECT 1 FROM catalog_product WHERE id = ? AND publication_status = 'PUBLISHED')
         """, id);
   }
 
-  Optional<ProductDetail> product(UUID id) {
+  @Override
+  public Optional<ProductDetail> product(UUID id) {
     Optional<ProductDetailRow> product = optional("""
         SELECT p.id, p.name, p.slug, p.description, p.brand, p.publication_status, p.published_at, p.attributes,
                p.average_rating, p.review_count, c.id AS category_id, c.name AS category_name, c.slug AS category_slug
@@ -57,7 +61,8 @@ class CatalogProductQueries extends JdbcQuerySupport {
         objectMap(row.attributes()), images(id), variants(id, Map.of()), row.averageRating(), row.reviewCount()));
   }
 
-  List<Variant> variants(UUID productId, Map<String, String> selected) {
+  @Override
+  public List<VariantDetail> variants(UUID productId, Map<String, String> selected) {
     String sql = selected.isEmpty() ? """
         SELECT id, sku, name, list_price_amount, list_price_currency, options, weight_grams, is_active, advisory_in_stock
         FROM catalog_variant WHERE product_id = ? ORDER BY sku
@@ -69,7 +74,8 @@ class CatalogProductQueries extends JdbcQuerySupport {
         : jdbc.sql(sql).params(productId, json(selected)).query(this::variantRow).list();
   }
 
-  Optional<Variant> variant(UUID productId, UUID variantId) {
+  @Override
+  public Optional<VariantDetail> variant(UUID productId, UUID variantId) {
     return jdbc.sql("""
         SELECT id, sku, name, list_price_amount, list_price_currency, options, weight_grams, is_active, advisory_in_stock
         FROM catalog_variant WHERE product_id = ? AND id = ?
@@ -84,9 +90,9 @@ class CatalogProductQueries extends JdbcQuerySupport {
         rs.getString("category_name"), rs.getString("category_slug"));
   }
 
-  private Variant variantRow(ResultSet rs, int ignored) throws SQLException {
-    return new Variant(rs.getObject("id", UUID.class), rs.getString("sku"), rs.getString("name"),
-        new Money(rs.getBigDecimal("list_price_amount"), rs.getString("list_price_currency")), null,
+  private VariantDetail variantRow(ResultSet rs, int ignored) throws SQLException {
+    return new VariantDetail(rs.getObject("id", UUID.class), rs.getString("sku"), rs.getString("name"),
+        new MoneyValue(rs.getBigDecimal("list_price_amount"), rs.getString("list_price_currency")), null,
         stringMap(rs.getString("options")), rs.getObject("weight_grams", Integer.class), rs.getBoolean("is_active"),
         rs.getObject("advisory_in_stock", Boolean.class));
   }

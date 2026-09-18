@@ -1,7 +1,6 @@
 package org.phuchoang.ecp.catalog.api.facade;
 
-import org.phuchoang.ecp.catalog.internal.application.query.CatalogBrowseModel;
-import org.phuchoang.ecp.catalog.internal.application.query.CatalogProductService;
+import org.phuchoang.ecp.catalog.internal.application.query.product.ProductQueryService;
 import org.phuchoang.ecp.catalog.api.view.category.CategoryRefView;
 import org.phuchoang.ecp.catalog.api.view.common.MoneyView;
 import org.phuchoang.ecp.catalog.api.view.product.AdvisoryAvailabilityView;
@@ -16,10 +15,10 @@ import java.util.UUID;
 /** Maps catalog's internal product-detail read model to its named public interface. */
 @Component
 public class CatalogProductFacadeAdapter implements CatalogProductFacade {
-    private final CatalogProductService service;
+    private final ProductQueryService service;
     private final CatalogDtoMapper mapper;
 
-    public CatalogProductFacadeAdapter(CatalogProductService service, CatalogDtoMapper mapper) {
+    public CatalogProductFacadeAdapter(ProductQueryService service, CatalogDtoMapper mapper) {
         this.service = service;
         this.mapper = mapper;
     }

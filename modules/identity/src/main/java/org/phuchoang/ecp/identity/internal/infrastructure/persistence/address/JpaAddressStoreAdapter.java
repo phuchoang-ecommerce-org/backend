@@ -54,8 +54,13 @@ class JpaAddressStoreAdapter implements AddressStore {
     }
 
     @Override
-    public List<CustomerAddress> findAllByAccountId(UUID accountId) {
-        return addressJpaRepository.findAllByAccountId(accountId).stream().map(this::toDomain).toList();
+    public void clearDefaultShipping(UUID accountId) {
+        addressJpaRepository.clearDefaultShipping(accountId);
+    }
+
+    @Override
+    public void clearDefaultBilling(UUID accountId) {
+        addressJpaRepository.clearDefaultBilling(accountId);
     }
 
     @Override

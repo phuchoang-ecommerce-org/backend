@@ -1,119 +1,80 @@
 package org.phuchoang.ecp.catalog.internal.application.event;
 
-import tools.jackson.databind.ObjectMapper;
-import org.phuchoang.ecp.catalog.internal.domain.model.Product;
-import org.phuchoang.ecp.catalog.internal.domain.event.*;
-import org.phuchoang.ecp.sharedkernel.api.event.EventActor;
+import org.phuchoang.ecp.catalog.internal.application.command.CatalogCommandContext;
+import org.phuchoang.ecp.catalog.internal.domain.event.CatalogDomainEvent;
+import org.phuchoang.ecp.catalog.internal.domain.event.CategoryChanged;
+import org.phuchoang.ecp.catalog.internal.domain.event.ProductCreated;
+import org.phuchoang.ecp.catalog.internal.domain.event.ProductDiscontinued;
+import org.phuchoang.ecp.catalog.internal.domain.event.ProductPriceChanged;
+import org.phuchoang.ecp.catalog.internal.domain.event.ProductPublished;
+import org.phuchoang.ecp.catalog.internal.domain.event.ProductUpdated;
+import org.phuchoang.ecp.catalog.internal.domain.event.VariantAdded;
+import org.phuchoang.ecp.catalog.internal.domain.repository.CategoryRepository;
 import org.phuchoang.ecp.sharedkernel.api.event.EventMetadata;
 import org.phuchoang.ecp.sharedkernel.api.event.OutboxEvent;
 import org.phuchoang.ecp.sharedkernel.api.event.OutboxWriter;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.Clock;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
-/** Converts Catalog business facts into the versioned Kafka outbox contract. */
+/**
+ * The single path by which a Catalog business fact leaves the module: it is appended to
+ * {@code catalog_outbox} in the command's own transaction (`ADR-0011`), never sent to Kafka
+ * directly. This class only coordinates — routing, metadata, and the affected-category lookup;
+ * {@link CatalogEventPayloadMapper} owns the wire shape.
+ */
 @Component
 public class CatalogEventPublisher {
-    private static final String PRODUCT_TOPIC = "ecp.catalog.product.v1";
-    private static final String CATEGORY_TOPIC = "ecp.catalog.category.v1";
+
+    static final String PRODUCT_TOPIC = "ecp.catalog.product.v1";
+    static final String CATEGORY_TOPIC = "ecp.catalog.category.v1";
+    private static final int EVENT_VERSION = 1;
 
     private final OutboxWriter outbox;
-    private final Clock clock;
+    private final CategoryRepository categories;
+    private final CatalogEventPayloadMapper payloads;
     private final ObjectMapper json;
+    private final Clock clock;
 
-    public CatalogEventPublisher(OutboxWriter outbox, Clock clock, ObjectMapper json) {
+    public CatalogEventPublisher(OutboxWriter outbox, CategoryRepository categories, CatalogEventPayloadMapper payloads,
+            ObjectMapper json, Clock clock) {
         this.outbox = outbox;
-        this.clock = clock;
+        this.categories = categories;
+        this.payloads = payloads;
         this.json = json;
+        this.clock = clock;
     }
 
-    public void publish(CatalogDomainEvent event, UUID correlationId, EventActor actor,
-            List<String> affectedCategorySlugs, Map<String, Object> categoryPayload) {
-        Map<String, Object> payload = payload(event, affectedCategorySlugs, categoryPayload);
-        outbox.append(new OutboxEvent(new EventMetadata(UUID.randomUUID(), event.eventType(), 1, clock.instant(),
-            event.aggregateType(), event.aggregateId(), correlationId, actor), topic(event), json(payload)));
+    public void publish(CatalogDomainEvent event, CatalogCommandContext context) {
+        Object payload = payloads.payload(event, affectedCategories(event));
+        EventMetadata metadata = new EventMetadata(UUID.randomUUID(), event.eventType(), EVENT_VERSION,
+            clock.instant(), event.aggregateType(), event.aggregateId(), context.correlationId(), context.actor());
+        outbox.append(new OutboxEvent(metadata, topic(event), serialize(payload)));
     }
 
     private static String topic(CatalogDomainEvent event) {
         return event instanceof CategoryChanged ? CATEGORY_TOPIC : PRODUCT_TOPIC;
     }
 
-    private static Map<String, Object> payload(CatalogDomainEvent event, List<String> categorySlugs,
-            Map<String, Object> categoryPayload) {
-        if (event instanceof CategoryChanged) return new LinkedHashMap<>(categoryPayload);
-        if (event instanceof ProductDiscontinued discontinued) {
-            return Map.of("productId", discontinued.productId(), "variantSkus", discontinued.variantSkus());
-        }
-        if (event instanceof ProductPriceChanged changed) {
-            return Map.of("productId", changed.productId(), "variantSkus", List.of(changed.variant().sku()),
-                "variantId", changed.variant().id(), "listPrice", money(changed.variant()));
-        }
-        if (event instanceof VariantAdded added) {
-            return productPayload(added.productId(), List.of(added.variant().sku()), categorySlugs,
-                Map.of("variantId", added.variant().id(), "listPrice", money(added.variant())));
-        }
-        Product product = switch (event) {
-            case ProductCreated created -> created.product();
-            case ProductUpdated updated -> updated.product();
-            case ProductPublished published -> published.product();
-            default -> throw new IllegalArgumentException("Unsupported Catalog event " + event.getClass().getSimpleName());
+    /** Which listings the event invalidates: the subtree beneath the product's category, or the category itself. */
+    private AffectedCategories affectedCategories(CatalogDomainEvent event) {
+        UUID categoryId = switch (event) {
+            case ProductCreated created -> created.product().categoryId();
+            case ProductUpdated updated -> updated.product().categoryId();
+            case ProductPublished published -> published.product().categoryId();
+            case VariantAdded added -> added.categoryId();
+            case CategoryChanged changed -> changed.removed() ? null : changed.category().id();
+            case ProductPriceChanged ignored -> null;
+            case ProductDiscontinued ignored -> null;
         };
-        return productPayload(product.id(), product.variants().stream().map(Product.Variant::sku).toList(), categorySlugs,
-            Map.of("product", snapshot(product)));
+        return categoryId == null ? AffectedCategories.NONE : AffectedCategories.of(categories.findSubtree(categoryId));
     }
 
-    private static Map<String, Object> productPayload(UUID productId, List<String> skus, List<String> categorySlugs,
-            Map<String, Object> details) {
-        Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("productId", productId);
-        payload.put("variantSkus", skus);
-        payload.put("affectedCategorySlugs", categorySlugs);
-        payload.putAll(details);
-        return payload;
-    }
-
-    private static Map<String, Object> money(Product.Variant variant) {
-        return Map.of("amount", variant.amount().toPlainString(), "currency", variant.currency());
-    }
-
-    private static Map<String, Object> snapshot(Product product) {
-        Map<String, Object> value = new LinkedHashMap<>();
-        value.put("id", product.id());
-        value.put("categoryId", product.categoryId());
-        value.put("name", product.name());
-        value.put("slug", product.slug());
-        value.put("description", product.description());
-        value.put("brand", product.brand());
-        value.put("publicationStatus", product.publicationStatus());
-        value.put("publishedAt", product.publishedAt());
-        value.put("attributes", product.attributes());
-        value.put("variants", product.variants().stream().map(CatalogEventPublisher::snapshot).toList());
-        value.put("images", product.images().stream().map(CatalogEventPublisher::snapshot).toList());
-        return value;
-    }
-
-    private static Map<String, Object> snapshot(Product.Variant variant) {
-        Map<String, Object> value = new LinkedHashMap<>();
-        value.put("id", variant.id()); value.put("sku", variant.sku()); value.put("name", variant.name());
-        value.put("listPrice", money(variant)); value.put("options", variant.options());
-        value.put("weightGrams", variant.weightGrams()); value.put("active", variant.active());
-        return value;
-    }
-
-    private static Map<String, Object> snapshot(Product.Image image) {
-        Map<String, Object> value = new LinkedHashMap<>();
-        value.put("id", image.id()); value.put("url", image.url()); value.put("altText", image.altText());
-        value.put("sortOrder", image.sortOrder());
-        return value;
-    }
-
-    private String json(Object value) {
+    private String serialize(Object payload) {
         try {
-            return json.writeValueAsString(value);
+            return json.writeValueAsString(payload);
         } catch (Exception exception) {
             throw new IllegalStateException("Cannot serialize catalog event payload", exception);
         }

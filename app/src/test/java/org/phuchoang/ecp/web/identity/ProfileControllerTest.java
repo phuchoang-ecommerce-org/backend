@@ -7,8 +7,9 @@ import org.phuchoang.ecp.identity.api.facade.IdentityFacade;
 import org.phuchoang.ecp.identity.api.request.ProfileUpdateRequest;
 import org.phuchoang.ecp.identity.api.view.AccountView;
 import org.phuchoang.ecp.sharedkernel.api.ratelimit.RateLimiter;
-import org.phuchoang.ecp.security.JwtKeysConfig;
-import org.phuchoang.ecp.security.SecurityConfig;
+import org.phuchoang.ecp.configuration.security.JwtKeysConfig;
+import org.phuchoang.ecp.configuration.security.SecurityConfig;
+import org.phuchoang.ecp.web.common.security.JwtRequestContextResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -30,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /** L3 — `getOwnAccount`/`updateOwnProfile` (`UC-CUS-08`), against `paths/identity.yaml#/accountsMe`. */
 @WebMvcTest(controllers = ProfileController.class)
-@Import({SecurityConfig.class, JwtKeysConfig.class})
+@Import({SecurityConfig.class, JwtKeysConfig.class, JwtRequestContextResolver.class})
 class ProfileControllerTest {
 
     @Autowired

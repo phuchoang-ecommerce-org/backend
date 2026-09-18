@@ -19,4 +19,11 @@ public interface CacheAside {
 
     /** Removes {@code key}. {@code DEL}, never a value overwrite. */
     void invalidate(String key);
+
+    /**
+     * Removes every key starting with {@code prefix} — a {@code SCAN} + {@code UNLINK} walk, never
+     * {@code KEYS} (Backend Architecture.md §5.7 rule 3). Like {@link #invalidate}, a cache error
+     * is logged and swallowed.
+     */
+    void invalidateByPrefix(String prefix);
 }

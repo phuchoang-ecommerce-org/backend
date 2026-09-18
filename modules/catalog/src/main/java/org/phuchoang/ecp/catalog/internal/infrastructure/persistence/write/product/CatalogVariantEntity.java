@@ -23,7 +23,7 @@ class CatalogVariantEntity {
     @Column(nullable = false) private String sku;
     @Column(nullable = false) private String name;
     @Column(name = "list_price_amount", nullable = false) private BigDecimal amount;
-    @Column(name = "list_price_currency", nullable = false) private String currency;
+    @JdbcTypeCode(SqlTypes.CHAR) @Column(name = "list_price_currency", nullable = false, length = 3) private String currency;
     @JdbcTypeCode(SqlTypes.JSON) @Column(nullable = false, columnDefinition = "jsonb") private String options;
     @Column(name = "weight_grams") private Integer weightGrams;
     @Column(name = "is_active", nullable = false) private boolean active;

@@ -1,18 +1,18 @@
 package org.phuchoang.ecp.web.identity;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.phuchoang.ecp.identity.api.authorization.Actor;
+import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.identity.api.facade.IdentityFacade;
 import org.phuchoang.ecp.identity.api.request.AddressWriteRequest;
 import org.phuchoang.ecp.identity.api.view.AddressPageView;
 import org.phuchoang.ecp.identity.api.view.AddressView;
-import org.phuchoang.ecp.sharedkernel.api.error.FieldErrorCodes;
-import org.phuchoang.ecp.web.error.FieldError;
-import org.phuchoang.ecp.web.error.ValidationException;
-import org.phuchoang.ecp.web.pagination.Page;
-import org.phuchoang.ecp.web.pagination.PageEnvelope;
-import org.phuchoang.ecp.web.pagination.Pagination;
-import org.phuchoang.ecp.web.request.QueryParams;
+import org.phuchoang.ecp.web.common.error.FieldError;
+import org.phuchoang.ecp.web.common.pagination.Page;
+import org.phuchoang.ecp.web.common.pagination.PageEnvelope;
+import org.phuchoang.ecp.web.common.pagination.Pagination;
+import org.phuchoang.ecp.web.common.request.QueryParams;
+import org.phuchoang.ecp.web.common.request.RequestValidation;
+import org.phuchoang.ecp.web.common.security.RequestContextResolver;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -40,9 +40,11 @@ class AddressController {
     private static final Set<String> LIST_QUERY_PARAMS = Set.of("cursor", "size");
 
     private final IdentityFacade identityFacade;
+    private final RequestContextResolver requestContext;
 
-    AddressController(IdentityFacade identityFacade) {
+    AddressController(IdentityFacade identityFacade, RequestContextResolver requestContext) {
         this.identityFacade = identityFacade;
+        this.requestContext = requestContext;
     }
 
     @GetMapping("/api/v1/accounts/me/addresses")
@@ -50,7 +52,9 @@ class AddressController {
             @RequestParam(required = false) String cursor, @RequestParam(required = false) Integer size) {
         QueryParams.rejectUnknown(request, LIST_QUERY_PARAMS);
         int pageSize = Pagination.clampSize(size);
-        AddressPageView page = identityFacade.listOwnAddresses(actorOf(jwt), cursor, pageSize);
+
+        AddressPageView page = identityFacade.listOwnAddresses(caller(jwt), cursor, pageSize);
+
         return new PageEnvelope<>(page.items(), new Page(page.items().size(), page.nextCursor(), null));
     }
 
@@ -58,7 +62,9 @@ class AddressController {
     ResponseEntity<AddressView> addOwnAddress(@AuthenticationPrincipal Jwt jwt,
             @RequestBody AddressWriteRequest request) {
         requireAddressFields(request);
-        AddressView created = identityFacade.addOwnAddress(actorOf(jwt), request);
+
+        AddressView created = identityFacade.addOwnAddress(caller(jwt), request);
+
         return ResponseEntity.status(HttpStatus.CREATED)
             .location(URI.create("/api/v1/accounts/me/addresses/" + created.id()))
             .body(created);
@@ -66,42 +72,34 @@ class AddressController {
 
     @GetMapping("/api/v1/accounts/me/addresses/{addressId}")
     AddressView getOwnAddress(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID addressId) {
-        return identityFacade.getOwnAddress(actorOf(jwt), addressId);
+        return identityFacade.getOwnAddress(caller(jwt), addressId);
     }
 
     @PutMapping("/api/v1/accounts/me/addresses/{addressId}")
     AddressView replaceOwnAddress(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID addressId,
             @RequestBody AddressWriteRequest request) {
         requireAddressFields(request);
-        return identityFacade.replaceOwnAddress(actorOf(jwt), addressId, request);
+
+        return identityFacade.replaceOwnAddress(caller(jwt), addressId, request);
     }
 
     @DeleteMapping("/api/v1/accounts/me/addresses/{addressId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void removeOwnAddress(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID addressId) {
-        identityFacade.removeOwnAddress(actorOf(jwt), addressId);
+        identityFacade.removeOwnAddress(caller(jwt), addressId);
+    }
+
+    private IdentityActor caller(Jwt jwt) {
+        return requestContext.resolve(jwt).caller();
     }
 
     private static void requireAddressFields(AddressWriteRequest request) {
         List<FieldError> errors = new ArrayList<>();
-        requireNonBlank(request.recipientName(), "recipientName", errors);
-        requireNonBlank(request.line1(), "line1", errors);
-        requireNonBlank(request.city(), "city", errors);
-        requireNonBlank(request.postalCode(), "postalCode", errors);
-        requireNonBlank(request.countryCode(), "countryCode", errors);
-        if (!errors.isEmpty()) {
-            throw new ValidationException(errors);
-        }
-    }
-
-    private static void requireNonBlank(String value, String field, List<FieldError> errors) {
-        if (value == null || value.isBlank()) {
-            errors.add(new FieldError(field, FieldErrorCodes.REQUIRED, field + " is required."));
-        }
-    }
-
-    private Actor actorOf(Jwt jwt) {
-        Set<String> roles = Set.copyOf(jwt.getClaimAsStringList("roles"));
-        return new Actor(UUID.fromString(jwt.getSubject()), roles);
+        RequestValidation.requireNonBlank(request.recipientName(), "recipientName", errors);
+        RequestValidation.requireNonBlank(request.line1(), "line1", errors);
+        RequestValidation.requireNonBlank(request.city(), "city", errors);
+        RequestValidation.requireNonBlank(request.postalCode(), "postalCode", errors);
+        RequestValidation.requireNonBlank(request.countryCode(), "countryCode", errors);
+        RequestValidation.throwIfAny(errors);
     }
 }

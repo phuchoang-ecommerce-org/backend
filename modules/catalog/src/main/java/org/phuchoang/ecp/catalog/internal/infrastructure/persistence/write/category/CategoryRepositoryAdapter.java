@@ -1,6 +1,7 @@
 package org.phuchoang.ecp.catalog.internal.infrastructure.persistence.write.category;
 
 import org.phuchoang.ecp.catalog.internal.domain.model.Category;
+import org.phuchoang.ecp.catalog.internal.domain.model.SubtreeCategory;
 import org.phuchoang.ecp.catalog.internal.domain.repository.CategoryRepository;
 import org.springframework.stereotype.Repository;
 
@@ -56,8 +57,8 @@ class CategoryRepositoryAdapter implements CategoryRepository {
     }
 
     @Override
-    public List<String> findSlugsInSubtree(UUID categoryId) {
-        return hierarchy.findSlugsInSubtree(categoryId);
+    public List<SubtreeCategory> findSubtree(UUID categoryId) {
+        return hierarchy.findSubtree(categoryId);
     }
 
     private Category toDomain(CatalogCategoryEntity entity) {

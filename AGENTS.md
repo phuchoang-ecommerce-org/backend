@@ -22,7 +22,7 @@ Run a focused module test with `./gradlew :identity:test`. Initialize the docume
 
 ## Coding Style & Naming Conventions
 
-Use Java 21, four-space indentation, and the existing idiomatic Spring/Java style. Package names are lowercase under `org.phuchoang.ecp`; classes and records use `PascalCase`, methods and fields use `camelCase`, and constants use `UPPER_SNAKE_CASE`. Name application services by intent (for example, `RegisterAccountService`) and tests with a `Test` suffix. Preserve package-level `package-info.java` Modulith declarations when changing dependencies.
+Use Java 21, four-space indentation, and the existing idiomatic Spring/Java style. Package names are lowercase under `org.phuchoang.ecp`; classes and records use `PascalCase`, methods and fields use `camelCase`, and constants use `UPPER_SNAKE_CASE`. Name application services by intent — one focused use case per class (for example, `CreateProductService`), or one cohesive capability where the workflows share collaborators (for example, `RegistrationUseCases`) — and tests with a `Test` suffix. Preserve package-level `package-info.java` Modulith declarations when changing dependencies; every nested `api.*` sub-package needs its own `@NamedInterface("api")` package-info, because Spring Modulith 2.x scopes a package-level named interface to that single package.
 
 ## Testing Guidelines
 

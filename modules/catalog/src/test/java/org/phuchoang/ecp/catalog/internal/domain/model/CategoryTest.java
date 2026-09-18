@@ -27,6 +27,6 @@ class CategoryTest {
 
         assertThat(category.mayMoveBelow(descendant)).isFalse();
         assertThatThrownBy(() -> category.change(descendant.id(), category.name(), null, 0, false, descendant))
-            .isInstanceOf(IllegalArgumentException.class);
+            .isInstanceOf(CategoryHierarchyViolation.class);
     }
 }

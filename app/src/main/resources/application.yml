@@ -57,6 +57,9 @@ ecp:
     # when no key path is configured (JwtKeysConfig) — never do this in a real environment.
     private-key-path: ${ECP_JWT_PRIVATE_KEY_PATH:}
     public-key-path: ${ECP_JWT_PUBLIC_KEY_PATH:}
+    # Explicit opt-in for the in-memory dev keypair; the `prod` profile below forces it off so a
+    # production-like deployment without key files fails at startup instead of minting throwaway keys.
+    generate-dev-keys: ${ECP_JWT_GENERATE_DEV_KEYS:true}
     issuer: ${ECP_JWT_ISSUER:ecp-api}
     access-token-ttl-seconds: ${ECP_JWT_ACCESS_TTL_SECONDS:900}
   password:
@@ -73,15 +76,15 @@ ecp:
     write:
       limit: 120
       window-seconds: 60
-  outbox:
-    poll-delay-ms: ${ECP_OUTBOX_POLL_DELAY_MS:1000}
-    batch-size: ${ECP_OUTBOX_BATCH_SIZE:100}
     payment-retry:
       limit: 5
       window-seconds: 900
     read:
       limit: 600
       window-seconds: 60
+  outbox:
+    poll-delay-ms: ${ECP_OUTBOX_POLL_DELAY_MS:1000}
+    batch-size: ${ECP_OUTBOX_BATCH_SIZE:100}
   revalidation:
     url: ${ECP_REVALIDATION_URL:}
     secret: ${ECP_REVALIDATE_SECRET:}
@@ -106,3 +109,12 @@ logging:
   structured:
     format:
       console: logstash
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+ecp:
+  jwt:
+    generate-dev-keys: false

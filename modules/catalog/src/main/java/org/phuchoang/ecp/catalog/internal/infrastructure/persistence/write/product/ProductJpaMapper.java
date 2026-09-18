@@ -3,6 +3,7 @@ package org.phuchoang.ecp.catalog.internal.infrastructure.persistence.write.prod
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 import org.phuchoang.ecp.catalog.internal.domain.model.Product;
+import org.phuchoang.ecp.catalog.internal.domain.model.PublicationStatus;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -30,7 +31,7 @@ class ProductJpaMapper {
 
     Product toDomain(CatalogProductEntity entity) {
         return new Product(entity.id(), entity.categoryId(), entity.name(), entity.slug(), entity.description(), entity.brand(),
-            entity.publicationStatus(), entity.publishedAt(), objects(entity.attributes()),
+            PublicationStatus.from(entity.publicationStatus()), entity.publishedAt(), objects(entity.attributes()),
             entity.variants().stream().map(this::toDomain).toList(), entity.images().stream().map(this::toDomain).toList());
     }
 

@@ -3,6 +3,7 @@ package org.phuchoang.ecp.web.identity;
 import org.phuchoang.ecp.identity.api.facade.IdentityFacade;
 import org.phuchoang.ecp.identity.api.request.EmailVerificationRequest;
 import org.phuchoang.ecp.identity.api.request.VerificationResendRequest;
+import org.phuchoang.ecp.web.common.request.RequestValidation;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,14 +23,16 @@ class AccountVerificationController {
     @PostMapping("/api/v1/account-verifications")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void verifyEmailAddress(@RequestBody EmailVerificationRequest request) {
-        AccountController.requireNonBlank(request.token(), "token");
+        RequestValidation.requireNonBlank(request.token(), "token");
+
         identityFacade.verifyEmailAddress(request.token());
     }
 
     @PostMapping("/api/v1/account-verification-requests")
     @ResponseStatus(HttpStatus.ACCEPTED)
     void resendEmailVerification(@RequestBody VerificationResendRequest request) {
-        AccountController.requireNonBlank(request.email(), "email");
+        RequestValidation.requireNonBlank(request.email(), "email");
+
         identityFacade.resendEmailVerification(request.email());
     }
 }

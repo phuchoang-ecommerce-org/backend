@@ -1,6 +1,6 @@
 package org.phuchoang.ecp.ordering.api;
 
-import org.phuchoang.ecp.identity.api.authorization.CallerContext;
+import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.ordering.internal.application.ListOrdersQuery;
 import org.phuchoang.ecp.ordering.internal.application.ListOrdersService;
 import org.springframework.stereotype.Component;
@@ -17,7 +17,7 @@ public final class OrderFacade {
         this.listOrdersService = listOrdersService;
     }
 
-    public OrderPageView listOrders(CallerContext caller, String cursor, int size, UUID customerId) {
+    public OrderPageView listOrders(IdentityActor caller, String cursor, int size, UUID customerId) {
         listOrdersService.listOrders(caller, new ListOrdersQuery(cursor, size, customerId));
         return OrderPageView.EMPTY;
     }

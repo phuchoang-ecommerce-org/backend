@@ -1,8 +1,9 @@
 package org.phuchoang.ecp.catalog.internal.infrastructure.persistence.browse;
 
-import org.phuchoang.ecp.catalog.internal.application.query.CatalogBrowseModel.Category;
-import org.phuchoang.ecp.catalog.internal.application.query.CatalogBrowseModel.CategoryNode;
-import org.phuchoang.ecp.catalog.internal.application.query.CatalogBrowseModel.CategoryRef;
+import org.phuchoang.ecp.catalog.internal.application.port.CategoryBrowsePort;
+import org.phuchoang.ecp.catalog.internal.application.query.model.category.CategoryDetail;
+import org.phuchoang.ecp.catalog.internal.application.query.model.category.CategoryNode;
+import org.phuchoang.ecp.catalog.internal.application.query.model.category.CategoryRef;
 import org.phuchoang.ecp.catalog.internal.infrastructure.persistence.JdbcQuerySupport;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
@@ -18,17 +19,19 @@ import java.util.UUID;
 
 /** Catalog-owned category existence, hierarchy, and breadcrumb queries. */
 @Component
-class CatalogCategoryQueries extends JdbcQuerySupport {
+class CatalogCategoryQueries extends JdbcQuerySupport implements CategoryBrowsePort {
 
   CatalogCategoryQueries(JdbcClient jdbc) {
     super(jdbc);
   }
 
-  boolean exists(UUID id) {
+  @Override
+  public boolean categoryExists(UUID id) {
     return exists("SELECT EXISTS (SELECT 1 FROM catalog_category WHERE id = ?)", id);
   }
 
-  Optional<Category> category(UUID id) {
+  @Override
+  public Optional<CategoryDetail> category(UUID id) {
     Optional<CategoryRow> category = optional("""
         SELECT id, parent_id, name, slug, path, depth, sort_order
         FROM catalog_category WHERE id = ?
@@ -37,15 +40,17 @@ class CatalogCategoryQueries extends JdbcQuerySupport {
       return Optional.empty();
     }
     CategoryRow row = category.get();
-    return Optional.of(new Category(row.id, row.parentId, row.name, row.slug, row.depth, row.sortOrder, null, false,
+    return Optional.of(new CategoryDetail(row.id, row.parentId, row.name, row.slug, row.depth, row.sortOrder, null, false,
         ancestors(row)));
   }
 
-  List<CategoryNode> wholeTree() {
+  @Override
+  public List<CategoryNode> wholeTree() {
     return tree(null, null);
   }
 
-  List<CategoryNode> tree(UUID rootId, Integer maxDepth) {
+  @Override
+  public List<CategoryNode> tree(UUID rootId, Integer maxDepth) {
     String sql = rootId == null ? """
         SELECT id, parent_id, name, slug, path, depth, sort_order FROM catalog_category ORDER BY depth, sort_order, name
         """ : """

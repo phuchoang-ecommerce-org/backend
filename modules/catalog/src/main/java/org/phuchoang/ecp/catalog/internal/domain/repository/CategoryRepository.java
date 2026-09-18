@@ -2,6 +2,7 @@ package org.phuchoang.ecp.catalog.internal.domain.repository;
 
 import org.jmolecules.ddd.annotation.Repository;
 import org.phuchoang.ecp.catalog.internal.domain.model.Category;
+import org.phuchoang.ecp.catalog.internal.domain.model.SubtreeCategory;
 
 import java.util.Optional;
 import java.util.List;
@@ -19,5 +20,6 @@ public interface CategoryRepository {
 
     long countByParentId(UUID parentId);
 
-    List<String> findSlugsInSubtree(UUID categoryId);
+    /** The category itself and every descendant, shallowest first — the listings a change affects. */
+    List<SubtreeCategory> findSubtree(UUID categoryId);
 }

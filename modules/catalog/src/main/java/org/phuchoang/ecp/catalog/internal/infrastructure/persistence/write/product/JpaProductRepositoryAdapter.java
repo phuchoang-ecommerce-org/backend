@@ -1,7 +1,9 @@
 package org.phuchoang.ecp.catalog.internal.infrastructure.persistence.write.product;
 
 import org.phuchoang.ecp.catalog.internal.domain.model.Product;
+import org.phuchoang.ecp.catalog.internal.domain.repository.DuplicateSkuException;
 import org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 
 import java.time.Clock;
@@ -40,15 +42,26 @@ class JpaProductRepositoryAdapter implements ProductRepository {
             addedVariant = !product.variants().isEmpty();
         } else {
             entity = existing;
-            entity.update(product.name(), product.description(), product.brand(), product.categoryId(), mapper.json(product.attributes()),
-                product.publicationStatus(), Instant.now(clock));
+            entity.update(product.name(), product.description(), product.brand(), product.categoryId(),
+                mapper.json(product.attributes()), product.publicationStatus().name(), product.publishedAt(),
+                Instant.now(clock));
             addedVariant = children.synchronize(entity, product);
         }
         CatalogProductEntity saved = products.save(entity);
-        // The administration service translates the database-wide SKU constraint into the
-        // catalog validation error, so surface that constraint within save rather than at commit.
-        if (addedVariant) products.flush();
+        if (addedVariant) {
+            // Surface the database-wide SKU constraint (ux_catalog_variant_sku, catalog_retired_sku)
+            // inside save rather than at commit, and as a Catalog concept rather than a Spring one.
+            try {
+                products.flush();
+            } catch (DataIntegrityViolationException violation) {
+                throw new DuplicateSkuException(newestVariantSku(product), violation);
+            }
+        }
         return mapper.toDomain(saved);
+    }
+
+    private static String newestVariantSku(Product product) {
+        return product.variants().isEmpty() ? "?" : product.variants().getLast().sku();
     }
 
     @Override

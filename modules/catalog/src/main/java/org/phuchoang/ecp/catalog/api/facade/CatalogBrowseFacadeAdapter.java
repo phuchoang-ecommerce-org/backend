@@ -1,7 +1,8 @@
 package org.phuchoang.ecp.catalog.api.facade;
 
-import org.phuchoang.ecp.catalog.internal.application.query.CatalogBrowseModel;
-import org.phuchoang.ecp.catalog.internal.application.query.CatalogBrowseService;
+import org.phuchoang.ecp.catalog.internal.application.query.category.CategoryQueryService;
+import org.phuchoang.ecp.catalog.internal.application.query.product.ProductQueryService;
+import org.phuchoang.ecp.catalog.internal.application.query.variant.VariantQueryService;
 import org.phuchoang.ecp.catalog.api.view.category.CategoryNodeView;
 import org.phuchoang.ecp.catalog.api.view.category.CategoryRefView;
 import org.phuchoang.ecp.catalog.api.view.category.CategoryView;
@@ -23,48 +24,47 @@ import java.util.UUID;
  */
 @Component
 public class CatalogBrowseFacadeAdapter implements CatalogBrowseFacade {
-    /** Internal browse-use-case service. */
-    private final CatalogBrowseService service;
+    private final CategoryQueryService categories;
+    private final ProductQueryService products;
+    private final VariantQueryService variants;
     private final CatalogDtoMapper mapper;
 
-    /**
-     * Creates the public-contract adapter.
-     *
-     * @param service browse-use-case implementation to delegate to
-     */
-    public CatalogBrowseFacadeAdapter(CatalogBrowseService service, CatalogDtoMapper mapper) {
-        this.service = service;
+    public CatalogBrowseFacadeAdapter(CategoryQueryService categories, ProductQueryService products,
+            VariantQueryService variants, CatalogDtoMapper mapper) {
+        this.categories = categories;
+        this.products = products;
+        this.variants = variants;
         this.mapper = mapper;
     }
 
     @Override
     /** {@inheritDoc} */
     public List<CategoryNodeView> listCategories(UUID rootId, Integer maxDepth) {
-        return service.listCategories(rootId, maxDepth).stream().map(mapper::categoryNodeView).toList();
+        return categories.listCategories(rootId, maxDepth).stream().map(mapper::categoryNodeView).toList();
     }
 
     @Override
     /** {@inheritDoc} */
     public CategoryView getCategory(UUID categoryId) {
-        return mapper.categoryView(service.getCategory(categoryId));
+        return mapper.categoryView(categories.getCategory(categoryId));
     }
 
     @Override
     /** {@inheritDoc} */
     public ProductPageView listCategoryProducts(UUID categoryId, CatalogListingQuery query) {
-        return mapper.productPageView(service.listCategoryProducts(categoryId, mapper.listingQuery(query)));
+        return mapper.productPageView(products.listCategoryProducts(categoryId, mapper.listingQuery(query)));
     }
 
     @Override
     /** {@inheritDoc} */
     public List<VariantView> listProductVariants(UUID productId, Map<String, String> options) {
-        return service.listProductVariants(productId, options).stream().map(mapper::variantView).toList();
+        return variants.listProductVariants(productId, options).stream().map(mapper::variantView).toList();
     }
 
     @Override
     /** {@inheritDoc} */
     public VariantView getProductVariant(UUID productId, UUID variantId) {
-        return mapper.variantView(service.getProductVariant(productId, variantId));
+        return mapper.variantView(variants.getProductVariant(productId, variantId));
     }
 
 }
