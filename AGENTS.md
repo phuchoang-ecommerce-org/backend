@@ -10,6 +10,10 @@ You can find the document implementation plan in [Docs](../docs-extract/)
 
 You can find the Sprint plan of this project in [Plan](docs/scrum-plan)
 
+You can find the Skills of this project in [Skills](.skills)
+
+You can find the subagent definition of this project in [Subagents](.agents)
+
 ## Build, Test, and Development Commands
 
 - `./gradlew build` compiles and tests every module.

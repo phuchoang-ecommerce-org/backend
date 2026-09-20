@@ -63,7 +63,7 @@ class HttpWebRevalidationGatewayTest {
         EventEnvelope event = event();
         status.set(401);
         assertThatThrownBy(() -> gateway("secret").revalidate(event, "b"))
-            .isInstanceOf(IllegalStateException.class).hasMessageContaining("signature rejected");
+            .isInstanceOf(RevalidationSignatureRejectedException.class).hasMessageContaining("signature rejected");
         status.set(500);
         assertThatThrownBy(() -> gateway("secret").revalidate(event, "b"))
             .isInstanceOf(IllegalStateException.class).hasMessageContaining("HTTP 500");

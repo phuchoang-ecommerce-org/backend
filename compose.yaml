@@ -5,7 +5,7 @@ services:
       - 'POSTGRES_DB=ecp'
       - 'POSTGRES_PASSWORD=secret'
     ports:
-      - '5432'
+      - '5432:5432'
   kafka:
     image: 'confluentinc/cp-kafka:7.7.1'
     environment:
@@ -13,7 +13,7 @@ services:
       - 'KAFKA_NODE_ID=1'
       - 'KAFKA_PROCESS_ROLES=broker,controller'
       - 'KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093'
-      - 'KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092'
+      - 'KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092'
       - 'KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER'
       - 'KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka:9093'
       - 'KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'
@@ -22,7 +22,7 @@ services:
       - 'KAFKA_MIN_INSYNC_REPLICAS=1'
       - 'KAFKA_NUM_PARTITIONS=3'
     ports:
-      - '9092'
+      - '9092:9092'
   elasticsearch:
     image: 'docker.elastic.co/elasticsearch/elasticsearch:9.3.3'
     environment:
@@ -55,7 +55,7 @@ services:
       --timeout 300
       --tcp-keepalive 60
     ports:
-      - '6379'
+      - '6379:6379'
   redis-state:
     image: 'redis:7'
     command: >-

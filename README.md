@@ -27,6 +27,9 @@ Cross-module edges are limited to exactly what [`Module Dependency Diagram.md`](
 curl localhost:8080/healthz   # -> OK
 ```
 
+`bootRun` loads local configuration from `.env` when it exists, or from the development defaults
+in `.env.example` otherwise. Copy the template before changing values: `cp .env.example .env`.
+
 `./gradlew check` needs Docker for the `integrationTest` (L4-L6) source set — `docker compose up` brings up the local data tier (PostgreSQL, Kafka, Elasticsearch, MongoDB, Redis) from `compose.yaml`, and Testcontainers starts its own PostgreSQL container for `app`'s `PostgresConnectivityIT` independently of Compose.
 
 **On Colima:** start it first (`colima start --memory 4`, per the repo root `CLAUDE.md`), then point Testcontainers at the Colima VM's Docker socket — the default `docker context` resolution isn't enough on its own:

@@ -87,8 +87,45 @@ val integrationTestTask = tasks.register<Test>("integrationTest") {
     classpath = integrationTest.runtimeClasspath
     useJUnitPlatform()
     shouldRunAfter(tasks.test)
+    // Integration tests provide PostgreSQL through Testcontainers but do not provision Kafka.
+    // Do not make the Spring context wait for KafkaAdmin topic creation.
+    environment("SPRING_KAFKA_ADMIN_AUTO_CREATE", "false")
+
+    // Docker CLI understands Colima contexts, but Testcontainers does not read them. Give
+    // the forked integration-test JVM the matching socket configuration when Colima is
+    // present, while preserving an explicit user-supplied Docker configuration.
+    val colimaDockerSocket = file("${System.getProperty("user.home")}/.colima/default/docker.sock")
+    if (System.getenv("DOCKER_HOST") == null && colimaDockerSocket.exists()) {
+        environment("DOCKER_HOST", "unix://${colimaDockerSocket.absolutePath}")
+        environment("TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE", "/var/run/docker.sock")
+    }
 }
 
 tasks.check {
     dependsOn(integrationTestTask)
+}
+
+fun loadDotenv(file: File): Map<String, String> = file.readLines()
+    .mapNotNull { line ->
+        val trimmed = line.trim()
+        if (trimmed.isBlank() || trimmed.startsWith("#")) {
+            return@mapNotNull null
+        }
+        val separator = trimmed.indexOf('=')
+        require(separator > 0) { "Invalid dotenv entry in ${file.name}: $line" }
+        val key = trimmed.substring(0, separator).trim()
+        val value = trimmed.substring(separator + 1).trim().removeSurrounding("\"")
+        key to value
+    }
+    .toMap()
+
+tasks.bootRun {
+    val dotenvFile = rootProject.file(".env").takeIf(File::isFile)
+        ?: rootProject.file(".env.example").takeIf(File::isFile)
+
+    dotenvFile?.let { file ->
+        loadDotenv(file)
+            .filterKeys { System.getenv(it) == null }
+            .forEach { (key, value) -> environment(key, value) }
+    }
 }

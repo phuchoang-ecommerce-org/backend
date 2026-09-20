@@ -1,6 +1,8 @@
 package org.phuchoang.ecp.messaging.revalidation;
 
 import org.phuchoang.ecp.messaging.EventEnvelope;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -17,6 +19,8 @@ import java.nio.charset.StandardCharsets;
  */
 @Component
 class HttpWebRevalidationGateway implements WebRevalidationGateway {
+
+    private static final Logger log = LoggerFactory.getLogger(HttpWebRevalidationGateway.class);
 
     static final String SIGNATURE_HEADER = "X-ECP-Signature";
     static final String CORRELATION_HEADER = "X-Correlation-Id";
@@ -48,7 +52,8 @@ class HttpWebRevalidationGateway implements WebRevalidationGateway {
             return;
         }
         if (status == 401) {
-            throw new IllegalStateException("Web revalidation signature rejected for eventId=" + event.eventId());
+            log.error("callback.signature_rejected eventId={} correlationId={}", event.eventId(), event.correlationId());
+            throw new RevalidationSignatureRejectedException(event.eventId());
         }
         throw new IllegalStateException("Web revalidation returned HTTP " + status + " for eventId=" + event.eventId());
     }
