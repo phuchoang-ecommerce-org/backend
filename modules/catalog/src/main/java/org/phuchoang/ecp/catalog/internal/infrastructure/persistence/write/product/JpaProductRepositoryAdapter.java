@@ -42,9 +42,8 @@ class JpaProductRepositoryAdapter implements ProductRepository {
             addedVariant = !product.variants().isEmpty();
         } else {
             entity = existing;
-            entity.update(product.name(), product.description(), product.brand(), product.categoryId(),
-                mapper.json(product.attributes()), product.publicationStatus().name(), product.publishedAt(),
-                Instant.now(clock));
+            mapper.updateEntity(product, entity);
+            entity.touch(Instant.now(clock));
             addedVariant = children.synchronize(entity, product);
         }
         CatalogProductEntity saved = products.save(entity);

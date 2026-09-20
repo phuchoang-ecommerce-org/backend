@@ -2,7 +2,6 @@ package org.phuchoang.ecp.identity.internal.infrastructure.persistence.address;
 
 import org.phuchoang.ecp.identity.internal.application.port.AddressStore;
 import org.phuchoang.ecp.identity.internal.domain.model.CustomerAddress;
-import org.phuchoang.ecp.sharedkernel.api.address.Address;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 
@@ -16,9 +15,11 @@ import java.util.UUID;
 class JpaAddressStoreAdapter implements AddressStore {
 
     private final AddressJpaStore addressJpaRepository;
+    private final AddressJpaMapper mapper;
 
-    JpaAddressStoreAdapter(AddressJpaStore addressJpaRepository) {
+    JpaAddressStoreAdapter(AddressJpaStore addressJpaRepository, AddressJpaMapper mapper) {
         this.addressJpaRepository = addressJpaRepository;
+        this.mapper = mapper;
     }
 
     @Override
@@ -26,16 +27,12 @@ class JpaAddressStoreAdapter implements AddressStore {
         Instant createdAt = addressJpaRepository.findById(address.id())
             .map(AddressEntity::getCreatedAt)
             .orElseGet(Instant::now);
-        Address a = address.address();
-        AddressEntity entity = new AddressEntity(address.id(), address.accountId(), a.label(), a.recipientName(),
-            a.line1(), a.line2(), a.city(), a.region(), a.postalCode(), a.countryCode(), a.phone(),
-            address.defaultShipping(), address.defaultBilling(), createdAt);
-        return toDomain(addressJpaRepository.save(entity));
+        return mapper.toDomain(addressJpaRepository.save(mapper.toEntity(address, createdAt)));
     }
 
     @Override
     public Optional<CustomerAddress> findById(UUID id) {
-        return addressJpaRepository.findById(id).map(this::toDomain);
+        return addressJpaRepository.findById(id).map(mapper::toDomain);
     }
 
     @Override
@@ -43,7 +40,7 @@ class JpaAddressStoreAdapter implements AddressStore {
         List<AddressEntity> entities = after == null
             ? addressJpaRepository.findFirstPage(accountId, PageRequest.of(0, size))
             : addressJpaRepository.findNextPage(accountId, after.createdAt(), after.id(), PageRequest.of(0, size));
-        return entities.stream().map(this::toDomain).toList();
+        return entities.stream().map(mapper::toDomain).toList();
     }
 
     @Override
@@ -73,11 +70,4 @@ class JpaAddressStoreAdapter implements AddressStore {
         return addressJpaRepository.existsByAccountId(accountId);
     }
 
-    private CustomerAddress toDomain(AddressEntity entity) {
-        Address address = new Address(entity.getLabel(), entity.getRecipientName(), entity.getLine1(),
-            entity.getLine2(), entity.getCity(), entity.getRegion(), entity.getPostalCode(), entity.getCountryCode(),
-            entity.getPhone());
-        return CustomerAddress.reconstitute(entity.getId(), entity.getAccountId(), address,
-            entity.isDefaultShipping(), entity.isDefaultBilling());
-    }
 }

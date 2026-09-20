@@ -37,12 +37,31 @@ class CatalogCategoryEntity {
         this.sortOrder = sortOrder; this.featured = featured; this.updatedAt = now;
     }
     UUID id() { return id; }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
     UUID parentId() { return parentId; }
+    public UUID getParentId() { return parentId; }
+    public void setParentId(UUID parentId) { this.parentId = parentId; }
     String name() { return name; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
     String slug() { return slug; }
+    public String getSlug() { return slug; }
+    public void setSlug(String slug) { this.slug = slug; }
     String path() { return path; }
+    public String getPath() { return path; }
+    public void setPath(String path) { this.path = path; }
     int depth() { return depth; }
+    public int getDepth() { return depth; }
+    public void setDepth(int depth) { this.depth = depth; }
     String imageUrl() { return imageUrl; }
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     int sortOrder() { return sortOrder; }
+    public int getSortOrder() { return sortOrder; }
+    public void setSortOrder(int sortOrder) { this.sortOrder = sortOrder; }
     boolean featured() { return featured; }
+    public boolean isFeatured() { return featured; }
+    public void setFeatured(boolean featured) { this.featured = featured; }
+    public void initializeAuditTimestamps(Instant now) { this.createdAt = now; this.updatedAt = now; }
 }

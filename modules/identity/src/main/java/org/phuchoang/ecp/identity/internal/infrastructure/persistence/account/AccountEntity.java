@@ -92,31 +92,43 @@ class AccountEntity {
         return id;
     }
 
+    public void setId(UUID id) { this.id = id; }
+
     String getEmail() {
         return email;
     }
+
+    public void setEmail(String email) { this.email = email; }
 
     String getCredentialHash() {
         return credentialHash;
     }
 
+    public void setCredentialHash(String credentialHash) { this.credentialHash = credentialHash; }
+
     String getDisplayName() {
         return displayName;
     }
+
+    public void setDisplayName(String displayName) { this.displayName = displayName; }
 
     String getPendingEmail() {
         return pendingEmail;
     }
 
+    public void setPendingEmail(String pendingEmail) { this.pendingEmail = pendingEmail; }
+
     AccountStatus getStatus() {
         return status;
     }
+
+    public void setStatus(AccountStatus status) { this.status = status; }
 
     VerificationStatus getVerificationStatus() {
         return verificationStatus;
     }
 
-    void setVerificationStatus(VerificationStatus verificationStatus) {
+    public void setVerificationStatus(VerificationStatus verificationStatus) {
         this.verificationStatus = verificationStatus;
     }
 
@@ -124,7 +136,7 @@ class AccountEntity {
         return verifiedAt;
     }
 
-    void setVerifiedAt(Instant verifiedAt) {
+    public void setVerifiedAt(Instant verifiedAt) {
         this.verifiedAt = verifiedAt;
     }
 
@@ -132,7 +144,7 @@ class AccountEntity {
         return lastLoginAt;
     }
 
-    void setLastLoginAt(Instant lastLoginAt) {
+    public void setLastLoginAt(Instant lastLoginAt) {
         this.lastLoginAt = lastLoginAt;
     }
 
@@ -140,7 +152,7 @@ class AccountEntity {
         return failedLoginCount;
     }
 
-    void setFailedLoginCount(int failedLoginCount) {
+    public void setFailedLoginCount(int failedLoginCount) {
         this.failedLoginCount = failedLoginCount;
     }
 
@@ -148,7 +160,13 @@ class AccountEntity {
         return version;
     }
 
+    public void setVersion(long version) { this.version = version; }
+
     Instant getCreatedAt() {
         return createdAt;
     }
+
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+
+    void initializeAuditTimestamps(Instant now) { this.createdAt = now; this.updatedAt = now; }
 }

@@ -1,79 +1,63 @@
 package org.phuchoang.ecp.catalog.internal.infrastructure.persistence.write.product;
 
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.ObjectMapper;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.InjectionStrategy;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.ReportingPolicy;
 import org.phuchoang.ecp.catalog.internal.domain.model.Product;
-import org.phuchoang.ecp.catalog.internal.domain.model.PublicationStatus;
-import org.springframework.stereotype.Component;
 
 import java.time.Instant;
-import java.util.Map;
 
 /** Maps the Product aggregate and its owned children to persistence-only JPA shapes. */
-@Component
-class ProductJpaMapper {
-    private static final TypeReference<Map<String, Object>> OBJECTS = new TypeReference<>() { };
-    private static final TypeReference<Map<String, String>> STRINGS = new TypeReference<>() { };
+@Mapper(componentModel = "spring", uses = CatalogJsonMapper.class, injectionStrategy = InjectionStrategy.CONSTRUCTOR,
+    unmappedTargetPolicy = ReportingPolicy.ERROR)
+interface ProductJpaMapper {
 
-    private final ObjectMapper json;
+    @Mapping(target = "variants", ignore = true)
+    @Mapping(target = "images", ignore = true)
+    @Mapping(target = "attributes", qualifiedByName = "objectsToJson")
+    CatalogProductEntity toEntity(Product product);
 
-    ProductJpaMapper(ObjectMapper json) {
-        this.json = json;
-    }
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "slug", ignore = true)
+    @Mapping(target = "variants", ignore = true)
+    @Mapping(target = "images", ignore = true)
+    @Mapping(target = "attributes", qualifiedByName = "objectsToJson")
+    void updateEntity(Product product, @MappingTarget CatalogProductEntity entity);
 
-    CatalogProductEntity create(Product product, Instant now) {
-        CatalogProductEntity entity = new CatalogProductEntity(product.id(), product.categoryId(), product.name(), product.slug(),
-            product.description(), product.brand(), json(product.attributes()), now);
+    @BeanMapping(unmappedTargetPolicy = ReportingPolicy.IGNORE)
+    @Mapping(target = "attributes", qualifiedByName = "jsonToObjects")
+    Product toDomain(CatalogProductEntity entity);
+
+    @Mapping(target = "options", qualifiedByName = "stringsToJson")
+    CatalogVariantEntity toEntity(Product.Variant variant);
+
+    @Mapping(target = "options", qualifiedByName = "jsonToStrings")
+    Product.Variant toDomain(CatalogVariantEntity entity);
+
+    CatalogProductImageEntity toEntity(Product.Image image);
+
+    Product.Image toDomain(CatalogProductImageEntity entity);
+
+    default CatalogProductEntity create(Product product, Instant now) {
+        CatalogProductEntity entity = toEntity(product);
+        entity.initializeAuditTimestamps(now);
         product.variants().forEach(variant -> entity.addVariant(variantEntity(variant, now)));
         product.images().forEach(image -> entity.addImage(imageEntity(image, now)));
         return entity;
     }
 
-    Product toDomain(CatalogProductEntity entity) {
-        return new Product(entity.id(), entity.categoryId(), entity.name(), entity.slug(), entity.description(), entity.brand(),
-            PublicationStatus.from(entity.publicationStatus()), entity.publishedAt(), objects(entity.attributes()),
-            entity.variants().stream().map(this::toDomain).toList(), entity.images().stream().map(this::toDomain).toList());
+    default CatalogVariantEntity variantEntity(Product.Variant variant, Instant now) {
+        CatalogVariantEntity entity = toEntity(variant);
+        entity.initializeAuditTimestamps(now);
+        return entity;
     }
 
-    CatalogVariantEntity variantEntity(Product.Variant variant, Instant now) {
-        return new CatalogVariantEntity(variant.id(), variant.sku(), variant.name(), variant.amount(), variant.currency(),
-            json(variant.options()), variant.weightGrams(), variant.active(), now);
-    }
-
-    CatalogProductImageEntity imageEntity(Product.Image image, Instant now) {
-        return new CatalogProductImageEntity(image.id(), image.url(), image.altText(), image.sortOrder(), now);
-    }
-
-    private Product.Variant toDomain(CatalogVariantEntity entity) {
-        return new Product.Variant(entity.id(), entity.sku(), entity.name(), entity.amount(), entity.currency(),
-            strings(entity.options()), entity.weightGrams(), entity.active());
-    }
-
-    private Product.Image toDomain(CatalogProductImageEntity entity) {
-        return new Product.Image(entity.id(), entity.url(), entity.altText(), entity.sortOrder());
-    }
-
-    String json(Object value) {
-        try {
-            return json.writeValueAsString(value == null ? Map.of() : value);
-        } catch (Exception exception) {
-            throw new IllegalArgumentException("Invalid catalog JSON", exception);
-        }
-    }
-
-    private Map<String, Object> objects(String value) {
-        try {
-            return json.readValue(value, OBJECTS);
-        } catch (Exception exception) {
-            throw new IllegalStateException("Invalid stored catalog attributes", exception);
-        }
-    }
-
-    private Map<String, String> strings(String value) {
-        try {
-            return json.readValue(value, STRINGS);
-        } catch (Exception exception) {
-            throw new IllegalStateException("Invalid stored catalog options", exception);
-        }
+    default CatalogProductImageEntity imageEntity(Product.Image image, Instant now) {
+        CatalogProductImageEntity entity = toEntity(image);
+        entity.initializeAuditTimestamps(now);
+        return entity;
     }
 }

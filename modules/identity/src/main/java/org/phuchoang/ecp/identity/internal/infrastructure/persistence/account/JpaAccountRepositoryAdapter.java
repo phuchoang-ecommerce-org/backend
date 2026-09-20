@@ -4,7 +4,6 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceException;
 import org.phuchoang.ecp.identity.internal.domain.repository.AccountRepository;
 import org.phuchoang.ecp.identity.internal.domain.model.Account;
-import org.phuchoang.ecp.identity.internal.domain.model.CredentialHash;
 import org.phuchoang.ecp.identity.internal.domain.model.EmailAddress;
 import org.phuchoang.ecp.identity.internal.domain.model.RoleCode;
 import org.springframework.stereotype.Repository;
@@ -12,7 +11,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -26,12 +24,14 @@ class JpaAccountRepositoryAdapter implements AccountRepository {
     private final AccountJpaRepository accountJpaRepository;
     private final AccountRoleAssignments accountRoleAssignments;
     private final EntityManager entityManager;
+    private final AccountJpaMapper mapper;
 
     JpaAccountRepositoryAdapter(AccountJpaRepository accountJpaRepository,
-            AccountRoleAssignments accountRoleAssignments, EntityManager entityManager) {
+            AccountRoleAssignments accountRoleAssignments, EntityManager entityManager, AccountJpaMapper mapper) {
         this.accountJpaRepository = accountJpaRepository;
         this.accountRoleAssignments = accountRoleAssignments;
         this.entityManager = entityManager;
+        this.mapper = mapper;
     }
 
     @Override
@@ -43,17 +43,14 @@ class JpaAccountRepositoryAdapter implements AccountRepository {
         // transaction would make that transaction's later commit throw UnexpectedRollbackException.
         // A dedicated nested transaction is what lets RegisterAccountService catch
         // DuplicateEmailException and still commit its own (otherwise untouched) transaction.
-        AccountEntity entity = new AccountEntity(account.id(), account.email().value(), pendingEmailValueOf(account),
-            account.credentialHash().value(), account.displayName(), account.status(),
-            account.verificationStatus(), account.verifiedAt(), account.lastLoginAt(),
-            account.failedLoginCount(), account.version(), account.createdAt());
+        AccountEntity entity = mapper.toEntity(account);
         try {
             entityManager.persist(entity);
             entityManager.flush();
             for (RoleCode role : account.roles()) {
                 accountRoleAssignments.grant(entity.getId(), role);
             }
-            return toDomain(entity, account.roles());
+            return mapper.toDomain(entity, account.roles());
         } catch (PersistenceException e) {
             throw new DuplicateEmailException(e);
         }
@@ -61,35 +58,20 @@ class JpaAccountRepositoryAdapter implements AccountRepository {
 
     @Override
     public Account save(Account account) {
-        AccountEntity entity = new AccountEntity(account.id(), account.email().value(), pendingEmailValueOf(account),
-            account.credentialHash().value(), account.displayName(), account.status(),
-            account.verificationStatus(), account.verifiedAt(), account.lastLoginAt(),
-            account.failedLoginCount(), account.version(), account.createdAt());
+        AccountEntity entity = mapper.toEntity(account);
         AccountEntity saved = entityManager.merge(entity);
-        return toDomain(saved, account.roles());
+        return mapper.toDomain(saved, account.roles());
     }
 
     @Override
     public Optional<Account> findById(UUID id) {
         return accountJpaRepository.findById(id)
-            .map(entity -> toDomain(entity, accountRoleAssignments.rolesOf(entity.getId())));
+            .map(entity -> mapper.toDomain(entity, accountRoleAssignments.rolesOf(entity.getId())));
     }
 
     @Override
     public Optional<Account> findByEmail(EmailAddress email) {
         return accountJpaRepository.findByEmailIgnoreCase(email.value())
-            .map(entity -> toDomain(entity, accountRoleAssignments.rolesOf(entity.getId())));
-    }
-
-    private Account toDomain(AccountEntity entity, Set<RoleCode> roles) {
-        EmailAddress pendingEmail = entity.getPendingEmail() == null ? null : new EmailAddress(entity.getPendingEmail());
-        return Account.reconstitute(entity.getId(), new EmailAddress(entity.getEmail()), pendingEmail,
-            new CredentialHash(entity.getCredentialHash()), entity.getDisplayName(), entity.getStatus(),
-            entity.getVerificationStatus(), entity.getVerifiedAt(), entity.getLastLoginAt(),
-            entity.getFailedLoginCount(), entity.getVersion(), roles, entity.getCreatedAt());
-    }
-
-    private static String pendingEmailValueOf(Account account) {
-        return account.pendingEmail() == null ? null : account.pendingEmail().value();
+            .map(entity -> mapper.toDomain(entity, accountRoleAssignments.rolesOf(entity.getId())));
     }
 }

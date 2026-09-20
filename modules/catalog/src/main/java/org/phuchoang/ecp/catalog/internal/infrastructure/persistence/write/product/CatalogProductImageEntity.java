@@ -28,7 +28,16 @@ class CatalogProductImageEntity {
     }
     void attachTo(CatalogProductEntity product) { this.product = product; }
     UUID id() { return id; }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
     String url() { return url; }
+    public String getUrl() { return url; }
+    public void setUrl(String url) { this.url = url; }
     String altText() { return altText; }
+    public String getAltText() { return altText; }
+    public void setAltText(String altText) { this.altText = altText; }
     int sortOrder() { return sortOrder; }
+    public int getSortOrder() { return sortOrder; }
+    public void setSortOrder(int sortOrder) { this.sortOrder = sortOrder; }
+    public void initializeAuditTimestamps(Instant now) { this.createdAt = now; this.updatedAt = now; }
 }

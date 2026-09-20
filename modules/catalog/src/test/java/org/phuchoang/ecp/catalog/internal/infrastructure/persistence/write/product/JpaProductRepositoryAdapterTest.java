@@ -75,7 +75,7 @@ class JpaProductRepositoryAdapterTest {
     }
 
     private static JpaProductRepositoryAdapter adapter(CatalogProductJpaRepository products) {
-        ProductJpaMapper mapper = new ProductJpaMapper(new ObjectMapper());
+        ProductJpaMapper mapper = new ProductJpaMapperImpl(new CatalogJsonMapper(new ObjectMapper()));
         return new JpaProductRepositoryAdapter(products, mapper, new ProductChildSynchronizer(mapper, CLOCK), CLOCK);
     }
 }

@@ -39,11 +39,28 @@ class CatalogVariantEntity {
     void attachTo(CatalogProductEntity product) { this.product = product; }
     void changePrice(BigDecimal amount, String currency, Instant now) { this.amount = amount; this.currency = currency; this.updatedAt = now; }
     UUID id() { return id; }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
     String sku() { return sku; }
+    public String getSku() { return sku; }
+    public void setSku(String sku) { this.sku = sku; }
     String name() { return name; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
     BigDecimal amount() { return amount; }
+    public BigDecimal getAmount() { return amount; }
+    public void setAmount(BigDecimal amount) { this.amount = amount; }
     String currency() { return currency; }
+    public String getCurrency() { return currency; }
+    public void setCurrency(String currency) { this.currency = currency; }
     String options() { return options; }
+    public String getOptions() { return options; }
+    public void setOptions(String options) { this.options = options; }
     Integer weightGrams() { return weightGrams; }
+    public Integer getWeightGrams() { return weightGrams; }
+    public void setWeightGrams(Integer weightGrams) { this.weightGrams = weightGrams; }
     boolean active() { return active; }
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
+    public void initializeAuditTimestamps(Instant now) { this.createdAt = now; this.updatedAt = now; }
 }

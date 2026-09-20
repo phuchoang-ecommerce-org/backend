@@ -104,14 +104,36 @@ class CatalogProductEntity {
     }
 
     UUID id() { return id; }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
     UUID categoryId() { return categoryId; }
+    public UUID getCategoryId() { return categoryId; }
+    public void setCategoryId(UUID categoryId) { this.categoryId = categoryId; }
     String name() { return name; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
     String slug() { return slug; }
+    public String getSlug() { return slug; }
+    public void setSlug(String slug) { this.slug = slug; }
     String description() { return description; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
     String brand() { return brand; }
+    public String getBrand() { return brand; }
+    public void setBrand(String brand) { this.brand = brand; }
     String publicationStatus() { return publicationStatus; }
+    public String getPublicationStatus() { return publicationStatus; }
+    public void setPublicationStatus(String publicationStatus) { this.publicationStatus = publicationStatus; }
     Instant publishedAt() { return publishedAt; }
+    public Instant getPublishedAt() { return publishedAt; }
+    public void setPublishedAt(Instant publishedAt) { this.publishedAt = publishedAt; }
     String attributes() { return attributes; }
+    public String getAttributes() { return attributes; }
+    public void setAttributes(String attributes) { this.attributes = attributes; }
     List<CatalogVariantEntity> variants() { return variants; }
+    public List<CatalogVariantEntity> getVariants() { return variants; }
     List<CatalogProductImageEntity> images() { return images; }
+    public List<CatalogProductImageEntity> getImages() { return images; }
+    public void initializeAuditTimestamps(Instant now) { this.createdAt = now; this.updatedAt = now; }
+    public void touch(Instant now) { this.updatedAt = now; }
 }

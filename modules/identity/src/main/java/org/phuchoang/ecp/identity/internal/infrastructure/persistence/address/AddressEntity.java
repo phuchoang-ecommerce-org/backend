@@ -88,56 +88,72 @@ class AddressEntity {
     UUID getId() {
         return id;
     }
+    public void setId(UUID id) { this.id = id; }
 
     UUID getAccountId() {
         return accountId;
     }
+    public void setAccountId(UUID accountId) { this.accountId = accountId; }
 
     String getLabel() {
         return label;
     }
+    public void setLabel(String label) { this.label = label; }
 
     String getRecipientName() {
         return recipientName;
     }
+    public void setRecipientName(String recipientName) { this.recipientName = recipientName; }
 
     String getLine1() {
         return line1;
     }
+    public void setLine1(String line1) { this.line1 = line1; }
 
     String getLine2() {
         return line2;
     }
+    public void setLine2(String line2) { this.line2 = line2; }
 
     String getCity() {
         return city;
     }
+    public void setCity(String city) { this.city = city; }
 
     String getRegion() {
         return region;
     }
+    public void setRegion(String region) { this.region = region; }
 
     String getPostalCode() {
         return postalCode;
     }
+    public void setPostalCode(String postalCode) { this.postalCode = postalCode; }
 
     String getCountryCode() {
         return countryCode;
     }
+    public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
 
     String getPhone() {
         return phone;
     }
+    public void setPhone(String phone) { this.phone = phone; }
 
     boolean isDefaultShipping() {
         return defaultShipping;
     }
+    public void setDefaultShipping(boolean defaultShipping) { this.defaultShipping = defaultShipping; }
 
     boolean isDefaultBilling() {
         return defaultBilling;
     }
+    public void setDefaultBilling(boolean defaultBilling) { this.defaultBilling = defaultBilling; }
 
     Instant getCreatedAt() {
         return createdAt;
     }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+
+    void initializeAuditTimestamps(Instant now) { this.createdAt = now; this.updatedAt = now; }
 }

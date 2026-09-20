@@ -17,23 +17,22 @@ class JpaTokenStoreAdapter implements TokenStore {
 
     private final TokenJpaStore tokenJpaRepository;
     private final Clock clock;
+    private final TokenJpaMapper mapper;
 
-    JpaTokenStoreAdapter(TokenJpaStore tokenJpaRepository, Clock clock) {
+    JpaTokenStoreAdapter(TokenJpaStore tokenJpaRepository, Clock clock, TokenJpaMapper mapper) {
         this.tokenJpaRepository = tokenJpaRepository;
         this.clock = clock;
+        this.mapper = mapper;
     }
 
     @Override
     public IdentityToken save(IdentityToken token) {
-        TokenEntity entity = new TokenEntity(token.id(), token.accountId(), token.type(), token.tokenHash(),
-            token.issuedAt(), token.expiresAt(), token.consumedAt(), token.replacedBy(), token.chainId());
-        TokenEntity saved = tokenJpaRepository.save(entity);
-        return toDomain(saved);
+        return mapper.toDomain(tokenJpaRepository.save(mapper.toEntity(token)));
     }
 
     @Override
     public Optional<IdentityToken> findByTokenHash(String tokenHash, TokenType type) {
-        return tokenJpaRepository.findByTokenHashAndTokenType(tokenHash, type).map(this::toDomain);
+        return tokenJpaRepository.findByTokenHashAndTokenType(tokenHash, type).map(mapper::toDomain);
     }
 
     @Override
@@ -60,9 +59,4 @@ class JpaTokenStoreAdapter implements TokenStore {
         tokenJpaRepository.invalidateChain(chainId, now);
     }
 
-    private IdentityToken toDomain(TokenEntity entity) {
-        return new IdentityToken(entity.getId(), entity.getAccountId(), entity.getTokenType(),
-            entity.getTokenHash(), entity.getIssuedAt(), entity.getExpiresAt(), entity.getConsumedAt(),
-            entity.getReplacedBy(), entity.getChainId());
-    }
 }
