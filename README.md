@@ -23,12 +23,35 @@ Cross-module edges are limited to exactly what [`Module Dependency Diagram.md`](
 ```sh
 ./gradlew build          # compiles all 14 modules
 ./gradlew check          # runs test (L1-L3) + integrationTest (L4-L6) in every module
-./gradlew :app:bootRun   # starts the application on :8080
+docker compose up -d postgres kafka redis-cache redis-state
+./gradlew :app:bootRun   # starts the secured application on :8080
 curl localhost:8080/healthz   # -> OK
 ```
 
+### Manual API testing
+
+The normal application start requires a bearer token for protected APIs:
+
+```sh
+./gradlew :app:bootRun
+```
+
+For local token-free manual API testing, activate the `demo` and `no-auth` profiles. This seeds
+the demo records and sends requests without a JWT through an all-access local actor. Never use
+this profile combination in shared or production environments.
+
+```sh
+./gradlew :app:bootRun --args='--spring.profiles.active=demo,no-auth'
+```
+
+Use `ECP_NO_AUTH_ACCOUNT_ID` to select an existing account for `/accounts/me` and other
+ownership-based APIs; it otherwise defaults to the seeded demo administrator.
+
 `bootRun` loads local configuration from `.env` when it exists, or from the development defaults
 in `.env.example` otherwise. Copy the template before changing values: `cp .env.example .env`.
+
+For a real local frontend/backend walkthrough with seeded session and catalog records, see
+[`docs/local-demo.md`](docs/local-demo.md).
 
 `./gradlew check` needs Docker for the `integrationTest` (L4-L6) source set — `docker compose up` brings up the local data tier (PostgreSQL, Kafka, Elasticsearch, MongoDB, Redis) from `compose.yaml`, and Testcontainers starts its own PostgreSQL container for `app`'s `PostgresConnectivityIT` independently of Compose.
 

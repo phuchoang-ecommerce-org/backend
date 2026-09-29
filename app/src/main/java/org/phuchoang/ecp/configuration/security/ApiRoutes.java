@@ -23,6 +23,9 @@ final class ApiRoutes {
 
     /** Guest-readable catalog surfaces (`BR-CAT-02`: only published products are ever returned). */
     static final String[] PUBLIC_GET = {
+        "/api/v1/categories",
+        "/api/v1/categories/*",
+        "/api/v1/categories/*/products",
         "/api/v1/products/*",
         "/api/v1/products/*/rating-summary",
         "/api/v1/products/*/variants",

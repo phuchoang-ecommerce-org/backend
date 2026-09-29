@@ -1,0 +1,8 @@
+# Explicit local-only profile for manual API calls without a bearer token. Never activate this
+# profile in a shared or production environment.
+ecp:
+  security:
+    no-auth:
+      # Defaults to DemoDataSeeder's administrator. Point this at an existing account when testing
+      # /accounts/me or ownership-based APIs against a different dataset.
+      account-id: ${ECP_NO_AUTH_ACCOUNT_ID:10000000-0000-0000-0000-000000000001}

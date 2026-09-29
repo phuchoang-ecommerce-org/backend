@@ -4,8 +4,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 import org.phuchoang.ecp.catalog.api.facade.CatalogProductFacade;
+import org.phuchoang.ecp.catalog.api.view.common.MoneyView;
 import org.phuchoang.ecp.catalog.api.view.product.ProductDetailView;
 import org.phuchoang.ecp.catalog.api.view.product.RatingSummaryView;
+import org.phuchoang.ecp.catalog.api.view.product.VariantView;
 import org.phuchoang.ecp.sharedkernel.api.error.DomainException;
 import org.phuchoang.ecp.sharedkernel.api.error.GenErrorCode;
 import org.phuchoang.ecp.sharedkernel.api.ratelimit.RateLimiter;
@@ -21,6 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.math.BigDecimal;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
@@ -53,6 +56,19 @@ class ProductControllerTest {
             .andExpect(jsonPath("$.variants").isArray())
             .andExpect(jsonPath("$.reviews").doesNotExist())
             .andExpect(jsonPath("$.relatedProducts").doesNotExist());
+    }
+
+    @Test
+    void serializesMoneyAmountsAsContractDecimalStrings() throws Exception {
+        UUID id = UUID.randomUUID();
+        VariantView variant = new VariantView(UUID.randomUUID(), "JACKET-RED", "Red", new MoneyView(new BigDecimal("59.00"), "USD"),
+            null, Map.of("color", "Red"), null, true, null);
+        BDDMockito.given(catalog.getProduct(id)).willReturn(new ProductDetailView(id, "Trail jacket", "trail-jacket",
+            null, null, "PUBLISHED", null, List.of(), Map.of(), List.of(), List.of(variant), null, 0));
+
+        mockMvc.perform(get("/api/v1/products/{id}", id))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.variants[0].listPrice.amount").value("59.00"));
     }
 
     @Test
