@@ -268,6 +268,17 @@ class ArchitectureTests {
     }
 
     @Test
+    void elasticsearchClientTypesAreConfinedToCatalogSearchInfrastructure() {
+        ArchRule rule = noClasses()
+            .that().resideOutsideOfPackage(ROOT_PACKAGE + ".catalog.internal.infrastructure.search..")
+            .should().dependOnClassesThat().resideInAPackage("co.elastic.clients.elasticsearch..")
+            .because("ADR-0014 and ADR-0018 G6 confine Elasticsearch access to Catalog's search adapter; "
+                + "controllers, application services and Kafka transport must only name ports")
+            .allowEmptyShould(true);
+        rule.check(mainClasses);
+    }
+
+    @Test
     void kafkaProducerApisAreConfinedToTheCompositionRoot() {
         ArchRule rule = noClasses()
             .that().resideOutsideOfPackage(ROOT_PACKAGE + ".messaging..")

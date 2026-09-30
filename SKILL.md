@@ -1,2 +1,1 @@
-[Skills](.skills)
-[Subagents](.agents)
+[skill](.agents/)

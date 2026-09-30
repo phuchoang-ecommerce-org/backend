@@ -29,7 +29,8 @@ final class ApiRoutes {
         "/api/v1/products/*",
         "/api/v1/products/*/rating-summary",
         "/api/v1/products/*/variants",
-        "/api/v1/products/*/variants/*"
+        "/api/v1/products/*/variants/*",
+        "/api/v1/search/products"
     };
 
     private ApiRoutes() {

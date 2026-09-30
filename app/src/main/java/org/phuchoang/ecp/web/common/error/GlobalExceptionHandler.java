@@ -45,6 +45,15 @@ public class GlobalExceptionHandler {
             exception.errors());
     }
 
+    @ExceptionHandler(UnprocessableQueryException.class)
+    public ResponseEntity<Problem> handleUnprocessableQuery(UnprocessableQueryException exception,
+            HttpServletRequest request) {
+        // Integration Contract §3.3 reserves 422 for a well-formed but incompatible query
+        // combination (currently q + sort). The shared registry has no SCH-specific 422 code.
+        return problemResponse(GenErrorCode.VALIDATION_FAILED.code(), GenErrorCode.VALIDATION_FAILED.title(),
+            422, exception.getMessage(), request, List.of());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Problem> handleBeanValidation(MethodArgumentNotValidException exception,
             HttpServletRequest request) {

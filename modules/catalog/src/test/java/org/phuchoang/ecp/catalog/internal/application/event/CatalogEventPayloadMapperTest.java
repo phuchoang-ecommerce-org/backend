@@ -66,7 +66,7 @@ class CatalogEventPayloadMapperTest {
         Product.Variant variant = product.variants().getFirst();
 
         VariantAddedPayload added = (VariantAddedPayload) mapper.payload(
-            new VariantAdded(product.id(), product.categoryId(), variant),
+            new VariantAdded(product, variant),
             AffectedCategories.of(List.of(new SubtreeCategory(product.categoryId(), "shirts"))));
         ProductPriceChangedPayload priced = (ProductPriceChangedPayload) mapper.payload(
             new ProductPriceChanged(product.id(), variant), AffectedCategories.NONE);
@@ -74,6 +74,9 @@ class CatalogEventPayloadMapperTest {
         assertThat(added.variantId()).isEqualTo(variant.id());
         assertThat(added.variantIds()).containsExactly(variant.id());
         assertThat(added.affectedCategorySlugs()).containsExactly("shirts");
+        assertThat(added.product()).isNotNull();
+        assertThat(added.product().variants()).extracting(variantPayload -> variantPayload.id())
+            .containsExactly(variant.id());
         assertThat(priced.variantId()).isEqualTo(variant.id());
         assertThat(priced.listPrice().currency()).isEqualTo("USD");
     }

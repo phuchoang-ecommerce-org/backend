@@ -37,7 +37,7 @@ public class CatalogEventPayloadMapper {
             case ProductPublished published -> productChanged(published.product(), affected);
             case VariantAdded added -> new VariantAddedPayload(added.productId(), List.of(added.variant().id()),
                 List.of(added.variant().sku()), affected.ids(), affected.slugs(), added.variant().id(),
-                MoneyPayload.of(added.variant()));
+                MoneyPayload.of(added.variant()), added.product() == null ? null : ProductPayload.of(added.product()));
             case ProductPriceChanged changed -> new ProductPriceChangedPayload(changed.productId(),
                 List.of(changed.variant().id()), List.of(changed.variant().sku()), changed.variant().id(),
                 MoneyPayload.of(changed.variant()));

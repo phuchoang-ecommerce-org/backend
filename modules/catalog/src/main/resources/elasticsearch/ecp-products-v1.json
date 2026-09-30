@@ -1,0 +1,50 @@
+{
+  "settings": {
+    "index": {
+      "number_of_shards": 1,
+      "number_of_replicas": 1
+    }
+  },
+  "mappings": {
+    "dynamic": "strict",
+    "properties": {
+      "documentType": { "type": "keyword" },
+      "productId": { "type": "keyword" },
+      "slug": { "type": "keyword" },
+      "name": {
+        "type": "text",
+        "analyzer": "standard",
+        "fields": {
+          "keyword": { "type": "keyword" },
+          "suggest": { "type": "completion" }
+        }
+      },
+      "description": { "type": "text" },
+      "brand": { "type": "keyword" },
+      "categoryId": { "type": "keyword" },
+      "categoryPath": { "type": "keyword" },
+      "publicationStatus": { "type": "keyword" },
+      "publishedAt": { "type": "date" },
+      "primaryImageUrl": { "type": "keyword", "index": false },
+      "attributes": { "type": "flattened" },
+      "averageRating": { "type": "half_float" },
+      "reviewCount": { "type": "integer" },
+      "variants": {
+        "type": "nested",
+        "properties": {
+          "variantId": { "type": "keyword" },
+          "sku": { "type": "keyword" },
+          "listPrice": { "type": "scaled_float", "scaling_factor": 100 },
+          "currency": { "type": "keyword" },
+          "inStock": { "type": "boolean" },
+          "options": { "type": "flattened" }
+        }
+      },
+      "popularityScore": { "type": "float" },
+      "catalogEventAt": { "type": "date" },
+      "availabilityEventAt": { "type": "date" },
+      "ratingEventAt": { "type": "date" },
+      "indexedAt": { "type": "date" }
+    }
+  }
+}

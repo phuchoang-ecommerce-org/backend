@@ -35,6 +35,8 @@ spring:
         enable.idempotence: true
         max.in.flight.requests.per.connection: 5
         retries: 2147483647
+  elasticsearch:
+    uris: ${ECP_ELASTICSEARCH_URIS:http://localhost:9200}
 
 ecp:
   cursor:
@@ -89,6 +91,8 @@ ecp:
     url: ${ECP_REVALIDATION_URL:}
     secret: ${ECP_REVALIDATE_SECRET:}
     consumer-group: ${ECP_REVALIDATION_CONSUMER_GROUP:ecp.web-revalidation}
+  search-projection:
+    consumer-group: ${ECP_SEARCH_PROJECTION_CONSUMER_GROUP:ecp.catalog-search}
 
 management:
   server:

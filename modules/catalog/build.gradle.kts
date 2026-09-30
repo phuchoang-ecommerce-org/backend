@@ -16,6 +16,10 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-json")
+    // ADR-0014: Catalog owns the event-fed Elasticsearch read model.  This is the official
+    // Java client only; the projection uses no Spring Data repository abstraction.
+    implementation("org.springframework.boot:spring-boot-starter-elasticsearch")
+    implementation("io.micrometer:micrometer-core")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.modulith:spring-modulith-starter-test")

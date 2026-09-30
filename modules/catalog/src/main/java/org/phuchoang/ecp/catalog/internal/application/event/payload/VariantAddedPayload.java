@@ -8,5 +8,6 @@ import java.util.UUID;
 /** `VariantAdded.v1`. */
 @JsonInclude(JsonInclude.Include.ALWAYS)
 public record VariantAddedPayload(UUID productId, List<UUID> variantIds, List<String> variantSkus,
-        List<UUID> affectedCategoryIds, List<String> affectedCategorySlugs, UUID variantId, MoneyPayload listPrice) {
+        List<UUID> affectedCategoryIds, List<String> affectedCategorySlugs, UUID variantId, MoneyPayload listPrice,
+        ProductPayload product) {
 }
