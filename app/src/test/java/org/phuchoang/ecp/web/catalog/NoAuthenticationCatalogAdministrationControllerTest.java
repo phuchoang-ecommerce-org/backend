@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.BDDMockito;
 import org.phuchoang.ecp.catalog.api.facade.CatalogAdministrationFacade;
-import org.phuchoang.ecp.catalog.api.request.ProductWrite;
+import org.phuchoang.ecp.catalog.api.administration.product.ProductWrite;
 import org.phuchoang.ecp.catalog.api.view.product.ProductDetailView;
 import org.phuchoang.ecp.configuration.security.NoAuthenticationSecurityConfig;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;

@@ -36,7 +36,7 @@ final class CatalogSearchMapper {
             source.reviewCount(), source.inStock());
     }
 
-    private static MoneyView money(org.phuchoang.ecp.catalog.internal.application.query.model.common.MoneyValue source) {
+    private static MoneyView money(org.phuchoang.ecp.catalog.internal.application.productpricing.MoneyValue source) {
         return source == null ? null : new MoneyView(source.amount(), source.currency());
     }
 }

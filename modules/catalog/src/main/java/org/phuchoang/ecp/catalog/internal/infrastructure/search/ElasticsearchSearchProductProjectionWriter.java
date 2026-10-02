@@ -8,6 +8,7 @@ import org.phuchoang.ecp.catalog.internal.application.search.SearchProjectionEve
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 import java.time.Clock;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,10 +34,10 @@ class ElasticsearchSearchProductProjectionWriter implements SearchProductProject
     private final Clock clock;
     private final CatalogSearchProjectionPayloadMapper payloads;
 
-    ElasticsearchSearchProductProjectionWriter(ElasticsearchClient client, Clock clock) {
+    ElasticsearchSearchProductProjectionWriter(ElasticsearchClient client, Clock clock, ObjectMapper json) {
         this.client = client;
         this.clock = clock;
-        this.payloads = new CatalogSearchProjectionPayloadMapper(clock);
+        this.payloads = new CatalogSearchProjectionPayloadMapper(clock, json);
     }
 
     @Override

@@ -17,7 +17,7 @@ class CatalogSearchProjectionPayloadMapperTest {
 
     private final ObjectMapper json = new ObjectMapper();
     private final CatalogSearchProjectionPayloadMapper mapper = new CatalogSearchProjectionPayloadMapper(
-        Clock.fixed(Instant.parse("2026-09-30T12:00:00Z"), ZoneOffset.UTC));
+        Clock.fixed(Instant.parse("2026-09-30T12:00:00Z"), ZoneOffset.UTC), json);
 
     @Test
     void mapsPublishedSnapshotsToACompleteSearchDocument() {
@@ -67,6 +67,6 @@ class CatalogSearchProjectionPayloadMapperTest {
 
     private SearchProjectionEvent event(String eventType, UUID aggregateId, String payload) {
         return new SearchProjectionEvent(UUID.randomUUID(), eventType, Instant.parse("2026-09-30T11:00:00Z"), "Product",
-            aggregateId, UUID.randomUUID(), json.readTree(payload));
+            aggregateId, UUID.randomUUID(), payload);
     }
 }

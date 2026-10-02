@@ -1,8 +1,8 @@
 package org.phuchoang.ecp.catalog.api.facade;
 
-import org.phuchoang.ecp.catalog.internal.application.query.category.CategoryQueryService;
-import org.phuchoang.ecp.catalog.internal.application.query.product.ProductQueryService;
-import org.phuchoang.ecp.catalog.internal.application.query.variant.VariantQueryService;
+import org.phuchoang.ecp.catalog.internal.application.browse.category.CategoryQueryService;
+import org.phuchoang.ecp.catalog.internal.application.browse.categoryproduct.CategoryProductListingService;
+import org.phuchoang.ecp.catalog.internal.application.browse.variant.VariantQueryService;
 import org.phuchoang.ecp.catalog.api.view.category.CategoryNodeView;
 import org.phuchoang.ecp.catalog.api.view.category.CategoryRefView;
 import org.phuchoang.ecp.catalog.api.view.category.CategoryView;
@@ -11,7 +11,7 @@ import org.phuchoang.ecp.catalog.api.view.product.AdvisoryAvailabilityView;
 import org.phuchoang.ecp.catalog.api.view.product.ProductPageView;
 import org.phuchoang.ecp.catalog.api.view.product.ProductSummaryView;
 import org.phuchoang.ecp.catalog.api.view.product.VariantView;
-import org.phuchoang.ecp.catalog.api.query.CatalogListingQuery;
+import org.phuchoang.ecp.catalog.api.browse.categoryproduct.CatalogListingQuery;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -25,14 +25,14 @@ import java.util.UUID;
 @Component
 public class CatalogBrowseFacadeAdapter implements CatalogBrowseFacade {
     private final CategoryQueryService categories;
-    private final ProductQueryService products;
+    private final CategoryProductListingService categoryProducts;
     private final VariantQueryService variants;
     private final CatalogDtoMapper mapper;
 
-    public CatalogBrowseFacadeAdapter(CategoryQueryService categories, ProductQueryService products,
+    public CatalogBrowseFacadeAdapter(CategoryQueryService categories, CategoryProductListingService categoryProducts,
             VariantQueryService variants, CatalogDtoMapper mapper) {
         this.categories = categories;
-        this.products = products;
+        this.categoryProducts = categoryProducts;
         this.variants = variants;
         this.mapper = mapper;
     }
@@ -52,7 +52,7 @@ public class CatalogBrowseFacadeAdapter implements CatalogBrowseFacade {
     @Override
     /** {@inheritDoc} */
     public ProductPageView listCategoryProducts(UUID categoryId, CatalogListingQuery query) {
-        return mapper.productPageView(products.listCategoryProducts(categoryId, mapper.listingQuery(query)));
+        return mapper.productPageView(categoryProducts.listCategoryProducts(categoryId, mapper.listingQuery(query)));
     }
 
     @Override

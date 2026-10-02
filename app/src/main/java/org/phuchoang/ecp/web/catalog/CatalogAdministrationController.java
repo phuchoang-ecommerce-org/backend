@@ -1,14 +1,14 @@
 package org.phuchoang.ecp.web.catalog;
 
 import org.phuchoang.ecp.catalog.api.facade.CatalogAdministrationFacade;
-import org.phuchoang.ecp.catalog.api.request.BulkItem;
-import org.phuchoang.ecp.catalog.api.request.CategoryWrite;
-import org.phuchoang.ecp.catalog.api.request.ImageWrite;
-import org.phuchoang.ecp.catalog.api.request.PriceWrite;
-import org.phuchoang.ecp.catalog.api.request.ProductWrite;
-import org.phuchoang.ecp.catalog.api.request.PublicationWrite;
-import org.phuchoang.ecp.catalog.api.request.VariantWrite;
-import org.phuchoang.ecp.catalog.api.result.BulkResult;
+import org.phuchoang.ecp.catalog.api.administration.product.BulkItem;
+import org.phuchoang.ecp.catalog.api.administration.category.CategoryWrite;
+import org.phuchoang.ecp.catalog.api.administration.product.ImageWrite;
+import org.phuchoang.ecp.catalog.api.administration.product.PriceWrite;
+import org.phuchoang.ecp.catalog.api.administration.product.ProductWrite;
+import org.phuchoang.ecp.catalog.api.administration.product.PublicationWrite;
+import org.phuchoang.ecp.catalog.api.administration.product.VariantWrite;
+import org.phuchoang.ecp.catalog.api.administration.product.bulk.BulkResult;
 import org.phuchoang.ecp.catalog.api.view.category.CategoryView;
 import org.phuchoang.ecp.catalog.api.view.product.ProductDetailView;
 import org.phuchoang.ecp.catalog.api.view.product.ProductImageView;

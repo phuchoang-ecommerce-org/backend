@@ -1,6 +1,6 @@
 package org.phuchoang.ecp.catalog.internal.application.search;
 
-import org.phuchoang.ecp.catalog.internal.application.query.model.common.MoneyValue;
+import org.phuchoang.ecp.catalog.internal.application.productpricing.MoneyValue;
 
 import java.util.UUID;
 

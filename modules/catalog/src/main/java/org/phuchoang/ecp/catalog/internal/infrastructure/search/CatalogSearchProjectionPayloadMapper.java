@@ -1,6 +1,7 @@
 package org.phuchoang.ecp.catalog.internal.infrastructure.search;
 
 import org.phuchoang.ecp.catalog.internal.application.search.SearchProjectionEvent;
+import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.JsonNode;
 
 import java.math.BigDecimal;
@@ -17,14 +18,16 @@ final class CatalogSearchProjectionPayloadMapper {
     private static final String PRODUCT_DOCUMENT = "PRODUCT";
 
     private final Clock clock;
+    private final ObjectMapper json;
 
-    CatalogSearchProjectionPayloadMapper(Clock clock) {
+    CatalogSearchProjectionPayloadMapper(Clock clock, ObjectMapper json) {
         this.clock = clock;
+        this.json = json;
     }
 
     SearchProjectionOperation operation(SearchProjectionEvent event) {
         return switch (event.eventType()) {
-            case "ProductCreated", "ProductUpdated", "ProductPublished" -> productSnapshot(event, event.payload().path("product"));
+            case "ProductCreated", "ProductUpdated", "ProductPublished" -> productSnapshot(event, payload(event).path("product"));
             case "ProductPriceChanged" -> new SearchProjectionOperation.VariantPriceChange(priceChange(event));
             case "VariantAdded" -> variantAdded(event);
             case "ProductDiscontinued" -> new SearchProjectionOperation.ProductTombstone();
@@ -44,22 +47,22 @@ final class CatalogSearchProjectionPayloadMapper {
     }
 
     private SearchProjectionOperation variantAdded(SearchProjectionEvent event) {
-        JsonNode snapshot = event.payload().path("product");
+        JsonNode snapshot = payload(event).path("product");
         return !snapshot.isMissingNode() && !snapshot.isNull()
             ? productSnapshot(event, snapshot)
             : new SearchProjectionOperation.VariantAddition(addedVariant(event));
     }
 
-    private static Map<String, Object> priceChange(SearchProjectionEvent event) {
-        JsonNode payload = event.payload();
+    private Map<String, Object> priceChange(SearchProjectionEvent event) {
+        JsonNode payload = payload(event);
         Map<String, Object> variant = new HashMap<>();
         variant.put("variantId", requiredText(payload, "variantId", event));
         addMoney(variant, payload.path("listPrice"), event);
         return Map.copyOf(variant);
     }
 
-    private static Map<String, Object> addedVariant(SearchProjectionEvent event) {
-        JsonNode payload = event.payload();
+    private Map<String, Object> addedVariant(SearchProjectionEvent event) {
+        JsonNode payload = payload(event);
         Map<String, Object> variant = new HashMap<>();
         variant.put("variantId", requiredText(payload, "variantId", event));
         variant.put("sku", requiredText(payload.path("variantSkus").path(0), "", event));
@@ -144,5 +147,14 @@ final class CatalogSearchProjectionPayloadMapper {
             throw new IllegalArgumentException(prefix + " has no " + (field.isEmpty() ? "required value" : field) + ".");
         }
         return value.asText();
+    }
+
+    private JsonNode payload(SearchProjectionEvent event) {
+        try {
+            return json.readTree(event.payload());
+        } catch (Exception exception) {
+            throw new IllegalArgumentException("Cannot parse Catalog " + event.eventType() + " projection payload.",
+                exception);
+        }
     }
 }

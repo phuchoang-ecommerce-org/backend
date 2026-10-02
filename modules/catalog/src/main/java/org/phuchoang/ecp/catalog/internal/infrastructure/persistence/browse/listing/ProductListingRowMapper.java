@@ -1,7 +1,7 @@
 package org.phuchoang.ecp.catalog.internal.infrastructure.persistence.browse.listing;
 
-import org.phuchoang.ecp.catalog.internal.application.query.model.common.MoneyValue;
-import org.phuchoang.ecp.catalog.internal.application.query.model.product.ProductSummary;
+import org.phuchoang.ecp.catalog.internal.application.productpricing.MoneyValue;
+import org.phuchoang.ecp.catalog.internal.application.browse.categoryproduct.ProductSummary;
 import org.springframework.jdbc.core.RowMapper;
 
 import java.sql.ResultSet;

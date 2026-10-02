@@ -1,21 +1,24 @@
 package org.phuchoang.ecp.catalog.api.search;
 
-import tools.jackson.databind.JsonNode;
-
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-/** Transport-neutral subset of the v1 Kafka envelope required by Catalog's search projector. */
+/**
+ * Transport-neutral subset of the v1 event envelope required by Catalog's search projector.
+ * Payload decoding is owned by the search infrastructure adapter, not by this application API.
+ */
 public record CatalogSearchProjectionEvent(UUID eventId, String eventType, Instant occurredAt, String aggregateType,
-        UUID aggregateId, UUID correlationId, JsonNode payload) {
+        UUID aggregateId, UUID correlationId, String payload) {
 
     public CatalogSearchProjectionEvent {
         Objects.requireNonNull(eventId, "eventId");
         Objects.requireNonNull(occurredAt, "occurredAt");
         Objects.requireNonNull(aggregateId, "aggregateId");
         Objects.requireNonNull(correlationId, "correlationId");
-        Objects.requireNonNull(payload, "payload");
+        if (payload == null || payload.isBlank()) {
+            throw new IllegalArgumentException("payload must not be blank.");
+        }
         if (eventType == null || eventType.isBlank()) {
             throw new IllegalArgumentException("eventType must not be blank.");
         }

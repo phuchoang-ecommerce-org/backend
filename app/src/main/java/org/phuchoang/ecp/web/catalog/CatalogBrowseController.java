@@ -2,7 +2,7 @@ package org.phuchoang.ecp.web.catalog;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.phuchoang.ecp.catalog.api.facade.CatalogBrowseFacade;
-import org.phuchoang.ecp.catalog.api.query.CatalogListingQuery;
+import org.phuchoang.ecp.catalog.api.browse.categoryproduct.CatalogListingQuery;
 import org.phuchoang.ecp.catalog.api.view.category.CategoryNodeView;
 import org.phuchoang.ecp.catalog.api.view.category.CategoryView;
 import org.phuchoang.ecp.catalog.api.view.product.ProductPageView;

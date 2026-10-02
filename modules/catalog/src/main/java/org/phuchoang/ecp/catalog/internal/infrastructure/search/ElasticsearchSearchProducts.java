@@ -10,7 +10,7 @@ import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.elasticsearch.core.search.HitsMetadata;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import org.phuchoang.ecp.catalog.internal.application.query.model.common.MoneyValue;
+import org.phuchoang.ecp.catalog.internal.application.productpricing.MoneyValue;
 import org.phuchoang.ecp.catalog.internal.application.search.ActiveSearchFilter;
 import org.phuchoang.ecp.catalog.internal.application.search.SearchFacet;
 import org.phuchoang.ecp.catalog.internal.application.search.SearchProduct;

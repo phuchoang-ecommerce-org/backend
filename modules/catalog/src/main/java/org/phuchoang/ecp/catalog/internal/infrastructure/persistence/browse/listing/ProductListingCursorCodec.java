@@ -1,6 +1,6 @@
 package org.phuchoang.ecp.catalog.internal.infrastructure.persistence.browse.listing;
 
-import org.phuchoang.ecp.catalog.internal.application.query.model.listing.ProductListingQuery;
+import org.phuchoang.ecp.catalog.internal.application.browse.categoryproduct.ProductListingQuery;
 import org.phuchoang.ecp.sharedkernel.api.cursor.CursorCodec;
 import org.phuchoang.ecp.sharedkernel.api.cursor.CursorContext;
 import org.phuchoang.ecp.sharedkernel.api.cursor.CursorPosition;

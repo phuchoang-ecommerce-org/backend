@@ -5,8 +5,14 @@ import org.phuchoang.ecp.catalog.api.view.common.MoneyView;
 import org.phuchoang.ecp.catalog.api.view.product.ProductDetailView;
 import org.phuchoang.ecp.catalog.api.view.product.ProductImageView;
 import org.phuchoang.ecp.catalog.api.view.product.VariantView;
-import org.phuchoang.ecp.catalog.api.request.*;
-import org.phuchoang.ecp.catalog.api.result.BulkResult;
+import org.phuchoang.ecp.catalog.api.administration.category.CategoryWrite;
+import org.phuchoang.ecp.catalog.api.administration.product.BulkItem;
+import org.phuchoang.ecp.catalog.api.administration.product.ImageWrite;
+import org.phuchoang.ecp.catalog.api.administration.product.PriceWrite;
+import org.phuchoang.ecp.catalog.api.administration.product.ProductWrite;
+import org.phuchoang.ecp.catalog.api.administration.product.PublicationWrite;
+import org.phuchoang.ecp.catalog.api.administration.product.VariantWrite;
+import org.phuchoang.ecp.catalog.api.administration.product.bulk.BulkResult;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 
 import java.util.List;

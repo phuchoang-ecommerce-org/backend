@@ -291,9 +291,9 @@ class ArchitectureTests {
     @Test
     void catalogWritesThroughTheSharedOutboxPort() {
         ArchRule publisherRule = com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes()
-            .that().haveSimpleName("CatalogEventPublisher")
+            .that().haveSimpleName("CatalogOutboxEventPublisher")
             .should().dependOnClassesThat().haveFullyQualifiedName("org.phuchoang.ecp.sharedkernel.api.event.OutboxWriter")
-            .because("a module records its event through the shared port, never another module's outbox adapter");
+            .because("the outbox adapter records an event through the shared port, never another module's adapter");
         publisherRule.check(mainClasses);
 
         ArchRule adapterRule = noClasses()
@@ -312,6 +312,17 @@ class ArchitectureTests {
             .should().dependOnClassesThat().resideInAnyPackage("org.springframework.dao..", "jakarta.persistence..",
                 "org.springframework.jdbc..")
             .because("the application layer speaks in Catalog concepts, never persistence exceptions or clients")
+            .allowEmptyShould(true);
+        rule.check(mainClasses);
+    }
+
+    @Test
+    void catalogApplicationNeverSeesSerializationTechnology() {
+        ArchRule rule = noClasses()
+            .that().resideInAPackage(ROOT_PACKAGE + ".catalog.internal.application..")
+            .should().dependOnClassesThat().resideInAnyPackage("com.fasterxml.jackson..", "tools.jackson..")
+            .because("integration payload DTOs and JSON serialization belong to Catalog's infrastructure adapters, "
+                + "not its use-case layer")
             .allowEmptyShould(true);
         rule.check(mainClasses);
     }

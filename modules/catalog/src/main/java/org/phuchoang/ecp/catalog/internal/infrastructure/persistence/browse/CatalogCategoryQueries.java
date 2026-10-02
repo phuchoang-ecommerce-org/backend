@@ -1,9 +1,9 @@
 package org.phuchoang.ecp.catalog.internal.infrastructure.persistence.browse;
 
-import org.phuchoang.ecp.catalog.internal.application.port.CategoryBrowsePort;
-import org.phuchoang.ecp.catalog.internal.application.query.model.category.CategoryDetail;
-import org.phuchoang.ecp.catalog.internal.application.query.model.category.CategoryNode;
-import org.phuchoang.ecp.catalog.internal.application.query.model.category.CategoryRef;
+import org.phuchoang.ecp.catalog.internal.application.browse.category.CategoryBrowsePort;
+import org.phuchoang.ecp.catalog.internal.application.browse.category.CategoryDetail;
+import org.phuchoang.ecp.catalog.internal.application.browse.category.CategoryNode;
+import org.phuchoang.ecp.catalog.internal.application.browse.category.CategoryRef;
 import org.phuchoang.ecp.catalog.internal.infrastructure.persistence.JdbcQuerySupport;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;

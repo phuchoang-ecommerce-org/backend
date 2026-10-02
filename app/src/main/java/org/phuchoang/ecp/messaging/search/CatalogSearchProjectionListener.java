@@ -36,7 +36,7 @@ class CatalogSearchProjectionListener {
         MDC.put(CorrelationIdFilter.MDC_KEY, event.correlationId().toString());
         try {
             projection.project(new CatalogSearchProjectionEvent(event.eventId(), event.eventType(), event.occurredAt(),
-                event.aggregateType(), event.aggregateId(), event.correlationId(), event.payload()));
+                event.aggregateType(), event.aggregateId(), event.correlationId(), event.payload().toString()));
             log.info("Catalog search projection consumed eventId={} eventType={} aggregateId={} topic={} partition={} offset={}",
                 event.eventId(), event.eventType(), event.aggregateId(), record.topic(), record.partition(), record.offset());
         } finally {

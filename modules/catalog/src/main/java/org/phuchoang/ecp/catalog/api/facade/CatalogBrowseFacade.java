@@ -4,7 +4,7 @@ import org.phuchoang.ecp.catalog.api.view.category.CategoryNodeView;
 import org.phuchoang.ecp.catalog.api.view.category.CategoryView;
 import org.phuchoang.ecp.catalog.api.view.product.ProductPageView;
 import org.phuchoang.ecp.catalog.api.view.product.VariantView;
-import org.phuchoang.ecp.catalog.api.query.CatalogListingQuery;
+import org.phuchoang.ecp.catalog.api.browse.categoryproduct.CatalogListingQuery;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
