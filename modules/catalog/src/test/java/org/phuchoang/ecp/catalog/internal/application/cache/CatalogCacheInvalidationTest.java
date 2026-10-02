@@ -49,7 +49,7 @@ class CatalogCacheInvalidationTest {
         UUID categoryId = UUID.randomUUID();
         invalidation.categoryTreeChanged();
         invalidation.categoryListingsChanged(List.of(categoryId));
-        verify(cache).invalidate("category-tree");
+        verify(cache).invalidateByPrefix("category-tree");
         verify(cache).invalidateByPrefix("category-listing:" + categoryId + ":");
     }
 }

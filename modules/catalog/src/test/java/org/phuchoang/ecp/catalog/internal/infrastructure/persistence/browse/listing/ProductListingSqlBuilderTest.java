@@ -26,7 +26,9 @@ class ProductListingSqlBuilderTest {
         assertThat(sql.countSql()).startsWith(ProductListingSqlBuilder.PRODUCT_ROWS_CTE)
             .contains("SELECT COUNT(*) FROM product_rows WHERE 1 = 1 AND brand IN (?) AND in_stock = ?");
         assertThat(sql.countParameters()).containsExactly("/c/", "Acme", true);
-        assertThat(sql.pageSql()).contains("ORDER BY name ASC, id ASC LIMIT ?").doesNotContain("id > ?");
+        assertThat(sql.pageSql()).contains("page_rows AS (SELECT * FROM product_rows")
+            .contains("ORDER BY name ASC, id ASC LIMIT ?").doesNotContain("id > ?")
+            .contains("LEFT JOIN LATERAL");
         assertThat(sql.pageParameters()).containsExactly("/c/", "Acme", true, 21);
     }
 
@@ -55,9 +57,23 @@ class ProductListingSqlBuilderTest {
 
         ListingSql sql = ProductListingSqlBuilder.build("/c/", query, new SeekPosition(CursorValue.instant(created), lastId));
 
-        assertThat(sql.pageSql()).contains("(created_at < ? OR (created_at = ? AND id > ?))")
-            .contains("ORDER BY created_at DESC, id ASC");
+        assertThat(sql.pageSql()).contains("(p.created_at < ? OR (p.created_at = ? AND p.id > ?))")
+            .contains("ORDER BY p.created_at DESC, p.id ASC");
         assertThat(sql.pageParameters().get(1)).isInstanceOf(OffsetDateTime.class);
         assertThat(ProductListingSqlBuilder.orderBy("popularity:desc")).isEqualTo("review_count DESC, id ASC");
+    }
+
+    @Test
+    void defaultBrowseSelectsThePageBeforeVariantsAndCoverImages() {
+        ProductListingQuery query = new ProductListingQuery(null, 20, "default", List.of(), null, null, null);
+
+        ListingSql sql = ProductListingSqlBuilder.build("/c/", query, null);
+
+        assertThat(sql.countSql()).doesNotContain("catalog_variant");
+        assertThat(sql.pageSql()).contains("WITH page_rows AS (")
+            .contains("LIMIT ?\n)\n, page_variants AS")
+            .contains("FROM catalog_variant v JOIN page_rows")
+            .contains("LEFT JOIN LATERAL");
+        assertThat(sql.pageParameters()).containsExactly("/c/", 21);
     }
 }

@@ -30,8 +30,10 @@ public class CategoryProductListingService {
         if (!categories.categoryExists(categoryId)) {
             throw CatalogReadErrors.categoryNotFound();
         }
+        long total = cache.getOrLoad(CatalogCacheKeys.categoryListing(categoryId, "total:" + countFingerprint(query)),
+            CatalogCachePolicy.BROWSE_TTL, () -> listings.count(categoryId, query), Long.class);
         String key = CatalogCacheKeys.categoryListing(categoryId, fingerprint(query));
-        return cache.getOrLoad(key, CatalogCachePolicy.BROWSE_TTL, () -> listings.products(categoryId, query),
+        return cache.getOrLoad(key, CatalogCachePolicy.BROWSE_TTL, () -> listings.products(categoryId, query, total),
             ProductPage.class);
     }
 
@@ -39,6 +41,13 @@ public class CategoryProductListingService {
     static String fingerprint(ProductListingQuery query) {
         String raw = String.join("|", String.valueOf(query.cursor()), String.valueOf(query.size()),
             String.valueOf(query.sort()), String.valueOf(query.brands()), String.valueOf(query.priceFrom()),
+            String.valueOf(query.priceTo()), String.valueOf(query.inStock()));
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(raw.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /** Membership does not depend on a cursor, page size, or ordering. */
+    static String countFingerprint(ProductListingQuery query) {
+        String raw = String.join("|", String.valueOf(query.brands()), String.valueOf(query.priceFrom()),
             String.valueOf(query.priceTo()), String.valueOf(query.inStock()));
         return Base64.getUrlEncoder().withoutPadding().encodeToString(raw.getBytes(StandardCharsets.UTF_8));
     }

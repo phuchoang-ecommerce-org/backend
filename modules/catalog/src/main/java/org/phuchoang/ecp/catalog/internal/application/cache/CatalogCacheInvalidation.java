@@ -29,7 +29,7 @@ public class CatalogCacheInvalidation {
     }
 
     public void categoryTreeChanged() {
-        cache.invalidate(CatalogCacheKeys.categoryTree());
+        cache.invalidateByPrefix(CatalogCacheKeys.categoryTreePrefix());
     }
 
     public void categoryListingsChanged(List<UUID> categoryIds) {

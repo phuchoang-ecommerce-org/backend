@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.RowMapper;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -17,8 +18,12 @@ final class ProductListingRowMapper implements RowMapper<ProductListingRow> {
         return new ProductListingRow(rs.getObject("id", UUID.class), rs.getString("name"), rs.getString("slug"),
             rs.getString("brand"), rs.getString("publication_status"), rs.getString("image_url"),
             rs.getBigDecimal("price_from"), rs.getBigDecimal("price_to"), rs.getString("currency"),
-            (Double) rs.getObject("average_rating"), rs.getInt("review_count"),
+            decimalAsDouble(rs.getBigDecimal("average_rating")), rs.getInt("review_count"),
             rs.getObject("in_stock", Boolean.class), rs.getObject("created_at", OffsetDateTime.class));
+    }
+
+    private static Double decimalAsDouble(BigDecimal value) {
+        return value == null ? null : value.doubleValue();
     }
 
     ProductSummary toSummary(ProductListingRow row) {

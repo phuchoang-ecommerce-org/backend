@@ -10,6 +10,7 @@ import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -30,34 +31,48 @@ class RedisCacheAside implements CacheAside {
     private static final Logger log = LoggerFactory.getLogger(RedisCacheAside.class);
     private static final int SCAN_BATCH = 500;
 
-    private final RedisTemplate<String, Object> cacheRedisTemplate;
+    private final RedisTemplate<String, String> cacheRedisTemplate;
     private final MeterRegistry meterRegistry;
+    private final ObjectMapper json;
 
-    RedisCacheAside(@Qualifier("cacheRedisTemplate") RedisTemplate<String, Object> cacheRedisTemplate,
-                    MeterRegistry meterRegistry) {
+    RedisCacheAside(@Qualifier("cacheRedisTemplate") RedisTemplate<String, String> cacheRedisTemplate,
+                    MeterRegistry meterRegistry, ObjectMapper json) {
         this.cacheRedisTemplate = cacheRedisTemplate;
         this.meterRegistry = meterRegistry;
+        this.json = json;
     }
 
     @Override
     public <T> T getOrLoad(String key, Duration ttl, Supplier<T> loader, Class<T> type) {
+        String cached;
         try {
-            Object cached = cacheRedisTemplate.opsForValue().get(key);
-            if (type.isInstance(cached)) {
-                recordCatalogAccess(key, "hit");
-                return type.cast(cached);
-            }
-            recordCatalogAccess(key, "miss");
+            cached = cacheRedisTemplate.opsForValue().get(key);
         } catch (DataAccessException e) {
             recordCatalogAccess(key, "error");
             log.warn("redis-cache read failed for {}; falling through to loader (a cache error is a miss)", key, e);
+            cached = null;
+        }
+        if (cached != null) {
+            try {
+                T value = json.readValue(cached, type);
+                recordCatalogAccess(key, "hit");
+                return value;
+            } catch (Exception e) {
+                // Entries written with the earlier generic serializer (or a partially-written value)
+                // are ordinary cache misses. Replacing them keeps the cache safe to flush and migrate.
+                recordCatalogAccess(key, "miss");
+                log.warn("redis-cache value for {} is incompatible with {}; replacing it", key, type.getSimpleName());
+            }
+        } else {
+            recordCatalogAccess(key, "miss");
         }
 
         T loaded = loader.get();
         try {
             double jitter = 0.9 + ThreadLocalRandom.current().nextDouble(0.2); // ±10%
-            cacheRedisTemplate.opsForValue().set(key, loaded, Duration.ofMillis((long) (ttl.toMillis() * jitter)));
-        } catch (DataAccessException e) {
+            cacheRedisTemplate.opsForValue().set(key, json.writeValueAsString(loaded),
+                Duration.ofMillis((long) (ttl.toMillis() * jitter)));
+        } catch (Exception e) {
             log.warn("redis-cache write failed for {}; the value is still returned to the caller", key, e);
         }
         return loaded;
@@ -93,10 +108,9 @@ class RedisCacheAside implements CacheAside {
     }
 
     private void recordCatalogAccess(String key, String result) {
-        if (key.equals("category-tree") || key.startsWith("category-listing:") || key.startsWith("variant:")
+        if (key.equals("category-tree") || key.startsWith("category-tree:") || key.startsWith("category-listing:") || key.startsWith("variant:")
                 || key.startsWith("cat:product:")) {
             meterRegistry.counter("ecp.catalog.cache.accesses", "cache", "catalog", "result", result).increment();
         }
     }
 }
-

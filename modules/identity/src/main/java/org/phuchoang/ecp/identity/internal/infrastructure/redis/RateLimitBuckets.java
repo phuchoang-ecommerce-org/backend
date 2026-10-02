@@ -13,7 +13,7 @@ import java.util.Map;
  * numbers rather than throwing — a rate limiter is defence, not a place to add a new way for a
  * typo'd bucket name to become a 500 (`US-AUD-04`).
  */
-@Component
+@Component("identityRateLimitBuckets")
 class RateLimitBuckets {
 
     private final Map<String, RateLimitBucket> buckets;

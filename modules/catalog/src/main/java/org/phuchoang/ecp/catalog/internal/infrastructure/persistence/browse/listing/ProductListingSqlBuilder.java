@@ -1,8 +1,8 @@
 package org.phuchoang.ecp.catalog.internal.infrastructure.persistence.browse.listing;
 
 import org.phuchoang.ecp.catalog.internal.application.browse.categoryproduct.ProductListingQuery;
-import org.phuchoang.ecp.catalog.internal.infrastructure.persistence.browse.listing.ProductListingCursorCodec.SeekPosition;
 import org.phuchoang.ecp.catalog.internal.application.pagination.CursorValue;
+import org.phuchoang.ecp.catalog.internal.infrastructure.persistence.browse.listing.ProductListingCursorCodec.SeekPosition;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -12,10 +12,10 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Composes the category-listing SQL: the {@code product_rows} CTE (variant-derived price range,
- * stock advisory and cover image aggregated <em>before</em> filtering and keyset pagination), the
- * filter predicates, the seek predicate for a cursor, and the sort order. Pure string/parameter
- * assembly — nothing here touches a connection.
+ * Composes the category-listing SQL. For name, created-at and popularity browses that do not
+ * filter on variant-derived values, the product page is selected before variant and image work.
+ * Aggregate-dependent paths still use PostgreSQL for the authoritative calculation, but fetch a
+ * cover image only after the 21-row page boundary.
  */
 final class ProductListingSqlBuilder {
 
@@ -23,8 +23,7 @@ final class ProductListingSqlBuilder {
         WITH product_rows AS (
             SELECT p.id, p.name, p.slug, p.brand, p.publication_status, p.average_rating, p.review_count, p.created_at,
                    MIN(v.list_price_amount) AS price_from, MAX(v.list_price_amount) AS price_to,
-                   MIN(v.list_price_currency) AS currency, BOOL_OR(v.advisory_in_stock) AS in_stock,
-                   (SELECT i.url FROM catalog_product_image i WHERE i.product_id = p.id ORDER BY i.sort_order, i.id LIMIT 1) AS image_url
+                   MIN(v.list_price_currency) AS currency, BOOL_OR(v.advisory_in_stock) AS in_stock
             FROM catalog_product p
             LEFT JOIN catalog_variant v ON v.product_id = p.id AND v.is_active
             JOIN catalog_category c ON c.id = p.category_id
@@ -33,66 +32,143 @@ final class ProductListingSqlBuilder {
         )
         """;
 
+    private static final String PAGE_IMAGE_JOIN = """
+        LEFT JOIN LATERAL (
+            SELECT i.url AS image_url FROM catalog_product_image i
+            WHERE i.product_id = page_rows.id
+            ORDER BY i.sort_order, i.id LIMIT 1
+        ) image ON true
+        """;
+
     private ProductListingSqlBuilder() {
     }
 
-    /** @param path the category's materialised path, which scopes the CTE to the subtree */
+    /** @param path the category's materialised path, which scopes the query to the subtree */
     static ListingSql build(String path, ProductListingQuery query, SeekPosition cursor) {
-        List<Object> parameters = new ArrayList<>();
-        parameters.add(path);
-        StringBuilder filters = new StringBuilder(" WHERE 1 = 1");
-        if (!query.brands().isEmpty()) {
-            filters.append(" AND brand IN (").append("?, ".repeat(query.brands().size() - 1)).append("?)");
-            parameters.addAll(query.brands());
+        return requiresAggregate(query) ? aggregateListing(path, query, cursor) : directListing(path, query, cursor);
+    }
+
+    private static ListingSql directListing(String path, ProductListingQuery query, SeekPosition cursor) {
+        List<Object> countParameters = new ArrayList<>();
+        countParameters.add(path);
+        StringBuilder countFilters = new StringBuilder();
+        appendBrandFilter(countFilters, countParameters, query, "p.");
+        String countSql = """
+            SELECT COUNT(*)
+            FROM catalog_product p JOIN catalog_category c ON c.id = p.category_id
+            WHERE p.publication_status = 'PUBLISHED' AND c.path LIKE ? || '%'
+            """ + countFilters;
+
+        List<Object> pageParameters = new ArrayList<>();
+        pageParameters.add(path);
+        StringBuilder pageFilters = new StringBuilder();
+        appendBrandFilter(pageFilters, pageParameters, query, "p.");
+        if (cursor != null) {
+            appendSeekPredicate(pageFilters, pageParameters, query.sort(), cursor, "p.");
         }
+        pageParameters.add(query.size() + 1);
+        String pageSql = """
+            WITH page_rows AS (
+                SELECT p.id, p.name, p.slug, p.brand, p.publication_status, p.average_rating, p.review_count, p.created_at
+                FROM catalog_product p JOIN catalog_category c ON c.id = p.category_id
+                WHERE p.publication_status = 'PUBLISHED' AND c.path LIKE ? || '%'
+            """ + pageFilters + " ORDER BY " + orderBy(query.sort(), "p.") + " LIMIT ?\n)\n"
+            + """
+            , page_variants AS (
+                SELECT v.product_id, MIN(v.list_price_amount) AS price_from, MAX(v.list_price_amount) AS price_to,
+                       MIN(v.list_price_currency) AS currency, BOOL_OR(v.advisory_in_stock) AS in_stock
+                FROM catalog_variant v JOIN page_rows ON page_rows.id = v.product_id
+                WHERE v.is_active GROUP BY v.product_id
+            )
+            SELECT page_rows.*, page_variants.price_from, page_variants.price_to, page_variants.currency,
+                   page_variants.in_stock, image.image_url
+            FROM page_rows
+            LEFT JOIN page_variants ON page_variants.product_id = page_rows.id
+            """ + PAGE_IMAGE_JOIN + " ORDER BY " + orderBy(query.sort(), "page_rows.");
+        return new ListingSql(countSql, List.copyOf(countParameters), pageSql, List.copyOf(pageParameters));
+    }
+
+    private static ListingSql aggregateListing(String path, ProductListingQuery query, SeekPosition cursor) {
+        List<Object> countParameters = new ArrayList<>();
+        countParameters.add(path);
+        StringBuilder countFilters = new StringBuilder(" WHERE 1 = 1");
+        appendFilters(countFilters, countParameters, query, "");
+        String countSql = PRODUCT_ROWS_CTE + "SELECT COUNT(*) FROM product_rows" + countFilters;
+
+        List<Object> pageParameters = new ArrayList<>();
+        pageParameters.add(path);
+        StringBuilder pageFilters = new StringBuilder(" WHERE 1 = 1");
+        appendFilters(pageFilters, pageParameters, query, "");
+        if (cursor != null) {
+            appendSeekPredicate(pageFilters, pageParameters, query.sort(), cursor, "");
+        }
+        pageParameters.add(query.size() + 1);
+        String pageSql = PRODUCT_ROWS_CTE + ", page_rows AS (SELECT * FROM product_rows" + pageFilters + " ORDER BY "
+            + orderBy(query.sort()) + " LIMIT ?)\nSELECT page_rows.*, image.image_url FROM page_rows\n"
+            + PAGE_IMAGE_JOIN + " ORDER BY " + orderBy(query.sort(), "page_rows.");
+        return new ListingSql(countSql, List.copyOf(countParameters), pageSql, List.copyOf(pageParameters));
+    }
+
+    private static boolean requiresAggregate(ProductListingQuery query) {
+        return query.priceFrom() != null || query.priceTo() != null || query.inStock() != null
+            || query.sort().startsWith("price:");
+    }
+
+    private static void appendFilters(StringBuilder filters, List<Object> parameters, ProductListingQuery query,
+            String prefix) {
+        appendBrandFilter(filters, parameters, query, prefix);
         if (query.priceFrom() != null) {
-            filters.append(" AND price_from >= ?");
+            filters.append(" AND ").append(prefix).append("price_from >= ?");
             parameters.add(query.priceFrom());
         }
         if (query.priceTo() != null) {
-            filters.append(" AND price_from <= ?");
+            filters.append(" AND ").append(prefix).append("price_from <= ?");
             parameters.add(query.priceTo());
         }
         if (query.inStock() != null) {
-            filters.append(" AND in_stock = ?");
+            filters.append(" AND ").append(prefix).append("in_stock = ?");
             parameters.add(query.inStock());
         }
-        String countSql = PRODUCT_ROWS_CTE + "SELECT COUNT(*) FROM product_rows" + filters;
-        List<Object> countParameters = List.copyOf(parameters);
+    }
 
-        if (cursor != null) {
-            appendSeekPredicate(filters, parameters, query.sort(), cursor);
+    private static void appendBrandFilter(StringBuilder filters, List<Object> parameters, ProductListingQuery query,
+            String prefix) {
+        if (!query.brands().isEmpty()) {
+            filters.append(" AND ").append(prefix).append("brand IN (")
+                .append("?, ".repeat(query.brands().size() - 1)).append("?)");
+            parameters.addAll(query.brands());
         }
-        parameters.add(query.size() + 1); // one look-ahead row decides whether a next page exists
-        String pageSql = PRODUCT_ROWS_CTE + "SELECT * FROM product_rows" + filters + " ORDER BY " + orderBy(query.sort())
-            + " LIMIT ?";
-        return new ListingSql(countSql, countParameters, pageSql, List.copyOf(parameters));
     }
 
     static String orderBy(String sort) {
+        return orderBy(sort, "");
+    }
+
+    private static String orderBy(String sort, String prefix) {
         return switch (sort) {
-            case "price:asc" -> "price_from ASC NULLS LAST, id ASC";
-            case "price:desc" -> "price_from DESC NULLS LAST, id ASC";
-            case "createdAt:asc" -> "created_at ASC, id ASC";
-            case "createdAt:desc" -> "created_at DESC, id ASC";
-            case "popularity:asc" -> "review_count ASC, id ASC";
-            case "popularity:desc" -> "review_count DESC, id ASC";
-            default -> "name ASC, id ASC";
+            case "price:asc" -> prefix + "price_from ASC NULLS LAST, " + prefix + "id ASC";
+            case "price:desc" -> prefix + "price_from DESC NULLS LAST, " + prefix + "id ASC";
+            case "createdAt:asc" -> prefix + "created_at ASC, " + prefix + "id ASC";
+            case "createdAt:desc" -> prefix + "created_at DESC, " + prefix + "id ASC";
+            case "popularity:asc" -> prefix + "review_count ASC, " + prefix + "id ASC";
+            case "popularity:desc" -> prefix + "review_count DESC, " + prefix + "id ASC";
+            default -> prefix + "name ASC, " + prefix + "id ASC";
         };
     }
 
     private static void appendSeekPredicate(StringBuilder filters, List<Object> parameters, String sort,
-            SeekPosition cursor) {
+            SeekPosition cursor, String prefix) {
         UUID lastId = cursor.productId();
         if (sort.startsWith("price:")) {
             BigDecimal lastPrice = cursor.sortValue().type() == CursorValue.Type.NULL ? null : cursor.sortValue().decimalValue();
             if (lastPrice == null) {
-                filters.append(" AND (price_from IS NULL AND id > ?)");
+                filters.append(" AND (").append(prefix).append("price_from IS NULL AND ").append(prefix).append("id > ?)");
                 parameters.add(lastId);
             } else {
                 String comparison = sort.endsWith(":desc") ? "<" : ">";
-                filters.append(" AND (price_from IS NULL OR price_from ").append(comparison)
-                    .append(" ? OR (price_from = ? AND id > ?))");
+                filters.append(" AND (").append(prefix).append("price_from IS NULL OR ").append(prefix).append("price_from ")
+                    .append(comparison).append(" ? OR (").append(prefix).append("price_from = ? AND ")
+                    .append(prefix).append("id > ?))");
                 parameters.add(lastPrice);
                 parameters.add(lastPrice);
                 parameters.add(lastId);
@@ -110,8 +186,8 @@ final class ProductListingSqlBuilder {
             default -> "name";
         };
         String comparison = sort.endsWith(":desc") ? "<" : ">";
-        filters.append(" AND (").append(column).append(" ").append(comparison)
-            .append(" ? OR (").append(column).append(" = ? AND id > ?))");
+        filters.append(" AND (").append(prefix).append(column).append(" ").append(comparison)
+            .append(" ? OR (").append(prefix).append(column).append(" = ? AND ").append(prefix).append("id > ?))");
         parameters.add(lastValue);
         parameters.add(lastValue);
         parameters.add(lastId);

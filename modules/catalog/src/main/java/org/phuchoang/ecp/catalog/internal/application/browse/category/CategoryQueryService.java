@@ -31,15 +31,13 @@ public class CategoryQueryService {
      * @param maxDepth optional descendant depth limit
      */
     public List<CategoryNode> listCategories(UUID rootId, Integer maxDepth) {
-        if (rootId == null && maxDepth == null) {
-            CategoryTree cached = cache.getOrLoad(CatalogCacheKeys.categoryTree(), CatalogCachePolicy.BROWSE_TTL,
-                () -> new CategoryTree(categories.wholeTree()), CategoryTree.class);
-            return cached.items();
-        }
         if (rootId != null && !categories.categoryExists(rootId)) {
             throw CatalogReadErrors.categoryNotFound();
         }
-        return categories.tree(rootId, maxDepth);
+        CategoryTree cached = cache.getOrLoad(CatalogCacheKeys.categoryTree(rootId, maxDepth), CatalogCachePolicy.BROWSE_TTL,
+            () -> new CategoryTree(rootId == null && maxDepth == null ? categories.wholeTree() : categories.tree(rootId, maxDepth)),
+            CategoryTree.class);
+        return cached.items();
     }
 
     public CategoryDetail getCategory(UUID categoryId) {

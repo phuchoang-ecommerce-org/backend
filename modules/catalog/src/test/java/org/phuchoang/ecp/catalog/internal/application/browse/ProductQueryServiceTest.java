@@ -77,7 +77,8 @@ class ProductQueryServiceTest {
         ProductListingQuery query = new ProductListingQuery(null, 20, "default", List.of(), null, null, null);
         ProductPage page = new ProductPage(List.of(), null, 0);
         when(categories.categoryExists(categoryId)).thenReturn(true);
-        when(listings.products(categoryId, query)).thenReturn(page);
+        when(listings.count(categoryId, query)).thenReturn(0L);
+        when(listings.products(categoryId, query, 0L)).thenReturn(page);
 
         assertThat(listingsQuery.listCategoryProducts(categoryId, query)).isEqualTo(page);
 

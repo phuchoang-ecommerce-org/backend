@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
@@ -86,8 +87,12 @@ class CatalogProductQueries extends JdbcQuerySupport implements ProductDetailPor
     return new ProductDetailRow(rs.getObject("id", UUID.class), rs.getString("name"), rs.getString("slug"),
         rs.getString("description"), rs.getString("brand"), rs.getString("publication_status"),
         rs.getObject("published_at", OffsetDateTime.class), rs.getString("attributes"),
-        (Double) rs.getObject("average_rating"), rs.getInt("review_count"), rs.getObject("category_id", UUID.class),
+        decimalAsDouble(rs.getBigDecimal("average_rating")), rs.getInt("review_count"), rs.getObject("category_id", UUID.class),
         rs.getString("category_name"), rs.getString("category_slug"));
+  }
+
+  private static Double decimalAsDouble(BigDecimal value) {
+    return value == null ? null : value.doubleValue();
   }
 
   private VariantDetail variantRow(ResultSet rs, int ignored) throws SQLException {

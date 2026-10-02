@@ -30,12 +30,17 @@ class CatalogProductListingQueries extends JdbcQuerySupport implements ProductLi
     }
 
     @Override
-    public ProductPage products(UUID categoryId, ProductListingQuery query) {
+    public long count(UUID categoryId, ProductListingQuery query) {
+        String path = required("SELECT path FROM catalog_category WHERE id = ?", String.class, categoryId);
+        ListingSql sql = ProductListingSqlBuilder.build(path, query, null);
+        return jdbc.sql(sql.countSql()).params(sql.countParameters()).query(Long.class).single();
+    }
+
+    @Override
+    public ProductPage products(UUID categoryId, ProductListingQuery query, long total) {
         String path = required("SELECT path FROM catalog_category WHERE id = ?", String.class, categoryId);
         SeekPosition cursor = cursors.decode(categoryId, query);
         ListingSql sql = ProductListingSqlBuilder.build(path, query, cursor);
-
-        long total = jdbc.sql(sql.countSql()).params(sql.countParameters()).query(Long.class).single();
         List<ProductListingRow> page = jdbc.sql(sql.pageSql()).params(sql.pageParameters()).query(rows).list();
 
         boolean hasMore = page.size() > query.size();

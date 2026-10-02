@@ -52,7 +52,9 @@ class CatalogProductListingQueriesTest {
         when(countResult.single()).thenReturn(5L);
         when(rowsResult.list()).thenReturn(List.of());
 
-        ProductPage page = new CatalogProductListingQueries(jdbc, codec()).products(categoryId, query);
+        CatalogProductListingQueries queries = new CatalogProductListingQueries(jdbc, codec());
+        assertThat(queries.count(categoryId, query)).isEqualTo(5);
+        ProductPage page = queries.products(categoryId, query, 5);
 
         assertThat(page.total()).isEqualTo(5);
         assertThat(page.nextCursor()).isNull();
@@ -75,7 +77,7 @@ class CatalogProductListingQueriesTest {
         when(pathResult.single()).thenReturn("/electronics/");
 
         assertThatThrownBy(() -> new CatalogProductListingQueries(jdbc, codec()).products(categoryId,
-            new ProductListingQuery("not-a-cursor", 20, "default", List.of(), null, null, null)))
+            new ProductListingQuery("not-a-cursor", 20, "default", List.of(), null, null, null), 0))
             .isInstanceOf(InvalidCursorException.class)
             .hasMessage("Cursor is malformed or incompatible with this request.");
     }

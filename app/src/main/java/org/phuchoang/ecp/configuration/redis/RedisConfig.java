@@ -9,9 +9,7 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.GenericJacksonJsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-import tools.jackson.databind.json.JsonMapper;
 
 import java.time.Duration;
 
@@ -52,12 +50,15 @@ public class RedisConfig {
     }
 
     @Bean
-    public RedisTemplate<String, Object> cacheRedisTemplate(
+    public RedisTemplate<String, String> cacheRedisTemplate(
             @Qualifier("cacheConnectionFactory") RedisConnectionFactory cacheConnectionFactory) {
-        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        RedisTemplate<String, String> template = new RedisTemplate<>();
         template.setConnectionFactory(cacheConnectionFactory);
         template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new GenericJacksonJsonRedisSerializer(JsonMapper.builder().build()));
+        // Catalog's cache-aside port selects the concrete target type at read time. Store plain JSON
+        // and let that port deserialize into its allow-listed Class<T>; generic polymorphic Redis
+        // deserialization would otherwise return maps and turn every apparent hit into a database read.
+        template.setValueSerializer(new StringRedisSerializer());
         template.afterPropertiesSet();
         return template;
     }
