@@ -1,7 +1,7 @@
 ---
 name: ecp-backend-implementer
 description: Architecture-aware implementing protocol for the ECP Java/Spring modular monolith. Use when analyzing or implementing existing backend code while preserving business invariants, module boundaries, CQRS semantics, transaction boundaries, integration contracts, security guarantees, and operational behavior.
-version: 1.0.0
+version: 1.1.0
 ---
 # ECP Backend Feature Implementation Skill
 
@@ -96,11 +96,16 @@ references/domain-application-rules.md
 references/cqrs-persistence-rules.md
 references/integration-security-rules.md
 references/verification-checklist.md
+../../references/architecture-separation-guidelines.md
 ```
 
 Do not load every document mechanically.
 
 Determine which architectural dimensions are relevant to the requested feature and inspect those sources.
+
+Always load `../../references/architecture-separation-guidelines.md` before
+designing changed production types or package placement. It is the canonical
+rule for semantic ownership and layer separation.
 
 ---
 
@@ -213,6 +218,12 @@ database owner
 event owner
 API owner
 ```
+
+For every new or changed datatype, record its semantic owner: Domain,
+Application, Infrastructure, Web/API, or private implementation detail. Do not
+choose placement from field similarity, Java construct, or existing technical
+package convenience. Identify the mappings required where a type crosses a
+layer boundary.
 
 Do not choose ownership because one existing class already has useful dependencies.
 
@@ -341,6 +352,12 @@ persistence/infrastructure
 ```
 
 Do not allow implementation convenience to collapse these responsibilities.
+
+Organize application code around cohesive capabilities/use cases, not generic
+`services`, `dtos`, `models`, or `utils` packages. Keep technology-specific
+models in their adapters and HTTP/OpenAPI models in Web/API. A type used only
+by one implementation should remain private/local unless it acquires an
+independent responsibility.
 
 ---
 
@@ -555,6 +572,8 @@ For substantial features, produce:
 ## 12. Risks
 
 ## 13. Non-Goals
+
+## 14. Type Ownership and Boundary Mappings
 
 ## Implementation Contract
 

@@ -1,7 +1,7 @@
 ---
 name: ecp-backend-refactor
 description: Architecture-aware refactoring protocol for the ECP Java/Spring modular monolith. Use when analyzing or refactoring existing backend code while preserving business invariants, module boundaries, CQRS semantics, transaction boundaries, integration contracts, security guarantees, and operational behavior.
-version: 1.0.0
+version: 1.1.0
 ---
 
 # Backend Refactor Skill
@@ -68,8 +68,13 @@ Load and apply:
 - `references/event-rules.md`
 - `references/testing-rules.md`
 - `references/refactor-smells.md`
+- `../../references/architecture-separation-guidelines.md`
 
 Treat these rules as project constraints, not suggestions.
+
+Always load the shared architecture-separation reference before selecting a
+target package or moving a datatype. Refactoring must restore semantic
+ownership, not merely rearrange files by technical type.
 
 ## Evidence Requirement
 
@@ -79,6 +84,7 @@ Every significant refactor recommendation must identify:
 - the violated or weakened architectural rule;
 - the invariant or runtime property at risk;
 - the target responsibility owner;
+- the semantic owner of each moved or introduced datatype and its boundary mappings;
 - the smallest migration path;
 - the verification that proves the migration safe.
 

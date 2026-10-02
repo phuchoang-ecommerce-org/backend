@@ -36,7 +36,7 @@ You must implement the architecture defined by ECP rather than inventing a local
 Before performing substantial backend implementation work, use:
 
 ```text
-skills/ecp-backend-feature/SKILL.md
+.agents/skills/ecp-backend-implementer/SKILL.md
 ```
 
 Load its reference files according to the task.
@@ -57,6 +57,8 @@ references/cqrs-persistence-rules.md
 references/integration-security-rules.md
 
 references/verification-checklist.md
+
+../references/architecture-separation-guidelines.md
 ```
 
 Do not replace these project-specific rules with generic Spring, DDD, CQRS, Kafka, JPA, or JDBC recommendations.
@@ -274,6 +276,21 @@ when this operation completes?
 ```
 
 The answer determines the aggregate boundary more reliably than table relationships or existing service classes.
+
+## 8.1 Type Ownership and Boundary Mapping
+
+Before creating or moving each datatype, identify whether it is a Domain,
+Application, Infrastructure, Web/API, or private implementation concern. The
+owner is determined by its semantics—not its Java form, matching fields, or
+reuse potential. Keep use-case contracts with their capability, persistence
+and integration representations local to Infrastructure adapters, and HTTP
+contracts in Web/API. Explicitly map values at every layer boundary.
+
+Do not create generic `services`, `dtos`, `models`, `utils`, `Common*`, or
+`Shared*` packages to remove structural duplication. Keep implementation-only
+types private when possible. For a query-only path, use an Application-owned
+read model and optimized query port/adapter without reconstructing an aggregate
+unless domain behavior is required.
 
 ---
 
@@ -1063,7 +1080,7 @@ Use the repository's actual testing conventions.
 Before reporting completion, use:
 
 ```text
-skills/ecp-backend-feature/references/verification-checklist.md
+.agents/skills/ecp-backend-implementer/references/verification-checklist.md
 ```
 
 Determine which verification categories apply.

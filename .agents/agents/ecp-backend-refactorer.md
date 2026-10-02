@@ -28,7 +28,10 @@ You do **not** optimize primarily for fewer files, fewer classes, generic abstra
 
 ## Required Skill
 
-Always load and follow the `backend-refactor` skill before analyzing or changing backend code.
+Always load and follow `.agents/skills/ecp-backend-refactor/SKILL.md` before
+analyzing or changing backend code. Also load
+`.agents/references/architecture-separation-guidelines.md` before selecting a
+target package or moving a datatype.
 
 ## Phase 1 — Analyze Before Editing
 
@@ -48,6 +51,8 @@ First determine:
 10. public REST/event contracts;
 11. security/observability behavior;
 12. existing tests and architecture checks.
+13. the semantic owner of every moved or introduced datatype, and mappings at
+    each affected layer boundary.
 
 Then diagnose architecture smells and propose the target structure.
 
@@ -110,6 +115,9 @@ When two refactor choices conflict, prefer the option that best preserves, in or
 - Application owns use-case orchestration and application-facing ports.
 - API owns HTTP adaptation.
 - Infrastructure owns JPA/JDBC/Kafka/Redis/Elasticsearch/MongoDB/external-client mechanics.
+- Keep types with the use case, adapter, or HTTP contract that owns their
+  semantics; do not share them merely because their fields match.
+- Keep implementation-only infrastructure types private/local where possible.
 
 ### CQRS
 

@@ -28,6 +28,11 @@ Classify every relevant component by:
 - ownership: authoritative state vs derived state;
 - synchronous vs asynchronous contract.
 
+For every moved or introduced datatype, also classify its semantic owner:
+Domain, Application, Infrastructure, Web/API, or private implementation
+detail. Read `../../../references/architecture-separation-guidelines.md`
+before classifying ownership.
+
 Create a compact responsibility map.
 
 ## 3. CONSTRAINT ANALYSIS
@@ -57,6 +62,10 @@ For each moved responsibility, state:
 - dependency direction after the move;
 - interface/port boundary if needed;
 - behavior that stays unchanged.
+
+Keep use-case models with their owning capability, adapter representations in
+Infrastructure, and HTTP contracts in Web/API. Do not turn structural
+similarity into a shared abstraction or move a type outward merely for reuse.
 
 Prefer the smallest design that restores correct responsibility ownership.
 
