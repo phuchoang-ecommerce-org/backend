@@ -10,7 +10,7 @@ import org.phuchoang.ecp.catalog.api.view.product.ProductDetailView;
 import org.phuchoang.ecp.configuration.security.JwtKeysConfig;
 import org.phuchoang.ecp.configuration.security.SecurityConfig;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
-import org.phuchoang.ecp.sharedkernel.api.ratelimit.RateLimiter;
+import org.phuchoang.ecp.web.common.ratelimit.RateLimiter;
 import org.phuchoang.ecp.web.common.security.JwtRequestContextResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;

@@ -3,7 +3,6 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":shared-kernel"))
     implementation("org.springframework.modulith:spring-modulith-starter-core")
     implementation("org.springframework.modulith:spring-modulith-events-api")
     implementation(libs.jmolecules.ddd)

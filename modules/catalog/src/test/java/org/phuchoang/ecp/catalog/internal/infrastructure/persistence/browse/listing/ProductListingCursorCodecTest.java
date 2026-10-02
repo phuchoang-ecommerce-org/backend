@@ -3,10 +3,10 @@ package org.phuchoang.ecp.catalog.internal.infrastructure.persistence.browse.lis
 import org.junit.jupiter.api.Test;
 import org.phuchoang.ecp.catalog.internal.application.browse.categoryproduct.ProductListingQuery;
 import org.phuchoang.ecp.catalog.internal.infrastructure.persistence.browse.listing.ProductListingCursorCodec.SeekPosition;
-import org.phuchoang.ecp.sharedkernel.api.cursor.CursorSigningKey;
-import org.phuchoang.ecp.sharedkernel.api.cursor.CursorValue;
-import org.phuchoang.ecp.sharedkernel.api.cursor.HmacCursorCodec;
-import org.phuchoang.ecp.sharedkernel.api.cursor.InvalidCursorException;
+import org.phuchoang.ecp.catalog.internal.application.pagination.CursorSigningKey;
+import org.phuchoang.ecp.catalog.internal.application.pagination.CursorValue;
+import org.phuchoang.ecp.catalog.internal.application.pagination.HmacCursorCodec;
+import org.phuchoang.ecp.catalog.internal.application.pagination.InvalidCursorException;
 
 import java.math.BigDecimal;
 import java.util.List;

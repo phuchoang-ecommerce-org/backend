@@ -6,7 +6,7 @@ import org.phuchoang.ecp.catalog.internal.application.browse.category.CategoryBr
 import org.phuchoang.ecp.catalog.internal.application.browse.CatalogReadErrors;
 import org.phuchoang.ecp.catalog.internal.application.browse.category.CategoryDetail;
 import org.phuchoang.ecp.catalog.internal.application.browse.category.CategoryNode;
-import org.phuchoang.ecp.sharedkernel.api.cache.CacheAside;
+import org.phuchoang.ecp.catalog.internal.application.cache.CacheAside;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

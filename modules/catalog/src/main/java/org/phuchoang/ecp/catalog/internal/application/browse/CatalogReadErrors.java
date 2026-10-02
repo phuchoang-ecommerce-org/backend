@@ -1,7 +1,7 @@
 package org.phuchoang.ecp.catalog.internal.application.browse;
 
-import org.phuchoang.ecp.sharedkernel.api.error.DomainException;
-import org.phuchoang.ecp.sharedkernel.api.error.GenErrorCode;
+import org.phuchoang.ecp.catalog.api.error.DomainException;
+import org.phuchoang.ecp.catalog.api.error.GenErrorCode;
 
 /** Catalog's uniform read-side not-found outcomes; an unpublished product is reported exactly like an absent one. */
 public final class CatalogReadErrors {

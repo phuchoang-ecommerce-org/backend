@@ -6,7 +6,7 @@ import org.phuchoang.ecp.catalog.internal.application.browse.categoryproduct.Pro
 import org.phuchoang.ecp.catalog.internal.infrastructure.persistence.JdbcQuerySupport;
 import org.phuchoang.ecp.catalog.internal.infrastructure.persistence.browse.listing.ProductListingCursorCodec.SeekPosition;
 import org.phuchoang.ecp.catalog.internal.infrastructure.persistence.browse.listing.ProductListingSqlBuilder.ListingSql;
-import org.phuchoang.ecp.sharedkernel.api.cursor.CursorCodec;
+import org.phuchoang.ecp.catalog.internal.application.pagination.CursorCodec;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 

@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.phuchoang.ecp.catalog.internal.application.browse.categoryproduct.ProductListingQuery;
 import org.phuchoang.ecp.catalog.internal.infrastructure.persistence.browse.listing.ProductListingCursorCodec.SeekPosition;
 import org.phuchoang.ecp.catalog.internal.infrastructure.persistence.browse.listing.ProductListingSqlBuilder.ListingSql;
-import org.phuchoang.ecp.sharedkernel.api.cursor.CursorValue;
+import org.phuchoang.ecp.catalog.internal.application.pagination.CursorValue;
 
 import java.math.BigDecimal;
 import java.time.Instant;

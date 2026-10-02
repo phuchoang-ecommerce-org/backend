@@ -10,8 +10,8 @@ import org.phuchoang.ecp.catalog.internal.application.browse.product.ProductDeta
 import org.phuchoang.ecp.catalog.internal.application.browse.product.ProductDetailsQueryService;
 import org.phuchoang.ecp.catalog.internal.application.browse.categoryproduct.ProductPage;
 import org.phuchoang.ecp.catalog.internal.application.browse.product.RatingSummary;
-import org.phuchoang.ecp.sharedkernel.api.cache.CacheAside;
-import org.phuchoang.ecp.sharedkernel.api.error.DomainException;
+import org.phuchoang.ecp.catalog.internal.application.cache.CacheAside;
+import org.phuchoang.ecp.catalog.api.error.DomainException;
 
 import java.time.Duration;
 import java.util.List;

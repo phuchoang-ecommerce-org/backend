@@ -1,11 +1,11 @@
 package org.phuchoang.ecp.catalog.internal.infrastructure.persistence.browse.listing;
 
 import org.phuchoang.ecp.catalog.internal.application.browse.categoryproduct.ProductListingQuery;
-import org.phuchoang.ecp.sharedkernel.api.cursor.CursorCodec;
-import org.phuchoang.ecp.sharedkernel.api.cursor.CursorContext;
-import org.phuchoang.ecp.sharedkernel.api.cursor.CursorPosition;
-import org.phuchoang.ecp.sharedkernel.api.cursor.CursorValue;
-import org.phuchoang.ecp.sharedkernel.api.cursor.InvalidCursorException;
+import org.phuchoang.ecp.catalog.internal.application.pagination.CursorCodec;
+import org.phuchoang.ecp.catalog.internal.application.pagination.CursorContext;
+import org.phuchoang.ecp.catalog.internal.application.pagination.CursorPosition;
+import org.phuchoang.ecp.catalog.internal.application.pagination.CursorValue;
+import org.phuchoang.ecp.catalog.internal.application.pagination.InvalidCursorException;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;

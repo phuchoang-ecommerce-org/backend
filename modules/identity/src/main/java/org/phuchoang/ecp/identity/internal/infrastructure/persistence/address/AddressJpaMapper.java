@@ -4,7 +4,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 import org.phuchoang.ecp.identity.internal.domain.model.CustomerAddress;
-import org.phuchoang.ecp.sharedkernel.api.address.Address;
+import org.phuchoang.ecp.identity.internal.domain.model.Address;
 
 import java.time.Instant;
 import java.util.UUID;

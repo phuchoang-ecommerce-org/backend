@@ -2,7 +2,7 @@ package org.phuchoang.ecp.web.catalog;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.phuchoang.ecp.catalog.api.search.SearchProductsQuery;
-import org.phuchoang.ecp.sharedkernel.api.error.FieldErrorCodes;
+import org.phuchoang.ecp.web.common.error.FieldErrorCodes;
 import org.phuchoang.ecp.web.common.error.FieldError;
 import org.phuchoang.ecp.web.common.error.UnprocessableQueryException;
 import org.phuchoang.ecp.web.common.error.ValidationException;

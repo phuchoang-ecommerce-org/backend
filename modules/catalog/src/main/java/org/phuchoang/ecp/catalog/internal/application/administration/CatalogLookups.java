@@ -4,8 +4,8 @@ import org.phuchoang.ecp.catalog.internal.domain.model.Category;
 import org.phuchoang.ecp.catalog.internal.domain.model.Product;
 import org.phuchoang.ecp.catalog.internal.domain.repository.CategoryRepository;
 import org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository;
-import org.phuchoang.ecp.sharedkernel.api.error.DomainException;
-import org.phuchoang.ecp.sharedkernel.api.error.GenErrorCode;
+import org.phuchoang.ecp.catalog.api.error.DomainException;
+import org.phuchoang.ecp.catalog.api.error.GenErrorCode;
 
 import java.util.UUID;
 

@@ -10,8 +10,8 @@ import org.phuchoang.ecp.catalog.internal.domain.model.Product;
 import org.phuchoang.ecp.catalog.internal.domain.model.SubtreeCategory;
 import org.phuchoang.ecp.catalog.internal.domain.repository.CategoryRepository;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
-import org.phuchoang.ecp.sharedkernel.api.event.OutboxEvent;
-import org.phuchoang.ecp.sharedkernel.api.event.OutboxWriter;
+import org.phuchoang.ecp.catalog.internal.application.event.OutboxEvent;
+import org.phuchoang.ecp.catalog.internal.application.event.OutboxWriter;
 import tools.jackson.databind.ObjectMapper;
 
 import java.time.Clock;

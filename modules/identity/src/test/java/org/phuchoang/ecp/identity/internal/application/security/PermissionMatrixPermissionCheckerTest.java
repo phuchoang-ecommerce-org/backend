@@ -2,7 +2,7 @@ package org.phuchoang.ecp.identity.internal.application.security;
 
 import org.junit.jupiter.api.Test;
 import org.phuchoang.ecp.identity.internal.domain.model.RoleCode;
-import org.phuchoang.ecp.sharedkernel.api.error.DomainException;
+import org.phuchoang.ecp.identity.api.error.DomainException;
 
 import java.util.EnumSet;
 import java.util.Set;

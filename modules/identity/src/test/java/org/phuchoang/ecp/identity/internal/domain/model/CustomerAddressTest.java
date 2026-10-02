@@ -1,7 +1,7 @@
 package org.phuchoang.ecp.identity.internal.domain.model;
 
 import org.junit.jupiter.api.Test;
-import org.phuchoang.ecp.sharedkernel.api.address.Address;
+import org.phuchoang.ecp.identity.internal.domain.model.Address;
 
 import java.util.UUID;
 

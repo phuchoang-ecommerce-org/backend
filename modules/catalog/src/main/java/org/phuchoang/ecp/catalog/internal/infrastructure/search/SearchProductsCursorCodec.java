@@ -3,10 +3,10 @@ package org.phuchoang.ecp.catalog.internal.infrastructure.search;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import org.phuchoang.ecp.catalog.internal.application.search.SearchProductsQuery;
-import org.phuchoang.ecp.sharedkernel.api.cursor.CursorCodec;
-import org.phuchoang.ecp.sharedkernel.api.cursor.CursorContext;
-import org.phuchoang.ecp.sharedkernel.api.cursor.CursorPosition;
-import org.phuchoang.ecp.sharedkernel.api.cursor.CursorValue;
+import org.phuchoang.ecp.catalog.internal.application.pagination.CursorCodec;
+import org.phuchoang.ecp.catalog.internal.application.pagination.CursorContext;
+import org.phuchoang.ecp.catalog.internal.application.pagination.CursorPosition;
+import org.phuchoang.ecp.catalog.internal.application.pagination.CursorValue;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;

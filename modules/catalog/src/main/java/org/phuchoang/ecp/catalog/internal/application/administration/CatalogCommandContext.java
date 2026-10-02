@@ -1,7 +1,7 @@
 package org.phuchoang.ecp.catalog.internal.application.administration;
 
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
-import org.phuchoang.ecp.sharedkernel.api.event.EventActor;
+import org.phuchoang.ecp.catalog.internal.application.event.EventActor;
 
 import java.util.Objects;
 import java.util.UUID;

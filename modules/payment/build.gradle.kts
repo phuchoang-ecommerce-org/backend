@@ -3,7 +3,6 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":shared-kernel"))
     implementation(project(":identity"))
     implementation("org.springframework.modulith:spring-modulith-starter-core")
     implementation(libs.jmolecules.ddd)
@@ -35,4 +34,3 @@ val integrationTestTask = tasks.register<Test>("integrationTest") {
 tasks.check {
     dependsOn(integrationTestTask)
 }
-

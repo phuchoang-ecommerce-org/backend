@@ -3,7 +3,6 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":shared-kernel"))
     implementation(project(":identity"))
     implementation(project(":catalog"))
     implementation(project(":promotion"))
@@ -37,4 +36,3 @@ val integrationTestTask = tasks.register<Test>("integrationTest") {
 tasks.check {
     dependsOn(integrationTestTask)
 }
-

@@ -7,7 +7,7 @@ import org.phuchoang.ecp.catalog.api.view.category.CategoryNodeView;
 import org.phuchoang.ecp.catalog.api.view.category.CategoryView;
 import org.phuchoang.ecp.catalog.api.view.product.ProductPageView;
 import org.phuchoang.ecp.catalog.api.view.product.VariantView;
-import org.phuchoang.ecp.sharedkernel.api.error.FieldErrorCodes;
+import org.phuchoang.ecp.web.common.error.FieldErrorCodes;
 import org.phuchoang.ecp.web.common.error.FieldError;
 import org.phuchoang.ecp.web.common.error.ValidationException;
 import org.phuchoang.ecp.web.common.pagination.Page;

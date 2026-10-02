@@ -4,8 +4,8 @@ import org.phuchoang.ecp.catalog.internal.application.administration.CatalogComm
 import org.phuchoang.ecp.catalog.internal.application.administration.CatalogPermissions;
 import org.phuchoang.ecp.catalog.internal.application.administration.product.update.UpdateProductService;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
-import org.phuchoang.ecp.sharedkernel.api.error.DomainException;
-import org.phuchoang.ecp.sharedkernel.api.error.GenErrorCode;
+import org.phuchoang.ecp.catalog.api.error.DomainException;
+import org.phuchoang.ecp.catalog.api.error.GenErrorCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

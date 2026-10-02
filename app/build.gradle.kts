@@ -28,7 +28,6 @@ dependencies {
     implementation("org.springframework.security:spring-security-oauth2-jose")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
 
-    implementation(project(":shared-kernel"))
     implementation(project(":identity"))
     implementation(project(":catalog"))
     implementation(project(":inventory"))

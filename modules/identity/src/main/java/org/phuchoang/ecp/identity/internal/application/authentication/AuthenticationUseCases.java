@@ -15,7 +15,7 @@ import org.phuchoang.ecp.identity.internal.domain.model.Account;
 import org.phuchoang.ecp.identity.internal.domain.model.AccountStatus;
 import org.phuchoang.ecp.identity.internal.domain.model.EmailAddress;
 import org.phuchoang.ecp.identity.internal.domain.repository.AccountRepository;
-import org.phuchoang.ecp.sharedkernel.api.error.DomainException;
+import org.phuchoang.ecp.identity.api.error.DomainException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

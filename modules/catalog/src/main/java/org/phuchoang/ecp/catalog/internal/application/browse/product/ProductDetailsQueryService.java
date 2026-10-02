@@ -3,7 +3,7 @@ package org.phuchoang.ecp.catalog.internal.application.browse.product;
 import org.phuchoang.ecp.catalog.internal.application.cache.CatalogCacheKeys;
 import org.phuchoang.ecp.catalog.internal.application.cache.CatalogCachePolicy;
 import org.phuchoang.ecp.catalog.internal.application.browse.CatalogReadErrors;
-import org.phuchoang.ecp.sharedkernel.api.cache.CacheAside;
+import org.phuchoang.ecp.catalog.internal.application.cache.CacheAside;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;

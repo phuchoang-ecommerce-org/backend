@@ -17,7 +17,7 @@ import org.phuchoang.ecp.identity.internal.application.authentication.LoginResul
 import org.phuchoang.ecp.identity.internal.application.profile.AccountSummary;
 import org.phuchoang.ecp.identity.internal.application.profile.UpdateProfileCommand;
 import org.phuchoang.ecp.identity.internal.application.registration.RegisterAccountCommand;
-import org.phuchoang.ecp.sharedkernel.api.address.Address;
+import org.phuchoang.ecp.identity.internal.domain.model.Address;
 
 /** Maps identity's API records to application commands and application results to API views. */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR)

@@ -4,8 +4,8 @@ import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import org.junit.jupiter.api.Test;
 import org.phuchoang.ecp.catalog.internal.application.search.SearchProductsQuery;
-import org.phuchoang.ecp.sharedkernel.api.cursor.CursorSigningKey;
-import org.phuchoang.ecp.sharedkernel.api.cursor.HmacCursorCodec;
+import org.phuchoang.ecp.catalog.internal.application.pagination.CursorSigningKey;
+import org.phuchoang.ecp.catalog.internal.application.pagination.HmacCursorCodec;
 
 import java.math.BigDecimal;
 import java.util.List;

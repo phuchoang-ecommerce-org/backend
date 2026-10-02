@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 import org.phuchoang.ecp.ordering.api.OrderFacade;
 import org.phuchoang.ecp.ordering.api.OrderPageView;
-import org.phuchoang.ecp.sharedkernel.api.ratelimit.RateLimiter;
+import org.phuchoang.ecp.web.common.ratelimit.RateLimiter;
 import org.phuchoang.ecp.configuration.security.JwtKeysConfig;
 import org.phuchoang.ecp.configuration.security.SecurityConfig;
 import org.phuchoang.ecp.web.common.security.JwtRequestContextResolver;

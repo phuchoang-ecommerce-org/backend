@@ -6,11 +6,11 @@ import org.phuchoang.ecp.identity.internal.application.security.CallerContext;
 import org.phuchoang.ecp.identity.internal.application.security.PermissionChecker;
 import org.phuchoang.ecp.identity.internal.application.security.PermissionMatrix;
 import org.phuchoang.ecp.identity.internal.domain.model.CustomerAddress;
-import org.phuchoang.ecp.sharedkernel.api.cursor.CursorCodec;
-import org.phuchoang.ecp.sharedkernel.api.cursor.CursorContext;
-import org.phuchoang.ecp.sharedkernel.api.cursor.CursorPosition;
-import org.phuchoang.ecp.sharedkernel.api.cursor.CursorValue;
-import org.phuchoang.ecp.sharedkernel.api.cursor.InvalidCursorException;
+import org.phuchoang.ecp.identity.internal.application.pagination.CursorCodec;
+import org.phuchoang.ecp.identity.internal.application.pagination.CursorContext;
+import org.phuchoang.ecp.identity.internal.application.pagination.CursorPosition;
+import org.phuchoang.ecp.identity.internal.application.pagination.CursorValue;
+import org.phuchoang.ecp.identity.internal.application.pagination.InvalidCursorException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

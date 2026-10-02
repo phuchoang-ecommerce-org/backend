@@ -6,7 +6,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
-import org.phuchoang.ecp.sharedkernel.api.error.DomainException;
+import org.phuchoang.ecp.ordering.api.error.DomainException;
 
 import java.util.Set;
 import java.util.UUID;

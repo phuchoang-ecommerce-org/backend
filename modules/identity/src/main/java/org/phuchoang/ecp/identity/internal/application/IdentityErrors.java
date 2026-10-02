@@ -1,7 +1,7 @@
 package org.phuchoang.ecp.identity.internal.application;
 
-import org.phuchoang.ecp.sharedkernel.api.error.DomainException;
-import org.phuchoang.ecp.sharedkernel.api.error.GenErrorCode;
+import org.phuchoang.ecp.identity.api.error.DomainException;
+import org.phuchoang.ecp.identity.api.error.GenErrorCode;
 
 /**
  * The one place identity's security-sensitive response semantics are decided, so they can be

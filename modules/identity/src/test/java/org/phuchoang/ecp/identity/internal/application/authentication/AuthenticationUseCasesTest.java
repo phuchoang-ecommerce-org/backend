@@ -21,7 +21,7 @@ import org.phuchoang.ecp.identity.internal.domain.model.RoleCode;
 import org.phuchoang.ecp.identity.internal.domain.model.TokenType;
 import org.phuchoang.ecp.identity.internal.domain.model.VerificationStatus;
 import org.phuchoang.ecp.identity.internal.domain.repository.AccountRepository;
-import org.phuchoang.ecp.sharedkernel.api.error.DomainException;
+import org.phuchoang.ecp.identity.api.error.DomainException;
 
 import java.time.Clock;
 import java.time.Duration;

@@ -1,6 +1,6 @@
 package org.phuchoang.ecp.web.common.request;
 
-import org.phuchoang.ecp.sharedkernel.api.error.FieldErrorCodes;
+import org.phuchoang.ecp.web.common.error.FieldErrorCodes;
 import org.phuchoang.ecp.web.common.error.FieldError;
 import org.phuchoang.ecp.web.common.error.ValidationException;
 

@@ -7,7 +7,6 @@ dependencyResolutionManagement {
 }
 
 include(
-    "shared-kernel",
     "identity",
     "catalog",
     "inventory",
@@ -29,7 +28,6 @@ include(
 // declare dependencies such as project(":identity"), rather than acquiring a
 // new nested project path.
 listOf(
-    "shared-kernel",
     "identity",
     "catalog",
     "inventory",

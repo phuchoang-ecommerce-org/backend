@@ -12,7 +12,7 @@ package org.phuchoang.ecp.identity.internal.application.security;
 public interface PermissionChecker {
 
     /**
-     * @throws org.phuchoang.ecp.sharedkernel.api.error.DomainException {@code ECP-GEN-4030} if
+     * @throws org.phuchoang.ecp.identity.api.error.DomainException {@code ECP-GEN-4030} if
      *     {@code caller}'s roles do not permit {@code operationId} (Permission Matrix.md §5.1)
      */
     void require(CallerContext caller, String operationId);

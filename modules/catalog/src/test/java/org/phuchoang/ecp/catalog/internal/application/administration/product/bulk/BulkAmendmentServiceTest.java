@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.phuchoang.ecp.catalog.internal.application.administration.CatalogCommandContext;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
-import org.phuchoang.ecp.sharedkernel.api.error.DomainException;
-import org.phuchoang.ecp.sharedkernel.api.error.GenErrorCode;
+import org.phuchoang.ecp.catalog.api.error.DomainException;
+import org.phuchoang.ecp.catalog.api.error.GenErrorCode;
 
 import java.util.List;
 import java.util.Map;

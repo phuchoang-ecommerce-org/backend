@@ -7,7 +7,7 @@ import org.phuchoang.ecp.identity.api.facade.IdentityFacade;
 import org.phuchoang.ecp.identity.api.request.AddressWriteRequest;
 import org.phuchoang.ecp.identity.api.view.AddressPageView;
 import org.phuchoang.ecp.identity.api.view.AddressView;
-import org.phuchoang.ecp.sharedkernel.api.ratelimit.RateLimiter;
+import org.phuchoang.ecp.web.common.ratelimit.RateLimiter;
 import org.phuchoang.ecp.configuration.security.JwtKeysConfig;
 import org.phuchoang.ecp.configuration.security.SecurityConfig;
 import org.phuchoang.ecp.web.common.security.JwtRequestContextResolver;
@@ -25,7 +25,7 @@ import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
-import static org.phuchoang.ecp.sharedkernel.api.error.GenErrorCode.NOT_FOUND;
+import static org.phuchoang.ecp.identity.api.error.GenErrorCode.NOT_FOUND;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -109,7 +109,7 @@ class AddressControllerTest {
     @Test
     void gettingAnotherCustomersAddressIs404NeverForbidden() throws Exception {
         UUID addressId = UUID.randomUUID();
-        doThrow(new org.phuchoang.ecp.sharedkernel.api.error.DomainException(NOT_FOUND, "Address not found."))
+        doThrow(new org.phuchoang.ecp.identity.api.error.DomainException(NOT_FOUND, "Address not found."))
             .when(identityFacade).getOwnAddress(any(), org.mockito.ArgumentMatchers.eq(addressId));
 
         mockMvc.perform(get("/api/v1/accounts/me/addresses/" + addressId).with(customerJwt()))

@@ -1,6 +1,6 @@
 package org.phuchoang.ecp.catalog.internal.application.cache;
 
-import org.phuchoang.ecp.sharedkernel.api.cache.CacheAside;
+import org.phuchoang.ecp.catalog.internal.application.cache.CacheAside;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

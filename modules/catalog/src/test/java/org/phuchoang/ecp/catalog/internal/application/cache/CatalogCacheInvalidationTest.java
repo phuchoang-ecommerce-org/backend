@@ -1,7 +1,7 @@
 package org.phuchoang.ecp.catalog.internal.application.cache;
 
 import org.junit.jupiter.api.Test;
-import org.phuchoang.ecp.sharedkernel.api.cache.CacheAside;
+import org.phuchoang.ecp.catalog.internal.application.cache.CacheAside;
 
 import java.util.List;
 import java.util.UUID;

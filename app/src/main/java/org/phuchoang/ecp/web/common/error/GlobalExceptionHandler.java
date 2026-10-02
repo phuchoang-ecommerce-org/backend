@@ -2,10 +2,10 @@ package org.phuchoang.ecp.web.common.error;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
-import org.phuchoang.ecp.sharedkernel.api.error.DomainException;
-import org.phuchoang.ecp.sharedkernel.api.error.ErrorCode;
-import org.phuchoang.ecp.sharedkernel.api.error.FieldErrorCodes;
-import org.phuchoang.ecp.sharedkernel.api.error.GenErrorCode;
+import org.phuchoang.ecp.web.common.error.DomainException;
+import org.phuchoang.ecp.web.common.error.ErrorCode;
+import org.phuchoang.ecp.web.common.error.FieldErrorCodes;
+import org.phuchoang.ecp.web.common.error.GenErrorCode;
 import org.phuchoang.ecp.web.common.filter.CorrelationIdFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +36,26 @@ public class GlobalExceptionHandler {
         ErrorCode errorCode = exception.errorCode();
         return problemResponse(errorCode.code(), errorCode.title(), errorCode.httpStatus(),
             exception.getMessage(), request, List.of());
+    }
+
+    @ExceptionHandler({
+        org.phuchoang.ecp.identity.api.error.DomainException.class,
+        org.phuchoang.ecp.catalog.api.error.DomainException.class,
+        org.phuchoang.ecp.ordering.api.error.DomainException.class
+    })
+    public ResponseEntity<Problem> handleContextDomain(RuntimeException exception, HttpServletRequest request) {
+        if (exception instanceof org.phuchoang.ecp.identity.api.error.DomainException identity) {
+            return problemResponse(identity.errorCode().code(), identity.errorCode().title(),
+                identity.errorCode().httpStatus(), identity.getMessage(), request, List.of());
+        }
+        if (exception instanceof org.phuchoang.ecp.catalog.api.error.DomainException catalog) {
+            return problemResponse(catalog.errorCode().code(), catalog.errorCode().title(),
+                catalog.errorCode().httpStatus(), catalog.getMessage(), request, List.of());
+        }
+        org.phuchoang.ecp.ordering.api.error.DomainException ordering =
+            (org.phuchoang.ecp.ordering.api.error.DomainException) exception;
+        return problemResponse(ordering.errorCode().code(), ordering.errorCode().title(),
+            ordering.errorCode().httpStatus(), ordering.getMessage(), request, List.of());
     }
 
     @ExceptionHandler(ValidationException.class)

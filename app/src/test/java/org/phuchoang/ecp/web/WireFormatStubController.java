@@ -3,9 +3,9 @@ package org.phuchoang.ecp.web;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import org.phuchoang.ecp.inventory.api.InventoryErrorCode;
-import org.phuchoang.ecp.sharedkernel.api.error.DomainException;
-import org.phuchoang.ecp.sharedkernel.api.error.GenErrorCode;
+import org.phuchoang.ecp.web.common.error.DomainException;
+import org.phuchoang.ecp.web.common.error.ErrorCode;
+import org.phuchoang.ecp.web.common.error.GenErrorCode;
 import org.phuchoang.ecp.web.common.pagination.Page;
 import org.phuchoang.ecp.web.common.pagination.PageEnvelope;
 import org.phuchoang.ecp.web.common.pagination.Pagination;
@@ -40,7 +40,22 @@ class WireFormatStubController {
 
     @GetMapping("/test/wire-format/domain-error")
     String domainError() {
-        throw new DomainException(InventoryErrorCode.INSUFFICIENT_STOCK,
+        throw new DomainException(new ErrorCode() {
+            @Override
+            public String code() {
+                return "ECP-INV-4091";
+            }
+
+            @Override
+            public int httpStatus() {
+                return 409;
+            }
+
+            @Override
+            public String title() {
+                return "Insufficient available stock";
+            }
+        },
             "SKU TS-BLU-M has 2 units available; 5 were requested.");
     }
 

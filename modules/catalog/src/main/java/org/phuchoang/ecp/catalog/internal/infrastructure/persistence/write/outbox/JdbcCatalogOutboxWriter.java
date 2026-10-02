@@ -1,8 +1,8 @@
 package org.phuchoang.ecp.catalog.internal.infrastructure.persistence.write.outbox;
 
-import org.phuchoang.ecp.sharedkernel.api.event.EventActor;
-import org.phuchoang.ecp.sharedkernel.api.event.OutboxEvent;
-import org.phuchoang.ecp.sharedkernel.api.event.OutboxWriter;
+import org.phuchoang.ecp.catalog.internal.application.event.EventActor;
+import org.phuchoang.ecp.catalog.internal.application.event.OutboxEvent;
+import org.phuchoang.ecp.catalog.internal.application.event.OutboxWriter;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
