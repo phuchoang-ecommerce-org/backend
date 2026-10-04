@@ -61,6 +61,7 @@ public final class PermissionMatrix {
     public static final String LIST_ORDERS = "listOrders";
     public static final String MANAGE_PRODUCTS = "manageProducts";
     public static final String MANAGE_CATEGORIES = "manageCategories";
+    public static final String COMMIT_STOCK_RESERVATION = "commitStockReservation";
 
     private static final Set<RoleCode> ANY_AUTHENTICATED =
         EnumSet.of(CUSTOMER, STAFF, WAREHOUSE_OPERATOR, CUSTOMER_SUPPORT, ADMINISTRATOR);
@@ -90,7 +91,8 @@ public final class PermissionMatrix {
         Map.entry(GET_PRODUCT, ANY_AUTHENTICATED_PLUS_GUEST),
         Map.entry(LIST_ORDERS, ANY_AUTHENTICATED),
         Map.entry(MANAGE_PRODUCTS, EnumSet.of(STAFF, ADMINISTRATOR)),
-        Map.entry(MANAGE_CATEGORIES, EnumSet.of(STAFF, ADMINISTRATOR)));
+        Map.entry(MANAGE_CATEGORIES, EnumSet.of(STAFF, ADMINISTRATOR)),
+        Map.entry(COMMIT_STOCK_RESERVATION, EnumSet.of(WAREHOUSE_OPERATOR, ADMINISTRATOR)));
 
     private PermissionMatrix() {
     }
