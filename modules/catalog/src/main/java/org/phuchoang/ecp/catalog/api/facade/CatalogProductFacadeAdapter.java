@@ -25,11 +25,11 @@ public class CatalogProductFacadeAdapter implements CatalogProductFacade {
 
     @Override
     public ProductDetailView getProduct(UUID productId) {
-        return mapper.productDetailView(service.getProduct(productId));
+        return CatalogApiErrors.translate(() -> mapper.productDetailView(service.getProduct(productId)));
     }
 
     @Override
     public RatingSummaryView getProductRatingSummary(UUID productId) {
-        return mapper.ratingSummaryView(service.getProductRatingSummary(productId));
+        return CatalogApiErrors.translate(() -> mapper.ratingSummaryView(service.getProductRatingSummary(productId)));
     }
 }

@@ -1,8 +1,8 @@
 package org.phuchoang.ecp.identity.internal.application.security;
 
 import org.phuchoang.ecp.identity.internal.domain.model.RoleCode;
-import org.phuchoang.ecp.identity.api.error.DomainException;
-import org.phuchoang.ecp.identity.api.error.GenErrorCode;
+import org.phuchoang.ecp.identity.internal.application.error.ApplicationErrorCode;
+import org.phuchoang.ecp.identity.internal.application.error.ApplicationException;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
@@ -20,7 +20,7 @@ public class PermissionMatrixPermissionChecker implements PermissionChecker {
         Set<RoleCode> allowed = PermissionMatrix.allowedRoles(operationId);
         boolean permitted = caller.roles().stream().anyMatch(allowed::contains);
         if (!permitted) {
-            throw new DomainException(GenErrorCode.FORBIDDEN,
+            throw new ApplicationException(ApplicationErrorCode.FORBIDDEN,
                 "The caller's role does not permit operation " + operationId + ".");
         }
     }

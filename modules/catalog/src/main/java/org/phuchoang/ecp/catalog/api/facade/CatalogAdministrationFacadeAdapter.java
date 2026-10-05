@@ -79,74 +79,78 @@ class CatalogAdministrationFacadeAdapter implements CatalogAdministrationFacade 
 
     @Override
     public ProductDetailView createProduct(IdentityActor caller, UUID correlationId, ProductWrite request) {
-        return mapper.productDetailView(createProduct.create(context(caller, correlationId), mapper.createProduct(request)));
+        return CatalogApiErrors.translate(() -> mapper.productDetailView(
+            createProduct.create(context(caller, correlationId), mapper.createProduct(request))));
     }
 
     @Override
     public ProductDetailView updateProduct(IdentityActor caller, UUID correlationId, UUID productId, ProductWrite request) {
-        return mapper.productDetailView(
-            updateProduct.update(context(caller, correlationId), productId, mapper.productChange(request)));
+        return CatalogApiErrors.translate(() -> mapper.productDetailView(
+            updateProduct.update(context(caller, correlationId), productId, mapper.productChange(request))));
     }
 
     @Override
     public void deleteProduct(IdentityActor caller, UUID correlationId, UUID productId) {
-        deleteProduct.delete(context(caller, correlationId), productId);
+        CatalogApiErrors.translate(() -> deleteProduct.delete(context(caller, correlationId), productId));
     }
 
     @Override
     public ProductDetailView setPublication(IdentityActor caller, UUID correlationId, UUID productId,
             PublicationWrite request) {
-        return mapper.productDetailView(
-            publication.setPublication(context(caller, correlationId), productId, mapper.setPublication(request)));
+        return CatalogApiErrors.translate(() -> mapper.productDetailView(
+            publication.setPublication(context(caller, correlationId), productId, mapper.setPublication(request))));
     }
 
     @Override
     public VariantView addVariant(IdentityActor caller, UUID correlationId, UUID productId, VariantWrite request) {
-        return mapper.variantView(addVariant.add(context(caller, correlationId), productId, mapper.addVariant(request)));
+        return CatalogApiErrors.translate(() -> mapper.variantView(
+            addVariant.add(context(caller, correlationId), productId, mapper.addVariant(request))));
     }
 
     @Override
     public void removeVariant(IdentityActor caller, UUID correlationId, UUID productId, UUID variantId) {
-        removeVariant.remove(context(caller, correlationId), productId, variantId);
+        CatalogApiErrors.translate(() -> removeVariant.remove(context(caller, correlationId), productId, variantId));
     }
 
     @Override
     public VariantView changePrice(IdentityActor caller, UUID correlationId, UUID productId, UUID variantId,
             PriceWrite request) {
-        return mapper.variantView(
-            changePrice.changePrice(context(caller, correlationId), productId, variantId, mapper.price(request)));
+        return CatalogApiErrors.translate(() -> mapper.variantView(
+            changePrice.changePrice(context(caller, correlationId), productId, variantId, mapper.price(request))));
     }
 
     @Override
     public ProductImageView addImage(IdentityActor caller, UUID correlationId, UUID productId, ImageWrite request) {
-        return mapper.productImageView(addImage.add(context(caller, correlationId), productId, mapper.addImage(request)));
+        return CatalogApiErrors.translate(() -> mapper.productImageView(
+            addImage.add(context(caller, correlationId), productId, mapper.addImage(request))));
     }
 
     @Override
     public void removeImage(IdentityActor caller, UUID correlationId, UUID productId, UUID imageId) {
-        removeImage.remove(context(caller, correlationId), productId, imageId);
+        CatalogApiErrors.translate(() -> removeImage.remove(context(caller, correlationId), productId, imageId));
     }
 
     @Override
     public CategoryView createCategory(IdentityActor caller, UUID correlationId, CategoryWrite request) {
-        return mapper.categoryView(createCategory.create(context(caller, correlationId), mapper.createCategory(request)));
+        return CatalogApiErrors.translate(() -> mapper.categoryView(
+            createCategory.create(context(caller, correlationId), mapper.createCategory(request))));
     }
 
     @Override
     public CategoryView updateCategory(IdentityActor caller, UUID correlationId, UUID categoryId, CategoryWrite request) {
-        return mapper.categoryView(
-            updateCategory.update(context(caller, correlationId), categoryId, mapper.categoryChange(request)));
+        return CatalogApiErrors.translate(() -> mapper.categoryView(
+            updateCategory.update(context(caller, correlationId), categoryId, mapper.categoryChange(request))));
     }
 
     @Override
     public void deleteCategory(IdentityActor caller, UUID correlationId, UUID categoryId) {
-        deleteCategory.delete(context(caller, correlationId), categoryId);
+        CatalogApiErrors.translate(() -> deleteCategory.delete(context(caller, correlationId), categoryId));
     }
 
     @Override
     public BulkResult amendBulk(IdentityActor caller, UUID correlationId, List<BulkItem> items) {
-        return mapper.bulkResult(
-            bulkAmendment.amend(context(caller, correlationId), items.stream().map(mapper::bulkAmendment).toList()));
+        return CatalogApiErrors.translate(() -> mapper.bulkResult(
+            bulkAmendment.amend(context(caller, correlationId), items.stream().map(mapper::bulkAmendment).toList())));
     }
 
     private static CatalogCommandContext context(IdentityActor caller, UUID correlationId) {

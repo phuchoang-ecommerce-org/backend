@@ -20,7 +20,7 @@ import org.phuchoang.ecp.identity.internal.domain.model.RoleCode;
 import org.phuchoang.ecp.identity.internal.domain.model.TokenType;
 import org.phuchoang.ecp.identity.internal.domain.model.VerificationStatus;
 import org.phuchoang.ecp.identity.internal.domain.repository.AccountRepository;
-import org.phuchoang.ecp.identity.api.error.DomainException;
+import org.phuchoang.ecp.identity.internal.application.error.ApplicationException;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -85,7 +85,7 @@ class RegistrationUseCasesTest {
         Throwable thrown = catchThrowable(() -> useCases().registerAccount(
             new RegisterAccountCommand("new@example.com", "weak", "New")));
 
-        assertThat(thrown).isInstanceOf(DomainException.class);
+        assertThat(thrown).isInstanceOf(ApplicationException.class);
         verify(accountRepository, never()).registerNew(any());
     }
 
@@ -118,8 +118,10 @@ class RegistrationUseCasesTest {
             .thenReturn(Optional.of(usable));
         when(tokenStore.consumeIfUsable(usable.id(), Instant.now(clock))).thenReturn(false);
 
-        DomainException expiredFailure = (DomainException) catchThrowable(() -> useCases().verifyEmailAddress("raw"));
-        DomainException racedFailure = (DomainException) catchThrowable(() -> useCases().verifyEmailAddress("raced"));
+        ApplicationException expiredFailure = (ApplicationException) catchThrowable(
+            () -> useCases().verifyEmailAddress("raw"));
+        ApplicationException racedFailure = (ApplicationException) catchThrowable(
+            () -> useCases().verifyEmailAddress("raced"));
 
         assertThat(expiredFailure.errorCode().code()).isEqualTo("ECP-GEN-4040").isEqualTo(racedFailure.errorCode().code());
         assertThat(expiredFailure.getMessage()).isEqualTo(racedFailure.getMessage());

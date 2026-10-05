@@ -8,8 +8,8 @@ import org.phuchoang.ecp.catalog.internal.domain.model.Category;
 import org.phuchoang.ecp.catalog.internal.domain.repository.CategoryRepository;
 import org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
-import org.phuchoang.ecp.catalog.api.error.DomainException;
-import org.phuchoang.ecp.catalog.api.error.GenErrorCode;
+import org.phuchoang.ecp.catalog.internal.application.error.ApplicationErrorCode;
+import org.phuchoang.ecp.catalog.internal.application.error.ApplicationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,7 +46,8 @@ public class DeleteCategoryService {
         long productCount = products.countByCategoryId(categoryId);
         long childCategoryCount = categories.countByParentId(categoryId);
         if (productCount > 0 || childCategoryCount > 0) {
-            throw new DomainException(GenErrorCode.VALIDATION_FAILED, "Category cannot be deleted: productCount="
+            throw new ApplicationException(ApplicationErrorCode.VALIDATION_FAILED,
+                "Category cannot be deleted: productCount="
                 + productCount + ", childCategoryCount=" + childCategoryCount);
         }
         categories.deleteById(categoryId);

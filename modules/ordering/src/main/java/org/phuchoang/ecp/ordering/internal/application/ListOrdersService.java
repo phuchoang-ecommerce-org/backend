@@ -2,8 +2,8 @@ package org.phuchoang.ecp.ordering.internal.application;
 
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
-import org.phuchoang.ecp.ordering.api.error.DomainException;
-import org.phuchoang.ecp.ordering.api.error.GenErrorCode;
+import org.phuchoang.ecp.ordering.internal.application.error.ApplicationErrorCode;
+import org.phuchoang.ecp.ordering.internal.application.error.ApplicationException;
 import org.springframework.stereotype.Service;
 
 /**
@@ -32,7 +32,7 @@ public class ListOrdersService {
 
         // customerId is Support/Administrator-only; a Customer supplying it is 403, per the contract.
         if (query.customerId() != null && caller.roles().contains("CUSTOMER")) {
-            throw new DomainException(GenErrorCode.FORBIDDEN,
+            throw new ApplicationException(ApplicationErrorCode.FORBIDDEN,
                 "customerId may only be supplied by Support or Administrator.");
         }
 

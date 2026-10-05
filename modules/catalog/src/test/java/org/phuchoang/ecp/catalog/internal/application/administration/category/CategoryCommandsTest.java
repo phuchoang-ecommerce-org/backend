@@ -17,7 +17,7 @@ import org.phuchoang.ecp.catalog.internal.domain.repository.CategoryRepository;
 import org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
-import org.phuchoang.ecp.catalog.api.error.DomainException;
+import org.phuchoang.ecp.catalog.internal.application.error.ApplicationException;
 
 import java.util.Optional;
 import java.util.Set;
@@ -67,7 +67,7 @@ class CategoryCommandsTest {
 
         assertThatThrownBy(() -> new UpdateCategoryService(categories, authorization, events)
             .update(context, root.id(), new CategoryChange("Root", child.id(), null, 0, false)))
-            .isInstanceOf(DomainException.class).hasMessage("Invalid parentId.");
+            .isInstanceOf(ApplicationException.class).hasMessage("Invalid parentId.");
         verify(categories, never()).save(any());
     }
 
@@ -79,7 +79,7 @@ class CategoryCommandsTest {
         DeleteCategoryService service = new DeleteCategoryService(categories, products, authorization, events);
 
         assertThatThrownBy(() -> service.delete(context, category.id()))
-            .isInstanceOf(DomainException.class).hasMessageContaining("productCount=2");
+            .isInstanceOf(ApplicationException.class).hasMessageContaining("productCount=2");
         verify(categories, never()).deleteById(any());
 
         UUID missing = UUID.randomUUID();

@@ -17,7 +17,7 @@ import org.phuchoang.ecp.identity.internal.domain.model.EmailAddress;
 import org.phuchoang.ecp.identity.internal.domain.model.RoleCode;
 import org.phuchoang.ecp.identity.internal.domain.model.VerificationStatus;
 import org.phuchoang.ecp.identity.internal.domain.repository.AccountRepository;
-import org.phuchoang.ecp.identity.api.error.DomainException;
+import org.phuchoang.ecp.identity.internal.application.error.ApplicationException;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -108,7 +108,7 @@ class ProfileUseCasesTest {
         Throwable thrown = catchThrowable(() -> useCases().updateOwnProfile(caller(),
             new UpdateProfileCommand(null, "taken@example.com")));
 
-        assertThat(thrown).isInstanceOf(DomainException.class).hasMessage("This email address cannot be used.");
+        assertThat(thrown).isInstanceOf(ApplicationException.class).hasMessage("This email address cannot be used.");
         verify(accountRepository, never()).save(any());
     }
 }

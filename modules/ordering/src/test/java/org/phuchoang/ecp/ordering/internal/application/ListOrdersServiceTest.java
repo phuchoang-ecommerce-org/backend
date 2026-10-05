@@ -6,7 +6,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
-import org.phuchoang.ecp.ordering.api.error.DomainException;
+import org.phuchoang.ecp.ordering.internal.application.error.ApplicationException;
 
 import java.util.Set;
 import java.util.UUID;
@@ -45,7 +45,7 @@ class ListOrdersServiceTest {
         Throwable thrown = catchThrowable(
             () -> service.listOrders(caller, new ListOrdersQuery(null, 20, UUID.randomUUID())));
 
-        assertThat(thrown).isInstanceOf(DomainException.class);
+        assertThat(thrown).isInstanceOf(ApplicationException.class);
     }
 
     @Test

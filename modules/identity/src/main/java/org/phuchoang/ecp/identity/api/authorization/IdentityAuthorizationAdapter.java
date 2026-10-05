@@ -2,6 +2,9 @@ package org.phuchoang.ecp.identity.api.authorization;
 
 import org.phuchoang.ecp.identity.internal.application.security.CallerContext;
 import org.phuchoang.ecp.identity.internal.application.security.PermissionChecker;
+import org.phuchoang.ecp.identity.api.error.DomainException;
+import org.phuchoang.ecp.identity.api.error.GenErrorCode;
+import org.phuchoang.ecp.identity.internal.application.error.ApplicationException;
 import org.springframework.stereotype.Component;
 
 /**
@@ -27,6 +30,10 @@ final class IdentityAuthorizationAdapter implements IdentityAuthorization {
 
     @Override
     public void assertAuthorized(IdentityActor caller, String operationId) {
-        permissions.require(CallerContext.of(caller.accountId(), caller.roles()), operationId);
+        try {
+            permissions.require(CallerContext.of(caller.accountId(), caller.roles()), operationId);
+        } catch (ApplicationException exception) {
+            throw new DomainException(GenErrorCode.valueOf(exception.errorCode().name()), exception.getMessage());
+        }
     }
 }

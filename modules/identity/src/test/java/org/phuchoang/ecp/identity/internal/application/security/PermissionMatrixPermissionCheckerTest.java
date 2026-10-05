@@ -2,7 +2,7 @@ package org.phuchoang.ecp.identity.internal.application.security;
 
 import org.junit.jupiter.api.Test;
 import org.phuchoang.ecp.identity.internal.domain.model.RoleCode;
-import org.phuchoang.ecp.identity.api.error.DomainException;
+import org.phuchoang.ecp.identity.internal.application.error.ApplicationException;
 
 import java.util.EnumSet;
 import java.util.Set;
@@ -62,8 +62,8 @@ class PermissionMatrixPermissionCheckerTest {
 
     private void assertDenied(CallerContext caller, String operationId) {
         assertThatThrownBy(() -> permissions.require(caller, operationId))
-            .isInstanceOf(DomainException.class)
-            .satisfies(e -> assertThat(((DomainException) e).errorCode().code()).isEqualTo("ECP-GEN-4030"));
+            .isInstanceOf(ApplicationException.class)
+            .satisfies(e -> assertThat(((ApplicationException) e).errorCode().code()).isEqualTo("ECP-GEN-4030"));
     }
 
     private CallerContext customer() {

@@ -1,9 +1,8 @@
-package org.phuchoang.ecp.inventory.internal.application.reservation;
+package org.phuchoang.ecp.inventory.internal.application.command.reservation.commit;
 
 import org.junit.jupiter.api.Test;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
-import org.phuchoang.ecp.inventory.api.reservation.ReservationReference;
 
 import java.util.Set;
 import java.util.UUID;
@@ -20,10 +19,11 @@ class CommitStockReservationServiceTest {
         CommitStockReservationService service = new CommitStockReservationService(authorization, attempt, 1);
         IdentityActor caller = new IdentityActor(UUID.randomUUID(), Set.of("WAREHOUSE_OPERATOR"));
 
-        ReservationReference reference = new ReservationReference(UUID.randomUUID(), UUID.randomUUID());
-        service.commit(caller, reference);
+        CommitStockReservationRequest request = new CommitStockReservationRequest(caller, UUID.randomUUID(),
+            UUID.randomUUID());
+        service.commit(request);
 
         verify(authorization).assertAuthorized(caller, "commitStockReservation");
-        verify(attempt).commit(reference);
+        verify(attempt).commit(request);
     }
 }

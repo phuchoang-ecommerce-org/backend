@@ -40,31 +40,34 @@ public class CatalogBrowseFacadeAdapter implements CatalogBrowseFacade {
     @Override
     /** {@inheritDoc} */
     public List<CategoryNodeView> listCategories(UUID rootId, Integer maxDepth) {
-        return categories.listCategories(rootId, maxDepth).stream().map(mapper::categoryNodeView).toList();
+        return CatalogApiErrors.translate(() ->
+            categories.listCategories(rootId, maxDepth).stream().map(mapper::categoryNodeView).toList());
     }
 
     @Override
     /** {@inheritDoc} */
     public CategoryView getCategory(UUID categoryId) {
-        return mapper.categoryView(categories.getCategory(categoryId));
+        return CatalogApiErrors.translate(() -> mapper.categoryView(categories.getCategory(categoryId)));
     }
 
     @Override
     /** {@inheritDoc} */
     public ProductPageView listCategoryProducts(UUID categoryId, CatalogListingQuery query) {
-        return mapper.productPageView(categoryProducts.listCategoryProducts(categoryId, mapper.listingQuery(query)));
+        return CatalogApiErrors.translate(() ->
+            mapper.productPageView(categoryProducts.listCategoryProducts(categoryId, mapper.listingQuery(query))));
     }
 
     @Override
     /** {@inheritDoc} */
     public List<VariantView> listProductVariants(UUID productId, Map<String, String> options) {
-        return variants.listProductVariants(productId, options).stream().map(mapper::variantView).toList();
+        return CatalogApiErrors.translate(() ->
+            variants.listProductVariants(productId, options).stream().map(mapper::variantView).toList());
     }
 
     @Override
     /** {@inheritDoc} */
     public VariantView getProductVariant(UUID productId, UUID variantId) {
-        return mapper.variantView(variants.getProductVariant(productId, variantId));
+        return CatalogApiErrors.translate(() -> mapper.variantView(variants.getProductVariant(productId, variantId)));
     }
 
 }

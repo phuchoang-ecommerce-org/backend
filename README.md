@@ -53,14 +53,7 @@ in `.env.example` otherwise. Copy the template before changing values: `cp .env.
 For a real local frontend/backend walkthrough with seeded session and catalog records, see
 [`docs/local-demo.md`](docs/local-demo.md).
 
-`./gradlew check` needs Docker for the `integrationTest` (L4-L6) source set — `docker compose up` brings up the local data tier (PostgreSQL, Kafka, Elasticsearch, MongoDB, Redis) from `compose.yaml`, and Testcontainers starts its own PostgreSQL container for `app`'s `PostgresConnectivityIT` independently of Compose.
-
-**On Colima:** start it first (`colima start --memory 4`, per the repo root `CLAUDE.md`), then point Testcontainers at the Colima VM's Docker socket — the default `docker context` resolution isn't enough on its own:
-
-```sh
-export DOCKER_HOST=unix://$HOME/.colima/default/docker.sock
-export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock   # the socket path inside the Colima VM, not the host path
-```
+`./gradlew check` needs Docker Desktop running for the `integrationTest` (L4-L6) source set — `docker compose up` brings up the local data tier (PostgreSQL, Kafka, Elasticsearch, MongoDB, Redis) from `compose.yaml`, and Testcontainers starts its own PostgreSQL container for `app`'s `PostgresConnectivityIT` independently of Compose.
 
 Testcontainers reuse is a per-developer opt-in, not a repo setting — add `testcontainers.reuse.enable=true` to `~/.testcontainers.properties` to keep a container warm across local `integrationTest` runs. Leave it unset in CI.
 

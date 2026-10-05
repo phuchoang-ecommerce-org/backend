@@ -1,9 +1,6 @@
-package org.phuchoang.ecp.inventory.internal.application.reservation;
+package org.phuchoang.ecp.inventory.internal.application.command.reservation.commit;
 
-import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
-import org.phuchoang.ecp.inventory.api.reservation.ReservationActionResult;
-import org.phuchoang.ecp.inventory.api.reservation.ReservationReference;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
@@ -11,6 +8,8 @@ import org.springframework.stereotype.Service;
 /** Authorised, idempotent fulfilment commitment. */
 @Service
 public class CommitStockReservationService {
+
+    private static final String COMMIT_STOCK_RESERVATION = "commitStockReservation";
 
     private final IdentityAuthorization authorization;
     private final CommitStockReservationAttempt attempt;
@@ -23,12 +22,12 @@ public class CommitStockReservationService {
         this.maxAttempts = Math.max(1, maxAttempts);
     }
 
-    public ReservationActionResult commit(IdentityActor caller, ReservationReference reference) {
-        authorization.assertAuthorized(caller, InventoryPermissions.COMMIT_STOCK_RESERVATION);
+    public CommitStockReservationResult commit(CommitStockReservationRequest request) {
+        authorization.assertAuthorized(request.caller(), COMMIT_STOCK_RESERVATION);
         OptimisticLockingFailureException last = null;
         for (int number = 1; number <= maxAttempts; number++) {
             try {
-                return attempt.commit(reference);
+                return attempt.commit(request);
             } catch (OptimisticLockingFailureException race) {
                 last = race;
             }

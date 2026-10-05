@@ -1,6 +1,9 @@
 package org.phuchoang.ecp.catalog.api.search;
 
 import org.phuchoang.ecp.catalog.api.search.view.SearchResultPageView;
+import org.phuchoang.ecp.catalog.api.error.DomainException;
+import org.phuchoang.ecp.catalog.api.error.GenErrorCode;
+import org.phuchoang.ecp.catalog.internal.application.error.ApplicationException;
 import org.phuchoang.ecp.catalog.internal.application.search.SearchProductQueryService;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +19,10 @@ class CatalogSearchFacadeAdapter implements CatalogSearchFacade {
 
     @Override
     public SearchResultPageView searchProducts(SearchProductsQuery query) {
-        return CatalogSearchMapper.page(searches.search(CatalogSearchMapper.query(query)));
+        try {
+            return CatalogSearchMapper.page(searches.search(CatalogSearchMapper.query(query)));
+        } catch (ApplicationException exception) {
+            throw new DomainException(GenErrorCode.valueOf(exception.errorCode().name()), exception.getMessage());
+        }
     }
 }

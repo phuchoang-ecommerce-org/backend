@@ -23,7 +23,7 @@ import org.phuchoang.ecp.identity.internal.domain.model.RoleCode;
 import org.phuchoang.ecp.identity.internal.domain.model.TokenType;
 import org.phuchoang.ecp.identity.internal.domain.model.VerificationStatus;
 import org.phuchoang.ecp.identity.internal.domain.repository.AccountRepository;
-import org.phuchoang.ecp.identity.api.error.DomainException;
+import org.phuchoang.ecp.identity.internal.application.error.ApplicationException;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -110,7 +110,7 @@ class PasswordUseCasesTest {
         Throwable thrown = catchThrowable(() -> useCases().changeOwnPassword(caller(),
             new ChangePasswordCommand("wrong", "new-Password1", true)));
 
-        assertThat(thrown).isInstanceOf(DomainException.class).hasMessage("Current password is incorrect.");
+        assertThat(thrown).isInstanceOf(ApplicationException.class).hasMessage("Current password is incorrect.");
         verify(accountRepository, never()).save(any());
     }
 
@@ -122,7 +122,7 @@ class PasswordUseCasesTest {
         Throwable thrown = catchThrowable(() -> useCases().changeOwnPassword(caller(),
             new ChangePasswordCommand("current", "current", true)));
 
-        assertThat(thrown).isInstanceOf(DomainException.class);
+        assertThat(thrown).isInstanceOf(ApplicationException.class);
         verify(accountRepository, never()).save(any());
     }
 
@@ -135,7 +135,7 @@ class PasswordUseCasesTest {
         Throwable thrown = catchThrowable(() -> useCases().changeOwnPassword(caller(),
             new ChangePasswordCommand("current", "weak", true)));
 
-        assertThat(thrown).isInstanceOf(DomainException.class);
+        assertThat(thrown).isInstanceOf(ApplicationException.class);
         verify(accountRepository, never()).save(any());
     }
 
@@ -188,7 +188,7 @@ class PasswordUseCasesTest {
 
         Throwable thrown = catchThrowable(() -> useCases().completePasswordReset("raw-token", "weak"));
 
-        assertThat(thrown).isInstanceOf(DomainException.class);
+        assertThat(thrown).isInstanceOf(ApplicationException.class);
         verify(tokenStore, never()).consumeIfUsable(any(), any());
     }
 
@@ -198,7 +198,7 @@ class PasswordUseCasesTest {
 
         Throwable thrown = catchThrowable(() -> useCases().completePasswordReset("bogus", "new-Password1"));
 
-        assertThat(thrown).isInstanceOf(DomainException.class).hasMessage("The reset link is not valid.");
+        assertThat(thrown).isInstanceOf(ApplicationException.class).hasMessage("The reset link is not valid.");
     }
 
     @Test
@@ -210,7 +210,7 @@ class PasswordUseCasesTest {
 
         Throwable thrown = catchThrowable(() -> useCases().completePasswordReset("raw-token", "new-Password1"));
 
-        assertThat(thrown).isInstanceOf(DomainException.class).hasMessage("The reset link is not valid.");
+        assertThat(thrown).isInstanceOf(ApplicationException.class).hasMessage("The reset link is not valid.");
         verify(accountRepository, never()).save(any());
     }
 

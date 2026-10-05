@@ -61,7 +61,9 @@ class ArchitectureTests {
             String base = ROOT_PACKAGE + "." + module;
             ArchRule rule = noClasses()
                 .that().resideInAPackage(base + ".internal.application..")
-                .should().dependOnClassesThat().resideInAPackage(base + ".internal.infrastructure..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                    base + ".internal.infrastructure..",
+                    base + ".api..")
                 .because("application may depend on domain and ports only, never its own module's "
                     + "infrastructure or api (Module Dependency Diagram.md §6)")
                 .allowEmptyShould(true);

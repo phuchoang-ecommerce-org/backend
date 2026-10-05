@@ -12,7 +12,7 @@ import org.phuchoang.ecp.catalog.internal.domain.repository.DuplicateSkuExceptio
 import org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
-import org.phuchoang.ecp.catalog.api.error.DomainException;
+import org.phuchoang.ecp.catalog.internal.application.error.ApplicationException;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -63,9 +63,9 @@ class AddVariantServiceTest {
         when(products.save(any())).thenThrow(new DuplicateSkuException("MUG-001", new RuntimeException("unique")));
 
         assertThatThrownBy(() -> service.add(context, product.id(), command))
-            .isInstanceOf(DomainException.class)
+            .isInstanceOf(ApplicationException.class)
             .hasMessage("SKU 'MUG-001' is already in use or retired.")
-            .satisfies(e -> assertThat(((DomainException) e).errorCode().code()).isEqualTo("ECP-GEN-4000"));
+            .satisfies(e -> assertThat(((ApplicationException) e).errorCode().code()).isEqualTo("ECP-GEN-4000"));
         verify(events, never()).publish(any(), any());
     }
 }
