@@ -10,6 +10,7 @@ import org.phuchoang.ecp.identity.internal.application.port.DomainEventPublisher
 import org.phuchoang.ecp.identity.internal.application.port.PasswordEncoder;
 import org.phuchoang.ecp.identity.internal.application.port.TokenStore;
 import org.phuchoang.ecp.identity.internal.application.security.PermissionMatrixPermissionChecker;
+import org.phuchoang.ecp.identity.internal.domain.policy.AccessControlPolicy;
 import org.phuchoang.ecp.identity.internal.application.token.OpaqueTokens;
 import org.phuchoang.ecp.identity.internal.domain.event.SessionEnded;
 import org.phuchoang.ecp.identity.internal.domain.model.Account;
@@ -67,7 +68,7 @@ class AuthenticationUseCasesTest {
     @BeforeEach
     void setUp() {
         useCases = new AuthenticationUseCases(accountRepository, new RefreshTokenSessionManager(tokenStore, clock),
-            passwordEncoder, accessTokenIssuer, new PermissionMatrixPermissionChecker(), events, clock);
+            passwordEncoder, accessTokenIssuer, new PermissionMatrixPermissionChecker(new AccessControlPolicy()), events, clock);
     }
 
     @Test

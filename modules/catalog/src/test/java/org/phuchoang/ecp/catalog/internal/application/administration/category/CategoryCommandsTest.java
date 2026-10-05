@@ -15,6 +15,7 @@ import org.phuchoang.ecp.catalog.internal.domain.event.CategoryChanged;
 import org.phuchoang.ecp.catalog.internal.domain.model.Category;
 import org.phuchoang.ecp.catalog.internal.domain.repository.CategoryRepository;
 import org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository;
+import org.phuchoang.ecp.catalog.internal.domain.policy.CategoryHierarchyPolicy;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
 import org.phuchoang.ecp.catalog.internal.application.error.ApplicationException;
@@ -76,7 +77,8 @@ class CategoryCommandsTest {
         Category category = new Category(UUID.randomUUID(), null, "Root", "root", "/root/", 0, null, 0, false);
         when(categories.findById(category.id())).thenReturn(Optional.of(category));
         when(products.countByCategoryId(category.id())).thenReturn(2L);
-        DeleteCategoryService service = new DeleteCategoryService(categories, products, authorization, events);
+        DeleteCategoryService service = new DeleteCategoryService(categories, products, authorization, events,
+            new CategoryHierarchyPolicy());
 
         assertThatThrownBy(() -> service.delete(context, category.id()))
             .isInstanceOf(ApplicationException.class).hasMessageContaining("productCount=2");
@@ -93,7 +95,8 @@ class CategoryCommandsTest {
         Category category = new Category(UUID.randomUUID(), null, "Root", "root", "/root/", 0, null, 0, false);
         when(categories.findById(category.id())).thenReturn(Optional.of(category));
 
-        new DeleteCategoryService(categories, products, authorization, events).delete(context, category.id());
+        new DeleteCategoryService(categories, products, authorization, events, new CategoryHierarchyPolicy())
+            .delete(context, category.id());
 
         verify(categories).deleteById(category.id());
         CategoryChanged removed = (CategoryChanged) captured();

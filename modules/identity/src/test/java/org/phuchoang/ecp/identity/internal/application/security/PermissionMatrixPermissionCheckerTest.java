@@ -3,6 +3,7 @@ package org.phuchoang.ecp.identity.internal.application.security;
 import org.junit.jupiter.api.Test;
 import org.phuchoang.ecp.identity.internal.domain.model.RoleCode;
 import org.phuchoang.ecp.identity.internal.application.error.ApplicationException;
+import org.phuchoang.ecp.identity.internal.domain.policy.AccessControlPolicy;
 
 import java.util.EnumSet;
 import java.util.Set;
@@ -17,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 class PermissionMatrixPermissionCheckerTest {
 
-    private final PermissionChecker permissions = new PermissionMatrixPermissionChecker();
+    private final PermissionChecker permissions = new PermissionMatrixPermissionChecker(new AccessControlPolicy());
 
     @Test
     void registerAccountPermitsOnlyGuest() {

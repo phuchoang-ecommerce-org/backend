@@ -7,6 +7,7 @@ import org.phuchoang.ecp.catalog.internal.domain.event.CategoryChanged;
 import org.phuchoang.ecp.catalog.internal.domain.model.Category;
 import org.phuchoang.ecp.catalog.internal.domain.repository.CategoryRepository;
 import org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository;
+import org.phuchoang.ecp.catalog.internal.domain.policy.CategoryHierarchyPolicy;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
 import org.phuchoang.ecp.catalog.internal.application.error.ApplicationErrorCode;
 import org.phuchoang.ecp.catalog.internal.application.error.ApplicationException;
@@ -26,13 +27,15 @@ public class DeleteCategoryService {
     private final ProductRepository products;
     private final IdentityAuthorization authorization;
     private final CatalogEventPublisher events;
+    private final CategoryHierarchyPolicy hierarchyPolicy;
 
     public DeleteCategoryService(CategoryRepository categories, ProductRepository products,
-            IdentityAuthorization authorization, CatalogEventPublisher events) {
+            IdentityAuthorization authorization, CatalogEventPublisher events, CategoryHierarchyPolicy hierarchyPolicy) {
         this.categories = categories;
         this.products = products;
         this.authorization = authorization;
         this.events = events;
+        this.hierarchyPolicy = hierarchyPolicy;
     }
 
     @Transactional
@@ -45,7 +48,8 @@ public class DeleteCategoryService {
         }
         long productCount = products.countByCategoryId(categoryId);
         long childCategoryCount = categories.countByParentId(categoryId);
-        if (productCount > 0 || childCategoryCount > 0) {
+        var decision = hierarchyPolicy.validateDeletion(new CategoryHierarchyPolicy.CategoryOccupancy(childCategoryCount, productCount));
+        if (!decision.accepted()) {
             throw new ApplicationException(ApplicationErrorCode.VALIDATION_FAILED,
                 "Category cannot be deleted: productCount="
                 + productCount + ", childCategoryCount=" + childCategoryCount);

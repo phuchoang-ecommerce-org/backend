@@ -8,6 +8,7 @@ import org.phuchoang.ecp.identity.internal.application.port.DomainEventPublisher
 import org.phuchoang.ecp.identity.internal.application.port.PasswordEncoder;
 import org.phuchoang.ecp.identity.internal.application.port.TokenStore;
 import org.phuchoang.ecp.identity.internal.application.security.PermissionMatrixPermissionChecker;
+import org.phuchoang.ecp.identity.internal.domain.policy.AccessControlPolicy;
 import org.phuchoang.ecp.identity.internal.application.token.OpaqueTokens;
 import org.phuchoang.ecp.identity.internal.domain.event.AccountRegistered;
 import org.phuchoang.ecp.identity.internal.domain.event.DuplicateRegistrationAttempted;
@@ -54,7 +55,7 @@ class RegistrationUseCasesTest {
 
     private RegistrationUseCases useCases() {
         return new RegistrationUseCases(accountRepository, new VerificationTokenManager(tokenStore, clock),
-            passwordEncoder, new PermissionMatrixPermissionChecker(), events, clock);
+            passwordEncoder, new PermissionMatrixPermissionChecker(new AccessControlPolicy()), events, clock);
     }
 
     @Test
