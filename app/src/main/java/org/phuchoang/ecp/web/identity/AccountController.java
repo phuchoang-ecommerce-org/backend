@@ -1,8 +1,8 @@
 package org.phuchoang.ecp.web.identity;
 
+import jakarta.validation.Valid;
 import org.phuchoang.ecp.identity.api.facade.IdentityFacade;
 import org.phuchoang.ecp.identity.api.request.RegisterAccountRequest;
-import org.phuchoang.ecp.web.common.request.RequestValidation;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,10 +21,7 @@ class AccountController {
 
     @PostMapping("/api/v1/accounts")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    void registerAccount(@RequestBody RegisterAccountRequest request) {
-        RequestValidation.requireNonBlank(request.email(), "email");
-        RequestValidation.requireNonBlank(request.password(), "password");
-
+    void registerAccount(@Valid @RequestBody RegisterAccountRequest request) {
         identityFacade.registerAccount(request);
     }
 }

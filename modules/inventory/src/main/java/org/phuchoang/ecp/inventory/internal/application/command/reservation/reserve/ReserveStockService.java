@@ -1,6 +1,6 @@
 package org.phuchoang.ecp.inventory.internal.application.command.reservation.reserve;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.phuchoang.ecp.inventory.internal.application.command.reservation.ReservationRetryPolicy;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
@@ -14,10 +14,9 @@ public class ReserveStockService {
     private final ReserveStockAttempt attempt;
     private final int maxAttempts;
 
-    public ReserveStockService(ReserveStockAttempt attempt,
-            @Value("${ecp.inventory.reservation.max-attempts:8}") int maxAttempts) {
+    public ReserveStockService(ReserveStockAttempt attempt, ReservationRetryPolicy retryPolicy) {
         this.attempt = attempt;
-        this.maxAttempts = Math.max(1, maxAttempts);
+        this.maxAttempts = retryPolicy.maxAttempts();
     }
 
     public ReserveStockResult reserve(ReserveStockRequest command) {

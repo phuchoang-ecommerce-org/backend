@@ -1,7 +1,7 @@
 package org.phuchoang.ecp.inventory.internal.application.command.reservation.commit;
 
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
-import org.springframework.beans.factory.annotation.Value;
+import org.phuchoang.ecp.inventory.internal.application.command.reservation.ReservationRetryPolicy;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 
@@ -16,10 +16,10 @@ public class CommitStockReservationService {
     private final int maxAttempts;
 
     public CommitStockReservationService(IdentityAuthorization authorization, CommitStockReservationAttempt attempt,
-            @Value("${ecp.inventory.reservation.max-attempts:8}") int maxAttempts) {
+            ReservationRetryPolicy retryPolicy) {
         this.authorization = authorization;
         this.attempt = attempt;
-        this.maxAttempts = Math.max(1, maxAttempts);
+        this.maxAttempts = retryPolicy.maxAttempts();
     }
 
     public CommitStockReservationResult commit(CommitStockReservationRequest request) {

@@ -71,6 +71,9 @@ ecp:
     argon2-parallelism: 1
     argon2-memory-kib: 19456
     argon2-iterations: 2
+  inventory:
+    reservation:
+      max-attempts: ${ECP_INVENTORY_RESERVATION_MAX_ATTEMPTS:8}
   rate-limit:
     auth-strict:
       limit: 10

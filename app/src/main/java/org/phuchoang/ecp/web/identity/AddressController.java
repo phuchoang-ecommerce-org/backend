@@ -1,17 +1,16 @@
 package org.phuchoang.ecp.web.identity;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.identity.api.facade.IdentityFacade;
 import org.phuchoang.ecp.identity.api.request.AddressWriteRequest;
 import org.phuchoang.ecp.identity.api.view.AddressPageView;
 import org.phuchoang.ecp.identity.api.view.AddressView;
-import org.phuchoang.ecp.web.common.error.FieldError;
 import org.phuchoang.ecp.web.common.pagination.Page;
 import org.phuchoang.ecp.web.common.pagination.PageEnvelope;
 import org.phuchoang.ecp.web.common.pagination.Pagination;
 import org.phuchoang.ecp.web.common.request.QueryParams;
-import org.phuchoang.ecp.web.common.request.RequestValidation;
 import org.phuchoang.ecp.web.common.security.RequestContextResolver;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +27,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -60,9 +58,7 @@ class AddressController {
 
     @PostMapping("/api/v1/accounts/me/addresses")
     ResponseEntity<AddressView> addOwnAddress(@AuthenticationPrincipal Jwt jwt,
-            @RequestBody AddressWriteRequest request) {
-        requireAddressFields(request);
-
+            @Valid @RequestBody AddressWriteRequest request) {
         AddressView created = identityFacade.addOwnAddress(caller(jwt), request);
 
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -77,9 +73,7 @@ class AddressController {
 
     @PutMapping("/api/v1/accounts/me/addresses/{addressId}")
     AddressView replaceOwnAddress(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID addressId,
-            @RequestBody AddressWriteRequest request) {
-        requireAddressFields(request);
-
+            @Valid @RequestBody AddressWriteRequest request) {
         return identityFacade.replaceOwnAddress(caller(jwt), addressId, request);
     }
 
@@ -93,13 +87,4 @@ class AddressController {
         return requestContext.resolve(jwt).caller();
     }
 
-    private static void requireAddressFields(AddressWriteRequest request) {
-        List<FieldError> errors = new ArrayList<>();
-        RequestValidation.requireNonBlank(request.recipientName(), "recipientName", errors);
-        RequestValidation.requireNonBlank(request.line1(), "line1", errors);
-        RequestValidation.requireNonBlank(request.city(), "city", errors);
-        RequestValidation.requireNonBlank(request.postalCode(), "postalCode", errors);
-        RequestValidation.requireNonBlank(request.countryCode(), "countryCode", errors);
-        RequestValidation.throwIfAny(errors);
-    }
 }

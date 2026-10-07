@@ -3,6 +3,7 @@ package org.phuchoang.ecp.inventory.internal.application.command.reservation.com
 import org.junit.jupiter.api.Test;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
+import org.phuchoang.ecp.inventory.internal.application.command.reservation.ReservationRetryPolicy;
 
 import java.util.Set;
 import java.util.UUID;
@@ -16,7 +17,8 @@ class CommitStockReservationServiceTest {
     void assertsThePermissionMatrixOperationBeforeCommitting() {
         IdentityAuthorization authorization = mock(IdentityAuthorization.class);
         CommitStockReservationAttempt attempt = mock(CommitStockReservationAttempt.class);
-        CommitStockReservationService service = new CommitStockReservationService(authorization, attempt, 1);
+        CommitStockReservationService service = new CommitStockReservationService(authorization, attempt,
+            new ReservationRetryPolicy(1));
         IdentityActor caller = new IdentityActor(UUID.randomUUID(), Set.of("WAREHOUSE_OPERATOR"));
 
         CommitStockReservationRequest request = new CommitStockReservationRequest(caller, UUID.randomUUID(),

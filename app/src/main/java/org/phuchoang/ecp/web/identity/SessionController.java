@@ -1,11 +1,11 @@
 package org.phuchoang.ecp.web.identity;
 
+import jakarta.validation.Valid;
 import org.phuchoang.ecp.identity.api.facade.IdentityFacade;
 import org.phuchoang.ecp.identity.api.request.LoginRequest;
 import org.phuchoang.ecp.identity.api.request.LogoutRequest;
 import org.phuchoang.ecp.identity.api.request.RenewSessionRequest;
 import org.phuchoang.ecp.identity.api.view.SessionResponse;
-import org.phuchoang.ecp.web.common.request.RequestValidation;
 import org.phuchoang.ecp.web.common.security.RequestContextResolver;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,10 +32,7 @@ class SessionController {
     }
 
     @PostMapping("/api/v1/sessions")
-    ResponseEntity<SessionResponse> logIn(@RequestBody LoginRequest request) {
-        RequestValidation.requireNonBlank(request.email(), "email");
-        RequestValidation.requireNonBlank(request.password(), "password");
-
+    ResponseEntity<SessionResponse> logIn(@Valid @RequestBody LoginRequest request) {
         SessionResponse session = identityFacade.logIn(request);
 
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -64,9 +61,7 @@ class SessionController {
      * in place (openapi.yaml `sessionRenewals`), unlike `logIn`, which creates a brand-new one.
      */
     @PostMapping("/api/v1/session-renewals")
-    SessionResponse renewSession(@RequestBody RenewSessionRequest request) {
-        RequestValidation.requireNonBlank(request.refreshToken(), "refreshToken");
-
+    SessionResponse renewSession(@Valid @RequestBody RenewSessionRequest request) {
         return identityFacade.renewSession(request);
     }
 }
