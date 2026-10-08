@@ -1,4 +1,4 @@
-package org.phuchoang.ecp.inventory.internal.domain.policy;
+package org.phuchoang.ecp.inventory.internal.domain.service;
 
 import java.util.ArrayList;
 import java.util.Comparator;

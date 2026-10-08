@@ -72,6 +72,17 @@ class ArchitectureTests {
     }
 
     @Test
+    void inventoryCommandsDelegateAggregatePersistenceToTheDomainModel() {
+        ArchRule rule = noClasses()
+            .that().resideInAPackage("org.phuchoang.ecp.inventory.internal.application.command..")
+            .should().dependOnClassesThat().resideInAPackage(
+                "org.phuchoang.ecp.inventory.internal.domain.repository..")
+            .because("Inventory command use cases must invoke the domain model rather than access aggregate "
+                + "repositories directly");
+        rule.check(mainClasses);
+    }
+
+    @Test
     void infrastructureDoesNotDependOnItsOwnApi() {
         for (String module : MODULES) {
             if (module.equals("identity")) {

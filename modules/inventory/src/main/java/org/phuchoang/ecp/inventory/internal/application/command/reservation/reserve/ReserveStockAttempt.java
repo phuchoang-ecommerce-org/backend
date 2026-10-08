@@ -1,83 +1,48 @@
 package org.phuchoang.ecp.inventory.internal.application.command.reservation.reserve;
 
+import org.phuchoang.ecp.inventory.internal.domain.service.ReserveStockDomainService;
 import org.phuchoang.ecp.inventory.internal.domain.model.StockItem;
 import org.phuchoang.ecp.inventory.internal.domain.model.StockReservation;
-import org.phuchoang.ecp.inventory.internal.domain.repository.StockItemRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 /** One all-or-nothing local transaction for UC-INV-01. */
 @Service
 public class ReserveStockAttempt {
 
-    private final StockItemRepository stockItems;
+    private final ReserveStockDomainService reservations;
 
-    public ReserveStockAttempt(StockItemRepository stockItems) {
-        this.stockItems = stockItems;
+    public ReserveStockAttempt(ReserveStockDomainService reservations) {
+        this.reservations = reservations;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public ReserveStockResult reserve(ReserveStockRequest command) {
-        return existingReservations(command).orElseGet(() -> reserveNew(command));
-    }
-
-    private Optional<ReserveStockResult> existingReservations(ReserveStockRequest command) {
-        List<StockItem> existing = stockItems.findByOrderId(command.orderId());
-        if (existing.isEmpty()) {
-            return Optional.empty();
+        try {
+            return reservationSet(command.orderId(), reservations.reserve(toDomainRequest(command)));
+        } catch (ReserveStockDomainService.InsufficientStockException exception) {
+            throw new InsufficientStockException(exception.shortfalls().stream()
+                .map(shortfall -> new StockShortfall(shortfall.orderLineId(), skuFor(command, shortfall.orderLineId()),
+                    shortfall.requestedQuantity(), shortfall.availableQuantity())).toList());
+        } catch (ReserveStockDomainService.UnpublishedProductException exception) {
+            throw new UnpublishedProductException(exception.orderLineId());
         }
-        return Optional.of(reservationSet(command.orderId(), existing));
     }
 
-    private ReserveStockResult reserveNew(ReserveStockRequest command) {
-        assertAllProductsPublished(command);
-        ReservationChanges changes = reserveLines(command, stockItemsById(command));
-        throwIfInsufficient(changes.shortfalls());
-        stockItems.saveAll(changes.stockItems().values());
-        return reservationSet(command.orderId(), List.copyOf(changes.stockItems().values()));
+    private static ReserveStockDomainService.ReservationRequest toDomainRequest(ReserveStockRequest command) {
+        return new ReserveStockDomainService.ReservationRequest(command.orderId(), command.lines().stream()
+            .map(line -> new ReserveStockDomainService.ReservationLine(line.orderLineId(), line.stockItemId(),
+                line.quantity(), line.published())).toList(), command.expiresAt());
     }
 
-    private static void assertAllProductsPublished(ReserveStockRequest command) {
-        command.lines().stream().filter(line -> !line.published()).findFirst()
-            .ifPresent(line -> { throw new UnpublishedProductException(line.orderLineId()); });
-    }
-
-    private Map<UUID, StockItem> stockItemsById(ReserveStockRequest command) {
-        Map<UUID, StockItem> items = new LinkedHashMap<>();
-        stockItems.findByIds(command.lines().stream().map(ReserveStockRequest.Line::stockItemId).distinct()
-            .sorted(Comparator.naturalOrder()).toList()).forEach(item -> items.put(item.id(), item));
-        return items;
-    }
-
-    private static ReservationChanges reserveLines(ReserveStockRequest command, Map<UUID, StockItem> stockItems) {
-        Map<UUID, StockItem> changed = new LinkedHashMap<>();
-        List<StockShortfall> shortfalls = new ArrayList<>();
-        for (ReserveStockRequest.Line line : command.lines()) {
-            StockItem item = changed.getOrDefault(line.stockItemId(), stockItems.get(line.stockItemId()));
-            if (item == null || item.availableQuantity() < line.quantity()) {
-                shortfalls.add(new StockShortfall(line.orderLineId(), line.sku(), line.quantity(),
-                    item == null ? 0 : item.availableQuantity()));
-                continue;
-            }
-            changed.put(item.id(), item.reserve(UUID.randomUUID(), command.orderId(), line.orderLineId(),
-                line.quantity(), command.expiresAt()));
-        }
-        return new ReservationChanges(changed, shortfalls);
-    }
-
-    private static void throwIfInsufficient(List<StockShortfall> shortfalls) {
-        if (!shortfalls.isEmpty()) {
-            throw new InsufficientStockException(shortfalls);
-        }
+    private static String skuFor(ReserveStockRequest command, UUID orderLineId) {
+        return command.lines().stream().filter(line -> line.orderLineId().equals(orderLineId)).findFirst()
+            .map(ReserveStockRequest.Line::sku).orElseThrow();
     }
 
     private static ReserveStockResult reservationSet(UUID orderId, List<StockItem> items) {
@@ -92,7 +57,4 @@ public class ReserveStockAttempt {
             reservation.quantity(), ReservedStock.Status.valueOf(reservation.status().name()), reservation.expiresAt(),
             reservation.resolvedAt(), reservation.orphanedAt());
     }
-
-    /** Private workflow state; it has no contract beyond this one transactional attempt. */
-    private record ReservationChanges(Map<UUID, StockItem> stockItems, List<StockShortfall> shortfalls) { }
 }
