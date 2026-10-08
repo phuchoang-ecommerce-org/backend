@@ -17,7 +17,7 @@ import org.phuchoang.ecp.identity.internal.application.pagination.CursorSigningK
 import org.phuchoang.ecp.identity.internal.application.pagination.CursorValue;
 import org.phuchoang.ecp.identity.internal.application.pagination.HmacCursorCodec;
 import org.phuchoang.ecp.identity.internal.application.pagination.InvalidCursorException;
-import org.phuchoang.ecp.identity.api.error.DomainException;
+import org.phuchoang.ecp.identity.internal.application.error.ApplicationException;
 
 import java.time.Instant;
 import java.util.List;
@@ -129,8 +129,8 @@ class AddressUseCasesTest {
 
         Throwable thrown = catchThrowable(() -> useCases().getOwnAddress(caller(), addressId));
 
-        assertThat(thrown).isInstanceOf(DomainException.class)
-            .satisfies(e -> assertThat(((DomainException) e).errorCode().code()).isEqualTo("ECP-GEN-4040"));
+        assertThat(thrown).isInstanceOf(ApplicationException.class)
+            .satisfies(e -> assertThat(((ApplicationException) e).errorCode().code()).isEqualTo("ECP-GEN-4040"));
     }
 
     @Test

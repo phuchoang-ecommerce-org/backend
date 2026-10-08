@@ -90,14 +90,6 @@ val integrationTestTask = tasks.register<Test>("integrationTest") {
     // Do not make the Spring context wait for KafkaAdmin topic creation.
     environment("SPRING_KAFKA_ADMIN_AUTO_CREATE", "false")
 
-    // Docker CLI understands Colima contexts, but Testcontainers does not read them. Give
-    // the forked integration-test JVM the matching socket configuration when Colima is
-    // present, while preserving an explicit user-supplied Docker configuration.
-    val colimaDockerSocket = file("${System.getProperty("user.home")}/.colima/default/docker.sock")
-    if (System.getenv("DOCKER_HOST") == null && colimaDockerSocket.exists()) {
-        environment("DOCKER_HOST", "unix://${colimaDockerSocket.absolutePath}")
-        environment("TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE", "/var/run/docker.sock")
-    }
 }
 
 tasks.check {

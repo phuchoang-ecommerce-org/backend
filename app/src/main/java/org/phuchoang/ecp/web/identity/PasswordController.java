@@ -1,10 +1,10 @@
 package org.phuchoang.ecp.web.identity;
 
+import jakarta.validation.Valid;
 import org.phuchoang.ecp.identity.api.facade.IdentityFacade;
 import org.phuchoang.ecp.identity.api.request.ChangePasswordRequest;
 import org.phuchoang.ecp.identity.api.request.PasswordResetCompletionRequest;
 import org.phuchoang.ecp.identity.api.request.PasswordResetRequestRequest;
-import org.phuchoang.ecp.web.common.request.RequestValidation;
 import org.phuchoang.ecp.web.common.security.RequestContextResolver;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,27 +29,19 @@ class PasswordController {
 
     @PutMapping("/api/v1/accounts/me/password")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    void changeOwnPassword(@AuthenticationPrincipal Jwt jwt, @RequestBody ChangePasswordRequest request) {
-        RequestValidation.requireNonBlank(request.currentPassword(), "currentPassword");
-        RequestValidation.requireNonBlank(request.newPassword(), "newPassword");
-
+    void changeOwnPassword(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody ChangePasswordRequest request) {
         identityFacade.changeOwnPassword(requestContext.resolve(jwt).caller(), request);
     }
 
     @PostMapping("/api/v1/password-reset-requests")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    void requestPasswordReset(@RequestBody PasswordResetRequestRequest request) {
-        RequestValidation.requireNonBlank(request.email(), "email");
-
+    void requestPasswordReset(@Valid @RequestBody PasswordResetRequestRequest request) {
         identityFacade.requestPasswordReset(request);
     }
 
     @PostMapping("/api/v1/password-resets")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    void completePasswordReset(@RequestBody PasswordResetCompletionRequest request) {
-        RequestValidation.requireNonBlank(request.token(), "token");
-        RequestValidation.requireNonBlank(request.newPassword(), "newPassword");
-
+    void completePasswordReset(@Valid @RequestBody PasswordResetCompletionRequest request) {
         identityFacade.completePasswordReset(request);
     }
 }

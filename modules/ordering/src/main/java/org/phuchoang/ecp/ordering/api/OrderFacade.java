@@ -3,6 +3,9 @@ package org.phuchoang.ecp.ordering.api;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.ordering.internal.application.ListOrdersQuery;
 import org.phuchoang.ecp.ordering.internal.application.ListOrdersService;
+import org.phuchoang.ecp.ordering.internal.application.error.ApplicationException;
+import org.phuchoang.ecp.ordering.api.error.DomainException;
+import org.phuchoang.ecp.ordering.api.error.GenErrorCode;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -18,7 +21,11 @@ public final class OrderFacade {
     }
 
     public OrderPageView listOrders(IdentityActor caller, String cursor, int size, UUID customerId) {
-        listOrdersService.listOrders(caller, new ListOrdersQuery(cursor, size, customerId));
-        return OrderPageView.EMPTY;
+        try {
+            listOrdersService.listOrders(caller, new ListOrdersQuery(cursor, size, customerId));
+            return OrderPageView.EMPTY;
+        } catch (ApplicationException exception) {
+            throw new DomainException(GenErrorCode.valueOf(exception.errorCode().name()), exception.getMessage());
+        }
     }
 }

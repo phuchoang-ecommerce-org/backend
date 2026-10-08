@@ -34,7 +34,7 @@ The single cold values are indicative only. The 100-request distribution is the 
 ## Environment and fixture
 
 - macOS 15.8.1, x86_64, Intel Core i3-1000NG4 (4 logical CPUs), 8 GB host RAM.
-- Colima using Virtualization.Framework with 4 GB configured memory.
+- Docker Desktop using 4 GB configured memory.
 - OpenJDK 21.0.12.1, PostgreSQL 16.15, Redis 7.4.11.
 - Spring Boot executable JAR, normal security profile, PostgreSQL/Kafka/two Redis instances in the isolated Compose project `ecp-catalog-bench`.
 - Elasticsearch was intentionally absent because search was out of scope; its bootstrap degraded as designed.
@@ -82,9 +82,7 @@ The first-page plan includes 30,000 image-index buffer hits. Keyset pagination a
 ## Reproduction outline
 
 ```sh
-colima start --memory 4
-DOCKER_HOST=unix://$HOME/.colima/default/docker.sock \
-  docker compose -p ecp-catalog-bench up -d postgres redis-cache redis-state kafka
+docker compose -p ecp-catalog-bench up -d postgres redis-cache redis-state kafka
 ./gradlew :app:bootJar
 ECP_CURSOR_ACTIVE_KEY=benchmark-only-cursor-signing-key-32 \
 ECP_REDIS_CACHE_HOST=127.0.0.1 ECP_REDIS_STATE_HOST=127.0.0.1 \
@@ -104,8 +102,7 @@ ab -k -n 100 -c 4 'http://127.0.0.1:8080/api/v1/products/<product>'
 Stop the application and remove only the isolated benchmark project when finished:
 
 ```sh
-DOCKER_HOST=unix://$HOME/.colima/default/docker.sock \
-  docker compose -p ecp-catalog-bench down
+docker compose -p ecp-catalog-bench down
 ```
 
 ## Interpretation limits

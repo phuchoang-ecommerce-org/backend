@@ -2,7 +2,7 @@ package org.phuchoang.ecp.identity.internal.infrastructure.security;
 
 import org.phuchoang.ecp.identity.internal.application.port.AccessTokenIssuer;
 import org.phuchoang.ecp.identity.internal.domain.model.RoleCode;
-import org.springframework.beans.factory.annotation.Value;
+import org.phuchoang.ecp.identity.internal.infrastructure.configuration.IdentityTokenProperties;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -33,13 +33,10 @@ class JwtAccessTokenIssuer implements AccessTokenIssuer {
     private final long accessTokenTtlSeconds;
     private final Clock clock;
 
-    JwtAccessTokenIssuer(JwtEncoder jwtEncoder,
-            @Value("${ecp.jwt.issuer:ecp-api}") String issuer,
-            @Value("${ecp.jwt.access-token-ttl-seconds:900}") long accessTokenTtlSeconds,
-            Clock clock) {
+    JwtAccessTokenIssuer(JwtEncoder jwtEncoder, IdentityTokenProperties properties, Clock clock) {
         this.jwtEncoder = jwtEncoder;
-        this.issuer = issuer;
-        this.accessTokenTtlSeconds = accessTokenTtlSeconds;
+        this.issuer = properties.issuer();
+        this.accessTokenTtlSeconds = properties.accessTokenTtlSeconds();
         this.clock = clock;
     }
 

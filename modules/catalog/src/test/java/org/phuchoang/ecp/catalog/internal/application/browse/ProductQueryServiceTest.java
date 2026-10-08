@@ -11,7 +11,7 @@ import org.phuchoang.ecp.catalog.internal.application.browse.product.ProductDeta
 import org.phuchoang.ecp.catalog.internal.application.browse.categoryproduct.ProductPage;
 import org.phuchoang.ecp.catalog.internal.application.browse.product.RatingSummary;
 import org.phuchoang.ecp.catalog.internal.application.cache.CacheAside;
-import org.phuchoang.ecp.catalog.api.error.DomainException;
+import org.phuchoang.ecp.catalog.internal.application.error.ApplicationException;
 
 import java.time.Duration;
 import java.util.List;
@@ -57,9 +57,9 @@ class ProductQueryServiceTest {
         when(products.product(absent)).thenReturn(Optional.empty());
         when(products.product(unpublished)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> details.getProduct(absent)).isInstanceOf(DomainException.class)
+        assertThatThrownBy(() -> details.getProduct(absent)).isInstanceOf(ApplicationException.class)
             .hasMessage("Product not found.");
-        assertThatThrownBy(() -> details.getProduct(unpublished)).isInstanceOf(DomainException.class)
+        assertThatThrownBy(() -> details.getProduct(unpublished)).isInstanceOf(ApplicationException.class)
             .hasMessage("Product not found.");
     }
 
@@ -93,7 +93,7 @@ class ProductQueryServiceTest {
 
         assertThatThrownBy(() -> listingsQuery.listCategoryProducts(categoryId,
             new ProductListingQuery(null, 20, "default", List.of(), null, null, null)))
-            .isInstanceOf(DomainException.class).hasMessage("Category not found.");
+            .isInstanceOf(ApplicationException.class).hasMessage("Category not found.");
     }
 
     private static ProductDetail detail(UUID id) {

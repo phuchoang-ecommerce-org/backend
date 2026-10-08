@@ -2,7 +2,8 @@ package org.phuchoang.ecp.identity.internal.application.security;
 
 import org.junit.jupiter.api.Test;
 import org.phuchoang.ecp.identity.internal.domain.model.RoleCode;
-import org.phuchoang.ecp.identity.api.error.DomainException;
+import org.phuchoang.ecp.identity.internal.application.error.ApplicationException;
+import org.phuchoang.ecp.identity.internal.domain.policy.AccessControlPolicy;
 
 import java.util.EnumSet;
 import java.util.Set;
@@ -17,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 class PermissionMatrixPermissionCheckerTest {
 
-    private final PermissionChecker permissions = new PermissionMatrixPermissionChecker();
+    private final PermissionChecker permissions = new PermissionMatrixPermissionChecker(new AccessControlPolicy());
 
     @Test
     void registerAccountPermitsOnlyGuest() {
@@ -62,8 +63,8 @@ class PermissionMatrixPermissionCheckerTest {
 
     private void assertDenied(CallerContext caller, String operationId) {
         assertThatThrownBy(() -> permissions.require(caller, operationId))
-            .isInstanceOf(DomainException.class)
-            .satisfies(e -> assertThat(((DomainException) e).errorCode().code()).isEqualTo("ECP-GEN-4030"));
+            .isInstanceOf(ApplicationException.class)
+            .satisfies(e -> assertThat(((ApplicationException) e).errorCode().code()).isEqualTo("ECP-GEN-4030"));
     }
 
     private CallerContext customer() {

@@ -4,8 +4,8 @@ import org.phuchoang.ecp.catalog.internal.domain.model.Category;
 import org.phuchoang.ecp.catalog.internal.domain.model.Product;
 import org.phuchoang.ecp.catalog.internal.domain.repository.CategoryRepository;
 import org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository;
-import org.phuchoang.ecp.catalog.api.error.DomainException;
-import org.phuchoang.ecp.catalog.api.error.GenErrorCode;
+import org.phuchoang.ecp.catalog.internal.application.error.ApplicationErrorCode;
+import org.phuchoang.ecp.catalog.internal.application.error.ApplicationException;
 
 import java.util.UUID;
 
@@ -36,11 +36,11 @@ public final class CatalogLookups {
         return parentId == null ? null : requireCategory(categories, parentId);
     }
 
-    public static DomainException invalid(String field) {
-        return new DomainException(GenErrorCode.VALIDATION_FAILED, "Invalid " + field + ".");
+    public static ApplicationException invalid(String field) {
+        return new ApplicationException(ApplicationErrorCode.VALIDATION_FAILED, "Invalid " + field + ".");
     }
 
-    private static DomainException notFound(String detail) {
-        return new DomainException(GenErrorCode.NOT_FOUND, detail);
+    private static ApplicationException notFound(String detail) {
+        return new ApplicationException(ApplicationErrorCode.NOT_FOUND, detail);
     }
 }

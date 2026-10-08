@@ -27,28 +27,28 @@ The cost of the separation is lag, and the lag is **deliberate** — recorded as
 ## Backend Lane
 
 ### `EN-EVENT-3` Elasticsearch search read model (8 pts)
-- [ ] Elasticsearch in `compose.yaml` alongside the Sprint 01 services; index mapping versioned as a file, not created implicitly by the first write
-- [ ] Projection consumes the Sprint 09 catalog events through the Sprint 08 envelope; **idempotent and order-guarded**, reusing `EN-EVENT-2`'s guards rather than a second implementation
-- [ ] `BR-CAT-02` — unpublished products are projected out, not filtered at query time. A published-flag filter on every query is one forgotten clause away from leaking an unpublished product
+- [x] Elasticsearch in `compose.yaml` alongside the Sprint 01 services; index mapping versioned as a file, not created implicitly by the first write
+- [x] Projection consumes the Sprint 09 catalog events through the Sprint 08 envelope; **idempotent and order-guarded**, reusing `EN-EVENT-2`'s guards rather than a second implementation
+- [x] `BR-CAT-02` — unpublished products are projected out, not filtered at query time. A published-flag filter on every query is one forgotten clause away from leaking an unpublished product
 - [ ] A **rebuild** path: the index can be reconstructed from the outbox from scratch. This is `EN-BENCH-2`'s drill in Sprint 29, and the path has to exist before it can be drilled
-- [ ] Projection lag exposed as a Micrometer meter in the `EN-OBS-2` set
+- [x] Projection lag exposed as a Micrometer meter in the `EN-OBS-2` set
 - [ ] `search` module's `allowedDependencies` do **not** include `catalog` — ArchUnit asserts it
 
 ### `US-SCH-01` Search Products by Keyword (8 pts) — `searchProducts`
-- [ ] Keyword query over the projected index; relevance ordering as the default
-- [ ] `BR-SCH-01` — a customer's search behaviour is never mixed with another's
-- [ ] `E1` — **no results is not an error.** The response is a successful empty result set; recovery material (popular keywords, categories) is the frontend's job and the contract must not force an error shape on it
-- [ ] `E2` — search unavailable returns `ECP-GEN-5030`, **not** `ECP-SCH-5030`. [`Error Codes.md`](../../../SA-docs/04-shared/Error%20Codes.md) §5.2 corrects the sequence diagram on exactly this point; implement the correction, not the diagram
-- [ ] `E3` — index lag is accepted and recorded as `P4`; no synchronous read-through to `catalog` is added to hide it
-- [ ] `E4` — rate limiting applies (`UC-AUD-04`), reusing the Sprint 04 limiter
-- [ ] Cursor pagination on the Sprint 02 envelope
+- [x] Keyword query over the projected index; relevance ordering as the default
+- [x] `BR-SCH-01` — a customer's search behaviour is never mixed with another's
+- [x] `E1` — **no results is not an error.** The response is a successful empty result set; recovery material (popular keywords, categories) is the frontend's job and the contract must not force an error shape on it
+- [x] `E2` — search unavailable returns `ECP-GEN-5030`, **not** `ECP-SCH-5030`. [`Error Codes.md`](../../../SA-docs/04-shared/Error%20Codes.md) §5.2 corrects the sequence diagram on exactly this point; implement the correction, not the diagram
+- [x] `E3` — index lag is accepted and recorded as `P4`; no synchronous read-through to `catalog` is added to hide it
+- [x] `E4` — rate limiting applies (`UC-AUD-04`), reusing the Sprint 04 limiter
+- [x] Cursor pagination on the Sprint 02 envelope
 
 ### `US-SCH-03` Filter and Sort Search Results (5 pts) — `searchProducts` (facets)
-- [ ] Facets — brand, price range, attribute — computed by the index, returned with counts
-- [ ] Sort options match those `US-CAT-02` exposes, so one control serves both surfaces
-- [ ] `E1` — a filter combination matching nothing returns an explicit empty result with the active filters echoed. **A filter is never silently dropped to manufacture results**
-- [ ] `E2` — an invalid filter value is rejected **and named**; the remaining filters still apply
-- [ ] `E3` — an inverted price range is interpreted in the order that makes it non-empty, not rejected
+- [x] Facets — brand, price range, attribute — computed by the index, returned with counts
+- [x] Sort options match those `US-CAT-02` exposes, so one control serves both surfaces
+- [x] `E1` — a filter combination matching nothing returns an explicit empty result with the active filters echoed. **A filter is never silently dropped to manufacture results**
+- [x] `E2` — an invalid filter value is rejected **and named**; the remaining filters still apply
+- [x] `E3` — an inverted price range is interpreted in the order that makes it non-empty, not rejected
 
 ---
 

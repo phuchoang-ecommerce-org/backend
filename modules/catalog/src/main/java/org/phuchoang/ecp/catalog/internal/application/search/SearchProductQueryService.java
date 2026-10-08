@@ -1,7 +1,7 @@
 package org.phuchoang.ecp.catalog.internal.application.search;
 
-import org.phuchoang.ecp.catalog.api.error.DomainException;
-import org.phuchoang.ecp.catalog.api.error.GenErrorCode;
+import org.phuchoang.ecp.catalog.internal.application.error.ApplicationErrorCode;
+import org.phuchoang.ecp.catalog.internal.application.error.ApplicationException;
 import org.springframework.stereotype.Service;
 
 /**
@@ -21,7 +21,8 @@ public class SearchProductQueryService {
         try {
             return products.search(query);
         } catch (SearchStoreUnavailableException exception) {
-            throw new DomainException(GenErrorCode.DEPENDENCY_UNAVAILABLE, "Search is temporarily unavailable.");
+            throw new ApplicationException(ApplicationErrorCode.DEPENDENCY_UNAVAILABLE,
+                "Search is temporarily unavailable.");
         }
     }
 }

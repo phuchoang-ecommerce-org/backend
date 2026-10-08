@@ -61,7 +61,8 @@ class AccountControllerTest {
                 .content("{\"password\":\"Str0ngPassword\"}"))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.code").value("ECP-GEN-4000"))
-            .andExpect(jsonPath("$.errors[0].field").value("email"));
+            .andExpect(jsonPath("$.errors[0].field").value("email"))
+            .andExpect(jsonPath("$.errors[0].code").value("ECP-GEN-4002"));
     }
 
     @Test

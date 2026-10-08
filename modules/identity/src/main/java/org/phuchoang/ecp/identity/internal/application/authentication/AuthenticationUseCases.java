@@ -15,7 +15,7 @@ import org.phuchoang.ecp.identity.internal.domain.model.Account;
 import org.phuchoang.ecp.identity.internal.domain.model.AccountStatus;
 import org.phuchoang.ecp.identity.internal.domain.model.EmailAddress;
 import org.phuchoang.ecp.identity.internal.domain.repository.AccountRepository;
-import org.phuchoang.ecp.identity.api.error.DomainException;
+import org.phuchoang.ecp.identity.internal.application.error.ApplicationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -103,10 +103,10 @@ public class AuthenticationUseCases {
     }
 
     // noRollbackFor: a reuse rejection's whole point is a durable side effect (the chain
-    // invalidation) that must survive the DomainException it then throws to reject *this* call —
+    // invalidation) that must survive the ApplicationException it then throws to reject *this* call —
     // Spring's default rollback-on-RuntimeException would otherwise undo the very write reuse
     // detection depends on.
-    @Transactional(noRollbackFor = DomainException.class)
+    @Transactional(noRollbackFor = ApplicationException.class)
     public LoginResult renewSession(String rawRefreshToken) {
         Presentation.Usable presented = switch (sessions.present(rawRefreshToken)) {
             case Presentation.Invalid invalid -> throw IdentityErrors.refreshTokenRejected();
@@ -124,7 +124,7 @@ public class AuthenticationUseCases {
         return session(account, rawNewRefreshToken);
     }
 
-    private DomainException chainEnded(java.util.UUID accountId) {
+    private ApplicationException chainEnded(java.util.UUID accountId) {
         events.publish(new SessionEnded(accountId, true, Instant.now(clock)));
         return IdentityErrors.refreshTokenReused();
     }

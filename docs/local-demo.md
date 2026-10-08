@@ -13,10 +13,9 @@ Never reuse these credentials outside a local machine.
 
 ## Start the demo
 
-1. Start Colima, then the local dependencies:
+1. Start Docker Desktop, then the local dependencies:
 
    ```sh
-   colima start --memory 4
    cd backend-extract
    docker compose up -d postgres kafka redis-cache redis-state
    ```

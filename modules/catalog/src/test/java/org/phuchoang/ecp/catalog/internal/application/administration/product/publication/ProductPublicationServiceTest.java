@@ -15,7 +15,7 @@ import org.phuchoang.ecp.catalog.internal.domain.model.PublicationStatus;
 import org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
-import org.phuchoang.ecp.catalog.api.error.DomainException;
+import org.phuchoang.ecp.catalog.internal.application.error.ApplicationException;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -77,7 +77,7 @@ class ProductPublicationServiceTest {
     @Test
     void anUnknownStatusIsAValidationFailureBeforeAnyLoad() {
         assertThatThrownBy(() -> service.setPublication(context, UUID.randomUUID(), new SetPublication("ARCHIVED", null)))
-            .isInstanceOf(DomainException.class).hasMessage("Invalid publicationStatus.");
+            .isInstanceOf(ApplicationException.class).hasMessage("Invalid publicationStatus.");
         verify(products, never()).findById(any());
     }
 
@@ -87,7 +87,7 @@ class ProductPublicationServiceTest {
         when(products.findById(productId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.setPublication(context, productId, new SetPublication("PUBLISHED", null)))
-            .isInstanceOf(DomainException.class).hasMessage("Product not found.");
+            .isInstanceOf(ApplicationException.class).hasMessage("Product not found.");
     }
 
     private CatalogDomainEvent captured() {

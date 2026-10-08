@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.phuchoang.ecp.catalog.internal.application.administration.CatalogCommandContext;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
-import org.phuchoang.ecp.catalog.api.error.DomainException;
-import org.phuchoang.ecp.catalog.api.error.GenErrorCode;
+import org.phuchoang.ecp.catalog.internal.application.error.ApplicationErrorCode;
+import org.phuchoang.ecp.catalog.internal.application.error.ApplicationException;
 
 import java.util.List;
 import java.util.Map;
@@ -35,7 +35,7 @@ class BulkAmendmentServiceTest {
         UUID broken = UUID.randomUUID();
         UUID fine = UUID.randomUUID();
         when(updates.update(eq(context), eq(missing), any()))
-            .thenThrow(new DomainException(GenErrorCode.NOT_FOUND, "Product not found."));
+            .thenThrow(new ApplicationException(ApplicationErrorCode.NOT_FOUND, "Product not found."));
         when(updates.update(eq(context), eq(broken), any())).thenThrow(new IllegalStateException("boom"));
 
         List<BulkAmendmentOutcome> outcomes = service.amend(context, List.of(new BulkAmendment(missing, change),

@@ -61,7 +61,9 @@ class ArchitectureTests {
             String base = ROOT_PACKAGE + "." + module;
             ArchRule rule = noClasses()
                 .that().resideInAPackage(base + ".internal.application..")
-                .should().dependOnClassesThat().resideInAPackage(base + ".internal.infrastructure..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                    base + ".internal.infrastructure..",
+                    base + ".api..")
                 .because("application may depend on domain and ports only, never its own module's "
                     + "infrastructure or api (Module Dependency Diagram.md §6)")
                 .allowEmptyShould(true);
@@ -118,11 +120,13 @@ class ArchitectureTests {
         org.assertj.core.api.Assertions.assertThat(aggregateRoots).containsExactlyInAnyOrder(
             "org.phuchoang.ecp.identity.internal.domain.model.Account",
             "org.phuchoang.ecp.catalog.internal.domain.model.Product",
-            "org.phuchoang.ecp.catalog.internal.domain.model.Category");
+            "org.phuchoang.ecp.catalog.internal.domain.model.Category",
+            "org.phuchoang.ecp.inventory.internal.domain.model.StockItem");
         org.assertj.core.api.Assertions.assertThat(repositories).containsExactlyInAnyOrder(
             "org.phuchoang.ecp.identity.internal.domain.repository.AccountRepository",
             "org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository",
-            "org.phuchoang.ecp.catalog.internal.domain.repository.CategoryRepository");
+            "org.phuchoang.ecp.catalog.internal.domain.repository.CategoryRepository",
+            "org.phuchoang.ecp.inventory.internal.domain.repository.StockItemRepository");
 
         ArchRule locationRule = com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes()
             .that().areAnnotatedWith(Repository.class)
@@ -258,6 +262,16 @@ class ArchitectureTests {
             .because("ADR-0014 and ADR-0018 G6 confine Elasticsearch access to Catalog's search adapter; "
                 + "controllers, application services and Kafka transport must only name ports")
             .allowEmptyShould(true);
+        rule.check(mainClasses);
+    }
+
+    @Test
+    void noWebControllerReachesTheInternalInventoryReservationBoundary() {
+        ArchRule rule = noClasses()
+            .that().resideInAPackage(ROOT_PACKAGE + ".web..")
+            .should().dependOnClassesThat().haveFullyQualifiedName(
+                ROOT_PACKAGE + ".inventory.api.reservation.InventoryReservationFacade")
+            .because("US-INV-01 and US-INV-02 are in-process order-placement operations, not HTTP endpoints");
         rule.check(mainClasses);
     }
 

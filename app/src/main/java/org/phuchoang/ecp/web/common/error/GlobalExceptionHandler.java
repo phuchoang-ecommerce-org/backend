@@ -80,7 +80,7 @@ public class GlobalExceptionHandler {
         List<FieldError> errors = exception.getBindingResult().getFieldErrors().stream()
             .map(fieldError -> new FieldError(
                 fieldError.getField(),
-                fieldError.getCode() != null && fieldError.getCode().equals("NotNull")
+                isRequiredConstraint(fieldError.getCode())
                     ? FieldErrorCodes.REQUIRED
                     : FieldErrorCodes.CONSTRAINT_VIOLATED,
                 fieldError.getDefaultMessage()))
@@ -139,5 +139,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status)
             .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_PROBLEM_JSON_VALUE)
             .body(problem);
+    }
+
+    private static boolean isRequiredConstraint(String constraint) {
+        return "NotNull".equals(constraint) || "NotBlank".equals(constraint) || "NotEmpty".equals(constraint);
     }
 }

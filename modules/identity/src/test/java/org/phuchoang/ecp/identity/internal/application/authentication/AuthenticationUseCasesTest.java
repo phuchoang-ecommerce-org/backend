@@ -10,6 +10,7 @@ import org.phuchoang.ecp.identity.internal.application.port.DomainEventPublisher
 import org.phuchoang.ecp.identity.internal.application.port.PasswordEncoder;
 import org.phuchoang.ecp.identity.internal.application.port.TokenStore;
 import org.phuchoang.ecp.identity.internal.application.security.PermissionMatrixPermissionChecker;
+import org.phuchoang.ecp.identity.internal.domain.policy.AccessControlPolicy;
 import org.phuchoang.ecp.identity.internal.application.token.OpaqueTokens;
 import org.phuchoang.ecp.identity.internal.domain.event.SessionEnded;
 import org.phuchoang.ecp.identity.internal.domain.model.Account;
@@ -21,7 +22,7 @@ import org.phuchoang.ecp.identity.internal.domain.model.RoleCode;
 import org.phuchoang.ecp.identity.internal.domain.model.TokenType;
 import org.phuchoang.ecp.identity.internal.domain.model.VerificationStatus;
 import org.phuchoang.ecp.identity.internal.domain.repository.AccountRepository;
-import org.phuchoang.ecp.identity.api.error.DomainException;
+import org.phuchoang.ecp.identity.internal.application.error.ApplicationException;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -67,7 +68,7 @@ class AuthenticationUseCasesTest {
     @BeforeEach
     void setUp() {
         useCases = new AuthenticationUseCases(accountRepository, new RefreshTokenSessionManager(tokenStore, clock),
-            passwordEncoder, accessTokenIssuer, new PermissionMatrixPermissionChecker(), events, clock);
+            passwordEncoder, accessTokenIssuer, new PermissionMatrixPermissionChecker(new AccessControlPolicy()), events, clock);
     }
 
     @Test
@@ -77,8 +78,8 @@ class AuthenticationUseCasesTest {
         when(accountRepository.findByEmail(new EmailAddress(existing.email().value()))).thenReturn(Optional.of(existing));
         when(passwordEncoder.matches(any(), any())).thenReturn(false);
 
-        DomainException unknownAccountFailure = catchLoginFailure("unknown@example.com", "whatever1");
-        DomainException wrongPasswordFailure = catchLoginFailure(existing.email().value(), "wrongPassword1");
+        ApplicationException unknownAccountFailure = catchLoginFailure("unknown@example.com", "whatever1");
+        ApplicationException wrongPasswordFailure = catchLoginFailure(existing.email().value(), "wrongPassword1");
 
         assertThat(unknownAccountFailure.errorCode().code()).isEqualTo(wrongPasswordFailure.errorCode().code());
         assertThat(unknownAccountFailure.getMessage()).isEqualTo(wrongPasswordFailure.getMessage());
@@ -93,7 +94,7 @@ class AuthenticationUseCasesTest {
         when(accountRepository.findByEmail(new EmailAddress(suspended.email().value()))).thenReturn(Optional.of(suspended));
         when(passwordEncoder.matches(any(), any())).thenReturn(true);
 
-        DomainException suspendedFailure = catchLoginFailure(suspended.email().value(), "correctPassword1");
+        ApplicationException suspendedFailure = catchLoginFailure(suspended.email().value(), "correctPassword1");
 
         assertThat(suspendedFailure.errorCode().code()).isEqualTo("ECP-GEN-4010");
         assertThat(suspendedFailure.getMessage()).isEqualTo("Email or password is incorrect.");
@@ -141,7 +142,7 @@ class AuthenticationUseCasesTest {
             issued.issuedAt(), issued.expiresAt(), Instant.now(clock), UUID.randomUUID(), issued.chainId());
         when(tokenStore.findByTokenHash(OpaqueTokens.hash(rawToken), TokenType.REFRESH)).thenReturn(Optional.of(consumed));
 
-        DomainException failure = (DomainException) catchThrowable(() -> useCases.renewSession(rawToken));
+        ApplicationException failure = (ApplicationException) catchThrowable(() -> useCases.renewSession(rawToken));
 
         assertThat(failure.errorCode().code()).isEqualTo("ECP-GEN-4011");
         verify(tokenStore).invalidateChain(consumed.chainId(), Instant.now(clock));
@@ -158,7 +159,7 @@ class AuthenticationUseCasesTest {
             issued.chainId());
         when(tokenStore.findByTokenHash(OpaqueTokens.hash(rawToken), TokenType.REFRESH)).thenReturn(Optional.of(expired));
 
-        DomainException failure = (DomainException) catchThrowable(() -> useCases.renewSession(rawToken));
+        ApplicationException failure = (ApplicationException) catchThrowable(() -> useCases.renewSession(rawToken));
 
         // openapi.yaml's RefreshTokenRejected response covers "invalid, expired, or already
         // consumed" uniformly under ECP-GEN-4011 — only the chain-invalidation side effect differs.
@@ -175,7 +176,7 @@ class AuthenticationUseCasesTest {
         when(accountRepository.findById(presented.accountId())).thenReturn(Optional.of(account));
         when(tokenStore.rotateIfUsable(eq(presented.id()), any(), eq(Instant.now(clock)))).thenReturn(false);
 
-        DomainException failure = (DomainException) catchThrowable(() -> useCases.renewSession(rawToken));
+        ApplicationException failure = (ApplicationException) catchThrowable(() -> useCases.renewSession(rawToken));
 
         assertThat(failure.errorCode().code()).isEqualTo("ECP-GEN-4011");
         verify(tokenStore).invalidateChain(presented.chainId(), Instant.now(clock));
@@ -206,10 +207,10 @@ class AuthenticationUseCasesTest {
         verify(events).publish(new SessionEnded(accountId, false, Instant.now(clock)));
     }
 
-    private DomainException catchLoginFailure(String email, String password) {
+    private ApplicationException catchLoginFailure(String email, String password) {
         Throwable thrown = catchThrowable(() -> useCases.logIn(new LoginCommand(email, password)));
-        assertThat(thrown).isInstanceOf(DomainException.class);
-        return (DomainException) thrown;
+        assertThat(thrown).isInstanceOf(ApplicationException.class);
+        return (ApplicationException) thrown;
     }
 
     private IdentityToken usableRefreshToken(String rawToken) {

@@ -10,8 +10,8 @@ import org.phuchoang.ecp.catalog.internal.domain.model.Product;
 import org.phuchoang.ecp.catalog.internal.domain.repository.DuplicateSkuException;
 import org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
-import org.phuchoang.ecp.catalog.api.error.DomainException;
-import org.phuchoang.ecp.catalog.api.error.GenErrorCode;
+import org.phuchoang.ecp.catalog.internal.application.error.ApplicationErrorCode;
+import org.phuchoang.ecp.catalog.internal.application.error.ApplicationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,7 +48,7 @@ public class AddVariantService {
         try {
             after = products.save(before.addVariant(variant));
         } catch (DuplicateSkuException exception) {
-            throw new DomainException(GenErrorCode.VALIDATION_FAILED, exception.getMessage());
+            throw new ApplicationException(ApplicationErrorCode.VALIDATION_FAILED, exception.getMessage());
         }
 
         Product.Variant added = after.variant(variant.id());
