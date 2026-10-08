@@ -1,8 +1,8 @@
 package org.phuchoang.ecp.inventory.internal.infrastructure.configuration;
 
-import org.phuchoang.ecp.inventory.internal.application.command.reservation.ReservationRetryPolicy;
 import org.phuchoang.ecp.inventory.internal.domain.service.CommitStockReservationDomainService;
 import org.phuchoang.ecp.inventory.internal.domain.service.ReleaseStockReservationDomainService;
+import org.phuchoang.ecp.inventory.internal.domain.service.ReservationRetryPolicy;
 import org.phuchoang.ecp.inventory.internal.domain.service.ReserveStockDomainService;
 import org.phuchoang.ecp.inventory.internal.domain.service.StockAllocationPolicy;
 import org.phuchoang.ecp.inventory.internal.domain.repository.StockItemRepository;

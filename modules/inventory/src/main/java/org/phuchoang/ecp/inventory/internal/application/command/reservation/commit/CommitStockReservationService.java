@@ -1,7 +1,7 @@
 package org.phuchoang.ecp.inventory.internal.application.command.reservation.commit;
 
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
-import org.phuchoang.ecp.inventory.internal.application.command.reservation.ReservationRetryPolicy;
+import org.phuchoang.ecp.inventory.internal.domain.service.ReservationRetryPolicy;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 

@@ -3,7 +3,7 @@ package org.phuchoang.ecp.inventory.internal.application.command.reservation.com
 import org.junit.jupiter.api.Test;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
-import org.phuchoang.ecp.inventory.internal.application.command.reservation.ReservationRetryPolicy;
+import org.phuchoang.ecp.inventory.internal.domain.service.ReservationRetryPolicy;
 
 import java.util.Set;
 import java.util.UUID;

@@ -1,6 +1,6 @@
 package org.phuchoang.ecp.inventory.internal.application.command.reservation.reserve;
 
-import org.phuchoang.ecp.inventory.internal.application.command.reservation.ReservationRetryPolicy;
+import org.phuchoang.ecp.inventory.internal.domain.service.ReservationRetryPolicy;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
