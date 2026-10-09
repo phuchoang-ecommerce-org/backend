@@ -1,6 +1,6 @@
 package org.phuchoang.ecp.catalog.internal.infrastructure.configuration;
 
-import org.phuchoang.ecp.catalog.internal.domain.policy.CategoryHierarchyPolicy;
+import org.phuchoang.ecp.catalog.internal.domain.service.CategoryHierarchyPolicy;
 import org.phuchoang.ecp.catalog.internal.domain.repository.CategoryRepository;
 import org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository;
 import org.phuchoang.ecp.catalog.internal.domain.service.CategoryCommandService;

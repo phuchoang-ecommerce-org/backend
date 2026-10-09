@@ -1,6 +1,7 @@
 package org.phuchoang.ecp.catalog.internal.domain.policy;
 
 import org.junit.jupiter.api.Test;
+import org.phuchoang.ecp.catalog.internal.domain.service.CategoryHierarchyPolicy;
 
 import java.util.List;
 import java.util.UUID;

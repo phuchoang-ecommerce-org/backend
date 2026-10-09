@@ -15,7 +15,7 @@ import org.phuchoang.ecp.catalog.internal.domain.event.CategoryChanged;
 import org.phuchoang.ecp.catalog.internal.domain.model.Category;
 import org.phuchoang.ecp.catalog.internal.domain.repository.CategoryRepository;
 import org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository;
-import org.phuchoang.ecp.catalog.internal.domain.policy.CategoryHierarchyPolicy;
+import org.phuchoang.ecp.catalog.internal.domain.service.CategoryHierarchyPolicy;
 import org.phuchoang.ecp.catalog.internal.domain.service.CategoryCommandService;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;

@@ -2,7 +2,6 @@ package org.phuchoang.ecp.catalog.internal.domain.service;
 
 import org.jmolecules.ddd.annotation.Service;
 import org.phuchoang.ecp.catalog.internal.domain.model.Category;
-import org.phuchoang.ecp.catalog.internal.domain.policy.CategoryHierarchyPolicy;
 import org.phuchoang.ecp.catalog.internal.domain.repository.CategoryRepository;
 import org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository;
 

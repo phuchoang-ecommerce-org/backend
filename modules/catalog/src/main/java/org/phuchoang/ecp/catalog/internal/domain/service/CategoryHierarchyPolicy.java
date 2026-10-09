@@ -1,4 +1,4 @@
-package org.phuchoang.ecp.catalog.internal.domain.policy;
+package org.phuchoang.ecp.catalog.internal.domain.service;
 
 import java.util.List;
 import java.util.Objects;
