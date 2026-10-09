@@ -1,8 +1,8 @@
 package org.phuchoang.ecp.catalog.internal.infrastructure.persistence.browse.listing;
 
-import org.phuchoang.ecp.catalog.internal.application.browse.categoryproduct.ProductListingPort;
-import org.phuchoang.ecp.catalog.internal.application.browse.categoryproduct.ProductListingQuery;
-import org.phuchoang.ecp.catalog.internal.application.browse.categoryproduct.ProductPage;
+import org.phuchoang.ecp.catalog.internal.application.browse.query.categoryproduct.ProductListingPort;
+import org.phuchoang.ecp.catalog.internal.application.browse.query.categoryproduct.ProductListingQuery;
+import org.phuchoang.ecp.catalog.internal.application.browse.query.categoryproduct.ProductPage;
 import org.phuchoang.ecp.catalog.internal.infrastructure.persistence.JdbcQuerySupport;
 import org.phuchoang.ecp.catalog.internal.infrastructure.persistence.browse.listing.ProductListingCursorCodec.SeekPosition;
 import org.phuchoang.ecp.catalog.internal.infrastructure.persistence.browse.listing.ProductListingSqlBuilder.ListingSql;

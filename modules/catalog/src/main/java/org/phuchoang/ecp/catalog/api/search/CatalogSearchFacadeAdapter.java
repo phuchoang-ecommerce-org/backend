@@ -4,7 +4,7 @@ import org.phuchoang.ecp.catalog.api.search.view.SearchResultPageView;
 import org.phuchoang.ecp.catalog.api.error.DomainException;
 import org.phuchoang.ecp.catalog.api.error.GenErrorCode;
 import org.phuchoang.ecp.catalog.internal.application.error.ApplicationException;
-import org.phuchoang.ecp.catalog.internal.application.search.SearchProductQueryService;
+import org.phuchoang.ecp.catalog.internal.application.search.query.SearchProductQueryService;
 import org.springframework.stereotype.Component;
 
 /** Maps Catalog's internal Elasticsearch query model to its named public search interface. */

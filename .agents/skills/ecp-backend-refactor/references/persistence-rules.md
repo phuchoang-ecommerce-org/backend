@@ -12,9 +12,12 @@ PostgreSQL remains the source of truth for authoritative business state.
 
 Preferred shape:
 
-`API -> application query port/view -> infrastructure query service -> PostgreSQL read SQL or approved derived store`
+`API -> application/<use-case>/query port/view -> Infrastructure query adapter -> PostgreSQL read SQL or approved derived store`
 
 JDBC is intentionally valid on the read side. A refactor must not replace JDBC with JPA solely for stylistic uniformity.
+The query port and view are Application contracts; SQL and store mechanics stay
+in the Infrastructure adapter. Query paths do not need a Domain Model
+constraint because they are observational.
 
 ## Projection path
 

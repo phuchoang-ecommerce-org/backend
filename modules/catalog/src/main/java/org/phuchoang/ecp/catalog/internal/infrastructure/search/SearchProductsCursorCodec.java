@@ -2,7 +2,7 @@ package org.phuchoang.ecp.catalog.internal.infrastructure.search;
 
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch.core.search.Hit;
-import org.phuchoang.ecp.catalog.internal.application.search.SearchProductsQuery;
+import org.phuchoang.ecp.catalog.internal.application.search.query.SearchProductsQuery;
 import org.phuchoang.ecp.catalog.internal.application.pagination.CursorCodec;
 import org.phuchoang.ecp.catalog.internal.application.pagination.CursorContext;
 import org.phuchoang.ecp.catalog.internal.application.pagination.CursorPosition;

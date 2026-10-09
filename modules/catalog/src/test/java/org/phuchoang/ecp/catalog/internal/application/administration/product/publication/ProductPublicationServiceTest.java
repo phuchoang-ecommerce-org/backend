@@ -1,10 +1,10 @@
-package org.phuchoang.ecp.catalog.internal.application.administration.product.publication;
+package org.phuchoang.ecp.catalog.internal.application.administration.command.product.publication;
 
-import org.phuchoang.ecp.catalog.internal.application.administration.product.ProductSnapshot;
+import org.phuchoang.ecp.catalog.internal.application.administration.command.product.ProductSnapshot;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.phuchoang.ecp.catalog.internal.application.administration.CatalogCommandContext;
-import org.phuchoang.ecp.catalog.internal.application.administration.CatalogPermissions;
+import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogCommandContext;
+import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogPermissions;
 import org.phuchoang.ecp.catalog.internal.application.event.CatalogEventPublisher;
 import org.phuchoang.ecp.catalog.internal.domain.event.CatalogDomainEvent;
 import org.phuchoang.ecp.catalog.internal.domain.event.ProductDiscontinued;
@@ -13,6 +13,7 @@ import org.phuchoang.ecp.catalog.internal.domain.event.ProductUpdated;
 import org.phuchoang.ecp.catalog.internal.domain.model.Product;
 import org.phuchoang.ecp.catalog.internal.domain.model.PublicationStatus;
 import org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository;
+import org.phuchoang.ecp.catalog.internal.domain.service.ProductCommandService;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
 import org.phuchoang.ecp.catalog.internal.application.error.ApplicationException;
@@ -40,7 +41,8 @@ class ProductPublicationServiceTest {
     private final ProductRepository products = mock(ProductRepository.class);
     private final IdentityAuthorization authorization = mock(IdentityAuthorization.class);
     private final CatalogEventPublisher events = mock(CatalogEventPublisher.class);
-    private final ProductPublicationService service = new ProductPublicationService(products, authorization, events, clock);
+    private final ProductPublicationService service = new ProductPublicationService(new ProductCommandService(products),
+        authorization, events, clock);
     private final CatalogCommandContext context = new CatalogCommandContext(
         new IdentityActor(UUID.randomUUID(), Set.of("STAFF")), UUID.randomUUID());
 

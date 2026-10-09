@@ -27,6 +27,13 @@ Owns:
 
 Application code must not absorb JDBC query construction, HTTP semantics, Kafka mechanics, or Redis commands.
 
+Package Application code as `application/<use-case>/<command|query>/`, not
+module-wide `commands`, `queries`, `services`, `dtos`, or `models`. Command
+use cases invoke authoritative Domain Model behavior so its constraints decide
+business transitions. Query ports and read models belong in the owning
+Application use-case `query` package; Infrastructure supplies the technical
+adapter, and queries do not traverse Domain Model constraints.
+
 ## API
 
 Owns:

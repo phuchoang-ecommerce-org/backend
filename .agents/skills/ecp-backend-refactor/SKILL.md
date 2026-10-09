@@ -1,7 +1,7 @@
 ---
 name: ecp-backend-refactor
 description: Architecture-aware refactoring protocol for the ECP Java/Spring modular monolith. Use when analyzing or refactoring existing backend code while preserving business invariants, module boundaries, CQRS semantics, transaction boundaries, integration contracts, security guarantees, and operational behavior.
-version: 1.1.0
+version: 1.2.0
 ---
 
 # Backend Refactor Skill
@@ -15,6 +15,20 @@ The refactoring sequence is:
 `existing code + project specification -> architecture diagnosis -> target design -> incremental migration -> verification`
 
 Never jump directly from a code smell to a code change.
+
+## Non-Negotiable Architecture and Test Gates
+
+Refactoring must restore strict Clean Architecture: Domain has no outer-layer
+dependency; Application depends only inward on Domain; Infrastructure and
+Web/API implement or adapt Application contracts. Existing layer leakage is
+evidence to correct, never a precedent to extend.
+
+Establish tests before production refactoring. First add the smallest focused
+characterization, invariant, contract, or architecture test that protects the
+behavior or target boundary, and run it to establish its baseline. When the
+refactor introduces a missing architectural constraint, add an initially
+failing structural test, then make it pass. Do not alter assertions merely to
+legitimize an implementation change.
 
 ## Mandatory Operating Rule
 
@@ -75,6 +89,20 @@ Treat these rules as project constraints, not suggestions.
 Always load the shared architecture-separation reference before selecting a
 target package or moving a datatype. Refactoring must restore semantic
 ownership, not merely rearrange files by technical type.
+
+Application targets must be use-case-centric before technical-centric:
+`application/<use-case>/<command|query>/`. For example, keep `Browse` query
+contracts and views under `application/browse/query`, and `Create` command
+inputs and handlers under `application/create/command`; never introduce a
+module-wide `commands`, `queries`, `services`, or `models` package.
+
+Every command must reach the authoritative Domain Model operation that enforces
+the relevant business constraints. Move business-transition decisions from
+controllers, application services, projections, caches, and adapters into the
+owning aggregate/domain policy. A query remains observational: its port and
+read model belong in the Application use-case query package and its technical
+adapter belongs in Infrastructure; it does not route through Domain Model
+constraints merely for symmetry.
 
 ## Evidence Requirement
 

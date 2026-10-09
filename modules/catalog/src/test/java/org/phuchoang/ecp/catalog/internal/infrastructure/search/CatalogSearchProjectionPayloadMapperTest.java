@@ -1,7 +1,7 @@
 package org.phuchoang.ecp.catalog.internal.infrastructure.search;
 
 import org.junit.jupiter.api.Test;
-import org.phuchoang.ecp.catalog.internal.application.search.SearchProjectionEvent;
+import org.phuchoang.ecp.catalog.internal.application.search.projection.SearchProjectionEvent;
 import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;

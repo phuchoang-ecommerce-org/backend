@@ -1,15 +1,16 @@
-package org.phuchoang.ecp.catalog.internal.application.administration.product.variant.add;
+package org.phuchoang.ecp.catalog.internal.application.administration.command.product.variant.add;
 
-import org.phuchoang.ecp.catalog.internal.application.administration.product.variant.VariantSnapshot;
+import org.phuchoang.ecp.catalog.internal.application.administration.command.product.variant.VariantSnapshot;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.phuchoang.ecp.catalog.internal.application.administration.CatalogCommandContext;
+import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogCommandContext;
 import org.phuchoang.ecp.catalog.internal.application.event.CatalogEventPublisher;
 import org.phuchoang.ecp.catalog.internal.domain.event.CatalogDomainEvent;
 import org.phuchoang.ecp.catalog.internal.domain.event.VariantAdded;
 import org.phuchoang.ecp.catalog.internal.domain.model.Product;
-import org.phuchoang.ecp.catalog.internal.domain.repository.DuplicateSkuException;
+import org.phuchoang.ecp.catalog.internal.domain.error.DuplicateSkuException;
 import org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository;
+import org.phuchoang.ecp.catalog.internal.domain.service.ProductCommandService;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
 import org.phuchoang.ecp.catalog.internal.application.error.ApplicationException;
@@ -33,7 +34,8 @@ class AddVariantServiceTest {
 
     private final ProductRepository products = mock(ProductRepository.class);
     private final CatalogEventPublisher events = mock(CatalogEventPublisher.class);
-    private final AddVariantService service = new AddVariantService(products, mock(IdentityAuthorization.class), events);
+    private final AddVariantService service = new AddVariantService(new ProductCommandService(products),
+        mock(IdentityAuthorization.class), events);
     private final CatalogCommandContext context = new CatalogCommandContext(
         new IdentityActor(UUID.randomUUID(), Set.of("STAFF")), UUID.randomUUID());
     private final AddVariant command = new AddVariant("MUG-001", "Blue", new BigDecimal("12.50"), "USD",

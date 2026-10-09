@@ -2,7 +2,7 @@ package org.phuchoang.ecp.catalog.internal.infrastructure.search;
 
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.phuchoang.ecp.catalog.internal.application.search.SearchProjectionLagProbe;
+import org.phuchoang.ecp.catalog.internal.application.search.projection.SearchProjectionLagProbe;
 import org.springframework.stereotype.Component;
 
 /** C2 projection freshness: now minus the newest applied Catalog envelope's occurredAt. */

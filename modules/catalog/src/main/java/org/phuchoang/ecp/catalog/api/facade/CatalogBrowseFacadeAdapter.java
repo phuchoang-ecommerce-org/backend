@@ -1,8 +1,8 @@
 package org.phuchoang.ecp.catalog.api.facade;
 
-import org.phuchoang.ecp.catalog.internal.application.browse.category.CategoryQueryService;
-import org.phuchoang.ecp.catalog.internal.application.browse.categoryproduct.CategoryProductListingService;
-import org.phuchoang.ecp.catalog.internal.application.browse.variant.VariantQueryService;
+import org.phuchoang.ecp.catalog.internal.application.browse.query.category.CategoryQueryService;
+import org.phuchoang.ecp.catalog.internal.application.browse.query.categoryproduct.CategoryProductListingService;
+import org.phuchoang.ecp.catalog.internal.application.browse.query.variant.VariantQueryService;
 import org.phuchoang.ecp.catalog.api.view.category.CategoryNodeView;
 import org.phuchoang.ecp.catalog.api.view.category.CategoryRefView;
 import org.phuchoang.ecp.catalog.api.view.category.CategoryView;

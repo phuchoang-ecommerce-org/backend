@@ -1,6 +1,6 @@
 package org.phuchoang.ecp.catalog.api.facade;
 
-import org.phuchoang.ecp.catalog.internal.application.browse.product.ProductDetailsQueryService;
+import org.phuchoang.ecp.catalog.internal.application.browse.query.product.ProductDetailsQueryService;
 import org.phuchoang.ecp.catalog.api.view.category.CategoryRefView;
 import org.phuchoang.ecp.catalog.api.view.common.MoneyView;
 import org.phuchoang.ecp.catalog.api.view.product.AdvisoryAvailabilityView;

@@ -50,6 +50,18 @@ When aggregate behavior changes:
 
 ---
 
+## 2.1 Test-First Verification
+
+```text
+[ ] A focused test was written and run before the production change.
+
+[ ] The initial failure demonstrated the missing behavior or architecture.
+
+[ ] The test asserts a business, contract, or architectural outcome rather than implementation detail.
+```
+
+---
+
 ## 3. Application Verification
 
 ```text
@@ -66,6 +78,8 @@ When aggregate behavior changes:
 [ ] Failure behavior matches the use case.
 
 [ ] Application tests cover orchestration where necessary.
+
+[ ] Application code is grouped as `application/<use-case>/<command|query>/`.
 ```
 
 ---
@@ -143,7 +157,13 @@ When concurrent writes are possible:
 ```text
 [ ] Commands change authoritative state through the intended path.
 
+[ ] Each command's business transition is accepted or rejected by the authoritative Domain Model constraint.
+
 [ ] Queries use the intended read source.
+
+[ ] Each query port/read model is in Application and its read adapter is in Infrastructure.
+
+[ ] Queries do not traverse Domain Model constraints unless explicitly required for an authoritative aggregate read.
 
 [ ] Write side does not depend on projection state as authority unless explicitly specified.
 

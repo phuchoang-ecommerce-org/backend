@@ -1,14 +1,14 @@
-package org.phuchoang.ecp.catalog.internal.application.administration.category;
+package org.phuchoang.ecp.catalog.internal.application.administration.command.category;
 
-import org.phuchoang.ecp.catalog.internal.application.administration.category.create.CreateCategory;
-import org.phuchoang.ecp.catalog.internal.application.administration.category.create.CreateCategoryService;
-import org.phuchoang.ecp.catalog.internal.application.administration.category.delete.DeleteCategoryService;
-import org.phuchoang.ecp.catalog.internal.application.administration.category.update.CategoryChange;
-import org.phuchoang.ecp.catalog.internal.application.administration.category.update.UpdateCategoryService;
+import org.phuchoang.ecp.catalog.internal.application.administration.command.category.create.CreateCategory;
+import org.phuchoang.ecp.catalog.internal.application.administration.command.category.create.CreateCategoryService;
+import org.phuchoang.ecp.catalog.internal.application.administration.command.category.delete.DeleteCategoryService;
+import org.phuchoang.ecp.catalog.internal.application.administration.command.category.update.CategoryChange;
+import org.phuchoang.ecp.catalog.internal.application.administration.command.category.update.UpdateCategoryService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.phuchoang.ecp.catalog.internal.application.administration.CatalogCommandContext;
-import org.phuchoang.ecp.catalog.internal.application.administration.CatalogPermissions;
+import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogCommandContext;
+import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogPermissions;
 import org.phuchoang.ecp.catalog.internal.application.event.CatalogEventPublisher;
 import org.phuchoang.ecp.catalog.internal.domain.event.CatalogDomainEvent;
 import org.phuchoang.ecp.catalog.internal.domain.event.CategoryChanged;
@@ -16,6 +16,7 @@ import org.phuchoang.ecp.catalog.internal.domain.model.Category;
 import org.phuchoang.ecp.catalog.internal.domain.repository.CategoryRepository;
 import org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository;
 import org.phuchoang.ecp.catalog.internal.domain.policy.CategoryHierarchyPolicy;
+import org.phuchoang.ecp.catalog.internal.domain.service.CategoryCommandService;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
 import org.phuchoang.ecp.catalog.internal.application.error.ApplicationException;
@@ -43,13 +44,17 @@ class CategoryCommandsTest {
     private final CatalogCommandContext context = new CatalogCommandContext(
         new IdentityActor(UUID.randomUUID(), Set.of("ADMINISTRATOR")), UUID.randomUUID());
 
+    private CategoryCommandService categoryCommands() {
+        return new CategoryCommandService(categories, products, new CategoryHierarchyPolicy());
+    }
+
     @Test
     void creationDerivesTheSlugFromTheNameAndThePathFromTheParent() {
         Category parent = new Category(UUID.randomUUID(), null, "Home", "home", "/home/", 0, null, 0, false);
         when(categories.findById(parent.id())).thenReturn(Optional.of(parent));
         when(categories.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        CategorySnapshot created = new CreateCategoryService(categories, authorization, events)
+        CategorySnapshot created = new CreateCategoryService(categoryCommands(), authorization, events)
             .create(context, new CreateCategory(parent.id(), "Living Room & Décor", null, 2, true));
 
         verify(authorization).assertAuthorized(context.caller(), CatalogPermissions.MANAGE_CATEGORIES);
@@ -66,7 +71,7 @@ class CategoryCommandsTest {
         when(categories.findById(root.id())).thenReturn(Optional.of(root));
         when(categories.findById(child.id())).thenReturn(Optional.of(child));
 
-        assertThatThrownBy(() -> new UpdateCategoryService(categories, authorization, events)
+        assertThatThrownBy(() -> new UpdateCategoryService(categoryCommands(), authorization, events)
             .update(context, root.id(), new CategoryChange("Root", child.id(), null, 0, false)))
             .isInstanceOf(ApplicationException.class).hasMessage("Invalid parentId.");
         verify(categories, never()).save(any());
@@ -77,8 +82,7 @@ class CategoryCommandsTest {
         Category category = new Category(UUID.randomUUID(), null, "Root", "root", "/root/", 0, null, 0, false);
         when(categories.findById(category.id())).thenReturn(Optional.of(category));
         when(products.countByCategoryId(category.id())).thenReturn(2L);
-        DeleteCategoryService service = new DeleteCategoryService(categories, products, authorization, events,
-            new CategoryHierarchyPolicy());
+        DeleteCategoryService service = new DeleteCategoryService(categoryCommands(), authorization, events);
 
         assertThatThrownBy(() -> service.delete(context, category.id()))
             .isInstanceOf(ApplicationException.class).hasMessageContaining("productCount=2");
@@ -95,7 +99,7 @@ class CategoryCommandsTest {
         Category category = new Category(UUID.randomUUID(), null, "Root", "root", "/root/", 0, null, 0, false);
         when(categories.findById(category.id())).thenReturn(Optional.of(category));
 
-        new DeleteCategoryService(categories, products, authorization, events, new CategoryHierarchyPolicy())
+        new DeleteCategoryService(categoryCommands(), authorization, events)
             .delete(context, category.id());
 
         verify(categories).deleteById(category.id());

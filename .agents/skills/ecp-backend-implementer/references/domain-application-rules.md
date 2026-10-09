@@ -168,6 +168,18 @@ return application result
 
 It owns orchestration, not core invariant logic.
 
+Application packages are organized as
+`application/<use-case>/<command|query>/`, never by module-wide technical
+categories. A command use case must load the authoritative Domain Model and
+invoke the domain operation that enforces the transition. Input validation and
+orchestration may happen in Application, but they cannot replace that
+constraint.
+
+For a query use case, put its port, query contract, and returned read model in
+`application/<use-case>/query`; its technical adapter belongs in
+Infrastructure. Queries are observational and do not pass through Domain Model
+constraints merely to satisfy a uniform flow.
+
 ---
 
 ## 10. Transaction Ownership

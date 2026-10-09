@@ -83,6 +83,19 @@ class ArchitectureTests {
     }
 
     @Test
+    void catalogCommandsDelegateAggregatePersistenceToTheDomainModel() {
+        // Mirrors the Inventory command boundary: Catalog command persistence must be reached
+        // through a constraint-bearing domain operation, never a repository port.
+        ArchRule rule = noClasses()
+            .that().resideInAPackage("org.phuchoang.ecp.catalog.internal.application..command..")
+            .should().dependOnClassesThat().resideInAPackage(
+                "org.phuchoang.ecp.catalog.internal.domain.repository..")
+            .because("Catalog command use cases must invoke constraint-bearing domain behavior rather than access "
+                + "aggregate repositories directly");
+        rule.check(mainClasses);
+    }
+
+    @Test
     void infrastructureDoesNotDependOnItsOwnApi() {
         for (String module : MODULES) {
             if (module.equals("identity")) {

@@ -52,6 +52,11 @@ outbox record
 
 must follow the documented transactional semantics.
 
+Every command decision that permits or rejects a business state transition must
+be made by the authoritative Domain Model constraint. Application pre-checks,
+database constraints, caches, and projections may provide complementary
+validation or protection but cannot replace the aggregate/domain policy.
+
 ---
 
 ## 3. Query Side
@@ -70,6 +75,11 @@ authoritative SQL
 may be appropriate.
 
 Do not reconstruct aggregates if no domain behavior is being executed.
+
+Define each query port, query contract, and returned read model in the owning
+`application/<use-case>/query` package. Implement the port in Infrastructure
+with the appropriate read-store adapter. Query processing is observational and
+does not execute Domain Model constraints.
 
 ---
 

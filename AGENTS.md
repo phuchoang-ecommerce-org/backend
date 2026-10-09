@@ -35,9 +35,3 @@ Follow the established Conventional Commit style: `feat:`, `feat(backend):`, `bu
 ## Configuration & Database Changes
 
 Keep secrets out of `application.yml`. Add immutable Flyway migrations using the existing `VyyyyMMddHHmm__module_description.sql` pattern; do not edit an applied migration.
-
-## Addition Commands
-
-```sh
-python3.14 * # the aterisk stands for files or commands that you want to use. Don't use default Python environment of MacOS
-```

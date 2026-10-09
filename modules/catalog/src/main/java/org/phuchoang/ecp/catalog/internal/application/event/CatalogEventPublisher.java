@@ -1,6 +1,6 @@
 package org.phuchoang.ecp.catalog.internal.application.event;
 
-import org.phuchoang.ecp.catalog.internal.application.administration.CatalogCommandContext;
+import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogCommandContext;
 import org.phuchoang.ecp.catalog.internal.domain.event.CatalogDomainEvent;
 
 /**

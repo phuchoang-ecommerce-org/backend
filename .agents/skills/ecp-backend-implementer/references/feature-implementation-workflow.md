@@ -9,6 +9,22 @@ This document defines the operational workflow an agent should follow when imple
 
 ---
 
+## 0. Phase 0 — Write the Test First
+
+Before production implementation, write and run the smallest focused test that
+would prove the requested behavior. It must fail because the behavior or
+architecture is absent, not because the fixture is broken.
+
+- For a command, start with the Domain Model invariant/transition test, then
+  add application orchestration coverage when needed.
+- For a query, start with a query-port/Infrastructure-adapter test covering the
+  read contract.
+- Add a structural test when package/layer placement is itself a requirement.
+
+Only then implement enough production code to make the test pass.
+
+---
+
 ## 1. Phase 1 — Understand the Feature
 
 Translate the request into business intent.
@@ -177,6 +193,9 @@ returned result
 ```
 
 Do not put invariant logic here if the invariant belongs to the aggregate.
+Every command must invoke the authoritative Domain Model operation that accepts
+or rejects the business transition; an application pre-check is never the
+final enforcement point.
 
 ---
 
@@ -206,6 +225,11 @@ projection mapping
 ```
 
 Use the persistence mechanism selected by ECP's architecture rather than choosing technology locally.
+
+Place the query port and read contract in
+`application/<use-case>/query`; implement that port with an Infrastructure
+adapter. A query does not load an aggregate or execute Domain Model constraints
+unless an explicit authoritative aggregate read is required.
 
 ---
 

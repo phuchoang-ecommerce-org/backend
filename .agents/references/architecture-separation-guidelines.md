@@ -25,6 +25,9 @@ Application may depend on Domain, but not on a technology implementation.
 Infrastructure implements capabilities defined inward. Web/API adapts transport
 to Application contracts and must not access Infrastructure directly.
 
+This is a strict Clean Architecture rule. An existing dependency in the wrong
+direction is technical debt to remove, not an allowable template for new code.
+
 ## Ownership and Placement
 
 Before adding or moving a `class`, `record`, `enum`, or interface, identify its
@@ -64,16 +67,30 @@ use case, ports, and query models. Organize it by capability/use case, not by
 generic technical categories such as `services`, `dtos`, `commands`, `models`,
 or `utils`.
 
-For example, a product capability may contain separate `create`, `detail`, and
-`listing` packages. Keep each command, query, result, and read model next to
-the use case that owns it. Broaden a type only when its semantics are truly
-broader.
+Use a two-level package structure: first the business use case, then its CQRS
+technical role. For example:
+
+```text
+application/
+  create/command/
+  update/command/
+  browse/query/
+  detail/query/
+```
+
+Keep each command, query, result, port, and read model with the use case that
+owns it. Do not create module-wide `application/commands`,
+`application/queries`, `application/services`, `application/dtos`, or
+`application/models` packages. Broaden a type only when its semantics are
+truly broader.
 
 Ports express a required capability, not a mechanism. An aggregate repository
 can be an Application or Domain port when its language is aggregate-oriented;
-a read port can return an Application-owned read model. Application must not
-construct SQL, use JPA/JDBC/Redis/Kafka APIs, or depend on an adapter class.
-It invokes Domain behavior rather than duplicating domain invariants.
+a query port belongs in the owning Application `<use-case>/query` package and
+returns an Application-owned read model. Its adapter belongs in Infrastructure.
+Application must not construct SQL, use JPA/JDBC/Redis/Kafka APIs, or depend on
+an adapter class. It invokes Domain behavior rather than duplicating domain
+invariants.
 
 ## Infrastructure
 
@@ -108,11 +125,13 @@ same semantics.
 
 ## CQRS and Boundary Mapping
 
-Command paths normally use an Application command, Domain aggregate behavior,
-and a persistence port/adapter because authoritative state transitions require
-invariants. Read-heavy query paths may use an Application query port and an
-optimized Infrastructure query adapter that returns an Application-owned read
-model. Do not reconstruct an aggregate solely to serve a projection/listing.
+Every command path uses an Application command, the authoritative Domain Model
+behavior that enforces the business constraint, and a persistence port/adapter.
+Application-level checks can improve feedback but cannot be the final authority
+for a state transition. Read-heavy query paths use an Application query port
+and an optimized Infrastructure query adapter returning an Application-owned
+read model. Queries are observational: do not send them through Domain Model
+constraints or reconstruct an aggregate solely to serve a projection/listing.
 
 For every cross-layer boundary, state the required mapping explicitly:
 

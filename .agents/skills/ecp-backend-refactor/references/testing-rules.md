@@ -2,6 +2,15 @@
 
 Refactoring is complete only when structural and behavioral verification passes.
 
+## Test-first rule
+
+Before changing production code, write and run the smallest focused test that
+captures the behavior or architecture to preserve. Use a domain-invariant test
+for command constraints, a query-port/adapter test for read behavior, and an
+architecture test for placement or dependency corrections. If the target rule
+is absent, the new test must initially fail for that rule; do not manufacture a
+failure by breaking a fixture.
+
 ## Minimum verification sequence
 
 Run the narrowest relevant checks during each migration step, then the broader suite before completion.

@@ -1,7 +1,7 @@
 ---
 name: ecp-backend-implementer
 description: Architecture-aware implementing protocol for the ECP Java/Spring modular monolith. Use when analyzing or implementing existing backend code while preserving business invariants, module boundaries, CQRS semantics, transaction boundaries, integration contracts, security guarantees, and operational behavior.
-version: 1.1.0
+version: 1.2.0
 ---
 # ECP Backend Feature Implementation Skill
 
@@ -93,7 +93,7 @@ references/document-authority.md
 references/backend-architecture-map.md
 references/feature-implementation-workflow.md
 references/domain-application-rules.md
-references/cqrs-persistence-rules.md
+references/cqrs-persistance-rules.md
 references/integration-security-rules.md
 references/verification-checklist.md
 ../../references/architecture-separation-guidelines.md
@@ -106,6 +106,26 @@ Determine which architectural dimensions are relevant to the requested feature a
 Always load `../../references/architecture-separation-guidelines.md` before
 designing changed production types or package placement. It is the canonical
 rule for semantic ownership and layer separation.
+
+## 2.1 Non-Negotiable Development Gates
+
+Apply Clean Architecture strictly. Dependencies point inward: Web/API and
+Infrastructure adapt Application contracts; Application depends on Domain;
+Domain depends on none of those outer layers. Do not make an exception because
+an existing implementation has the desired technical dependency.
+
+Use test-first development for every behavior or structural correction:
+
+1. write the smallest focused test that expresses the required behavior or
+   architectural boundary;
+2. run it and confirm it fails for the intended missing behavior/structure;
+3. implement only enough production code to make it pass;
+4. refactor with the relevant tests remaining green.
+
+For a query adapter, the first test is normally an adapter/integration test of
+the query contract. For a command, start with a domain-invariant test before
+the application orchestration test. Do not write or rewrite a test merely to
+match an implementation choice.
 
 ---
 
@@ -353,17 +373,34 @@ persistence/infrastructure
 
 Do not allow implementation convenience to collapse these responsibilities.
 
-Organize application code around cohesive capabilities/use cases, not generic
-`services`, `dtos`, `models`, or `utils` packages. Keep technology-specific
-models in their adapters and HTTP/OpenAPI models in Web/API. A type used only
-by one implementation should remain private/local unless it acquires an
-independent responsibility.
+Organize Application code first by use case, then by technical CQRS role. The
+required shape is `application/<use-case>/<command|query>/`, for example:
+
+```text
+application/
+  create/
+    command/
+      CreateProductCommand.java
+      CreateProductUseCase.java
+  browse/
+    query/
+      BrowseProductsQuery.java
+      BrowseProductsPort.java
+      ProductBrowseView.java
+```
+
+Do not use module-wide `application/commands`, `application/queries`,
+`services`, `dtos`, `models`, or `utils` packages. Keep a use case's command,
+query, port, result, and mapper with that use case. Keep technology-specific
+models in adapters and HTTP/OpenAPI models in Web/API. A type used only by one
+implementation should remain private/local unless it acquires an independent
+responsibility.
 
 ---
 
 ## 11. Command Implementation Default
 
-For authoritative business mutation:
+For every command that changes business state:
 
 ```text
 HTTP / caller
@@ -374,9 +411,7 @@ Command / application use case
     ↓
 Load aggregate
     ↓
-Execute aggregate behavior
-    ↓
-Check invariant
+Execute aggregate behavior that enforces its constraints
     ↓
 Persist aggregate
     +
@@ -385,7 +420,12 @@ Persist outbox event
 Commit
 ```
 
-The exact path may vary according to the documented feature, but authoritative state must preserve the intended consistency boundary.
+The application use case may validate input shape and orchestrate dependencies,
+but it must not be the final authority for a business transition. The command
+must load the authoritative Domain Model and invoke its behavior; that model
+must accept or reject the transition according to its constraints. Neither a
+controller, application pre-check, database predicate, cache, nor projection
+may substitute for this Domain Model constraint.
 
 ---
 
@@ -396,18 +436,23 @@ For reads:
 ```text
 HTTP / caller
     ↓
-Query entry point
+Application query use case
     ↓
-Query service
+Application query port
     ↓
-JDBC / projection / approved read store
+Infrastructure query adapter (JDBC / projection / approved read store)
     ↓
 Read model
     ↓
 Response
 ```
 
-Do not reconstruct aggregates merely to answer read-only questions unless the architecture explicitly requires authoritative aggregate reads.
+The port and returned read model belong in the Application use-case query
+package; the adapter and all JDBC/JPA/read-store details belong in
+Infrastructure. Query execution is observational and does not traverse the
+Domain Model merely to apply domain constraints. Do not reconstruct aggregates
+to answer read-only questions unless an explicitly documented authoritative
+aggregate read requires it.
 
 ---
 

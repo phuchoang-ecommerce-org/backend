@@ -1,6 +1,6 @@
 package org.phuchoang.ecp.catalog.internal.infrastructure.event.outbox;
 
-import org.phuchoang.ecp.catalog.internal.application.administration.CatalogCommandContext;
+import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogCommandContext;
 import org.phuchoang.ecp.catalog.internal.application.event.CatalogEventPublisher;
 import org.phuchoang.ecp.catalog.internal.domain.event.CatalogDomainEvent;
 import org.phuchoang.ecp.catalog.internal.domain.event.CategoryChanged;

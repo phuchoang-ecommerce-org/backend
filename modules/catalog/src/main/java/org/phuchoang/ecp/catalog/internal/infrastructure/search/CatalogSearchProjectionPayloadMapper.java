@@ -1,6 +1,6 @@
 package org.phuchoang.ecp.catalog.internal.infrastructure.search;
 
-import org.phuchoang.ecp.catalog.internal.application.search.SearchProjectionEvent;
+import org.phuchoang.ecp.catalog.internal.application.search.projection.SearchProjectionEvent;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.JsonNode;
 

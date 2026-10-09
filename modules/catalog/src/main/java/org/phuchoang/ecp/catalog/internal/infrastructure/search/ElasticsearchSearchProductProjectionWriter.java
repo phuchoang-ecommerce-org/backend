@@ -2,9 +2,9 @@ package org.phuchoang.ecp.catalog.internal.infrastructure.search;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.JsonData;
-import org.phuchoang.ecp.catalog.internal.application.search.SearchProjectionLagProbe;
-import org.phuchoang.ecp.catalog.internal.application.search.SearchProductProjectionWriter;
-import org.phuchoang.ecp.catalog.internal.application.search.SearchProjectionEvent;
+import org.phuchoang.ecp.catalog.internal.application.search.projection.SearchProjectionLagProbe;
+import org.phuchoang.ecp.catalog.internal.application.search.projection.SearchProductProjectionWriter;
+import org.phuchoang.ecp.catalog.internal.application.search.projection.SearchProjectionEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;

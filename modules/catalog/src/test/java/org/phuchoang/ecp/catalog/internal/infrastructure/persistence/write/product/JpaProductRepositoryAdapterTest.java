@@ -70,7 +70,7 @@ class JpaProductRepositoryAdapterTest {
                 Map.of(), null, true));
 
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> adapter(products).save(product))
-            .isInstanceOf(org.phuchoang.ecp.catalog.internal.domain.repository.DuplicateSkuException.class)
+            .isInstanceOf(org.phuchoang.ecp.catalog.internal.domain.error.DuplicateSkuException.class)
             .hasMessage("SKU 'MUG-001' is already in use or retired.");
     }
 

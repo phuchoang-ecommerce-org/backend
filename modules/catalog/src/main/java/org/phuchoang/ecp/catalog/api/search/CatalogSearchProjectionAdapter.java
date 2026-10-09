@@ -1,7 +1,7 @@
 package org.phuchoang.ecp.catalog.api.search;
 
-import org.phuchoang.ecp.catalog.internal.application.search.SearchProductProjectionWriter;
-import org.phuchoang.ecp.catalog.internal.application.search.SearchProjectionEvent;
+import org.phuchoang.ecp.catalog.internal.application.search.projection.SearchProductProjectionWriter;
+import org.phuchoang.ecp.catalog.internal.application.search.projection.SearchProjectionEvent;
 import org.springframework.stereotype.Component;
 
 /** Adapts Catalog's public event-consumer contract to its internal projection application flow. */

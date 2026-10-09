@@ -1,15 +1,15 @@
-package org.phuchoang.ecp.catalog.internal.application.browse;
+package org.phuchoang.ecp.catalog.internal.application.browse.query;
 
 import org.junit.jupiter.api.Test;
-import org.phuchoang.ecp.catalog.internal.application.browse.category.CategoryBrowsePort;
-import org.phuchoang.ecp.catalog.internal.application.browse.product.ProductDetailPort;
-import org.phuchoang.ecp.catalog.internal.application.browse.categoryproduct.ProductListingPort;
-import org.phuchoang.ecp.catalog.internal.application.browse.categoryproduct.CategoryProductListingService;
-import org.phuchoang.ecp.catalog.internal.application.browse.categoryproduct.ProductListingQuery;
-import org.phuchoang.ecp.catalog.internal.application.browse.product.ProductDetail;
-import org.phuchoang.ecp.catalog.internal.application.browse.product.ProductDetailsQueryService;
-import org.phuchoang.ecp.catalog.internal.application.browse.categoryproduct.ProductPage;
-import org.phuchoang.ecp.catalog.internal.application.browse.product.RatingSummary;
+import org.phuchoang.ecp.catalog.internal.application.browse.query.category.CategoryBrowsePort;
+import org.phuchoang.ecp.catalog.internal.application.browse.query.product.ProductDetailPort;
+import org.phuchoang.ecp.catalog.internal.application.browse.query.categoryproduct.ProductListingPort;
+import org.phuchoang.ecp.catalog.internal.application.browse.query.categoryproduct.CategoryProductListingService;
+import org.phuchoang.ecp.catalog.internal.application.browse.query.categoryproduct.ProductListingQuery;
+import org.phuchoang.ecp.catalog.internal.application.browse.query.product.ProductDetail;
+import org.phuchoang.ecp.catalog.internal.application.browse.query.product.ProductDetailsQueryService;
+import org.phuchoang.ecp.catalog.internal.application.browse.query.categoryproduct.ProductPage;
+import org.phuchoang.ecp.catalog.internal.application.browse.query.product.RatingSummary;
 import org.phuchoang.ecp.catalog.internal.application.cache.CacheAside;
 import org.phuchoang.ecp.catalog.internal.application.error.ApplicationException;
 

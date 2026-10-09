@@ -39,3 +39,17 @@ Do not refactor command completion into polling/waiting for Kafka projections. R
 ## CQRS-10 — Preserve consistency classification
 
 Do not move a zero-lag or correctness-critical decision onto an eventually consistent projection as a performance optimization.
+
+## CQRS-11 — Commands are constraint-bearing Domain Model operations
+
+Every command that changes business state must invoke the authoritative Domain
+Model behavior that decides whether its transition is valid. Application
+pre-checks, SQL predicates, caches, and projections are not substitutes for
+that constraint.
+
+## CQRS-12 — Query ports are Application contracts
+
+Place a query's port and read model in the owning
+`application/<use-case>/query` package, and its mechanism-specific adapter in
+Infrastructure. Queries are observational and must not route through Domain
+Model constraints merely for architectural symmetry.

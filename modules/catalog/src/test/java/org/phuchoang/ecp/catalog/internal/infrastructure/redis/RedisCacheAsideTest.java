@@ -2,9 +2,9 @@ package org.phuchoang.ecp.catalog.internal.infrastructure.redis;
 
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
-import org.phuchoang.ecp.catalog.internal.application.browse.category.CategoryNode;
-import org.phuchoang.ecp.catalog.internal.application.browse.categoryproduct.ProductPage;
-import org.phuchoang.ecp.catalog.internal.application.browse.product.ProductDetail;
+import org.phuchoang.ecp.catalog.internal.application.browse.query.category.CategoryNode;
+import org.phuchoang.ecp.catalog.internal.application.browse.query.categoryproduct.ProductPage;
+import org.phuchoang.ecp.catalog.internal.application.browse.query.product.ProductDetail;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import tools.jackson.databind.json.JsonMapper;

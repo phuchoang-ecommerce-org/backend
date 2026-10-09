@@ -5,8 +5,8 @@ import org.phuchoang.ecp.catalog.api.search.view.SearchFacetView;
 import org.phuchoang.ecp.catalog.api.search.view.SearchResultPageView;
 import org.phuchoang.ecp.catalog.api.view.common.MoneyView;
 import org.phuchoang.ecp.catalog.api.view.product.ProductSummaryView;
-import org.phuchoang.ecp.catalog.internal.application.search.SearchProduct;
-import org.phuchoang.ecp.catalog.internal.application.search.SearchProductPage;
+import org.phuchoang.ecp.catalog.internal.application.search.query.SearchProduct;
+import org.phuchoang.ecp.catalog.internal.application.search.query.SearchProductPage;
 
 /** Translation between Catalog's public search contract and its internal query read model. */
 final class CatalogSearchMapper {
@@ -14,8 +14,8 @@ final class CatalogSearchMapper {
     private CatalogSearchMapper() {
     }
 
-    static org.phuchoang.ecp.catalog.internal.application.search.SearchProductsQuery query(SearchProductsQuery source) {
-        return new org.phuchoang.ecp.catalog.internal.application.search.SearchProductsQuery(source.keyword(), source.cursor(),
+    static org.phuchoang.ecp.catalog.internal.application.search.query.SearchProductsQuery query(SearchProductsQuery source) {
+        return new org.phuchoang.ecp.catalog.internal.application.search.query.SearchProductsQuery(source.keyword(), source.cursor(),
             source.size(), source.sort(), source.categoryId(), source.brands(), source.attributes(), source.priceFrom(),
             source.priceTo(), source.inStock());
     }

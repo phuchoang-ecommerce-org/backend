@@ -2,7 +2,7 @@ package org.phuchoang.ecp.catalog.internal.infrastructure.event.outbox;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.phuchoang.ecp.catalog.internal.application.administration.CatalogCommandContext;
+import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogCommandContext;
 import org.phuchoang.ecp.catalog.internal.domain.event.CategoryChanged;
 import org.phuchoang.ecp.catalog.internal.domain.event.ProductCreated;
 import org.phuchoang.ecp.catalog.internal.domain.model.Category;

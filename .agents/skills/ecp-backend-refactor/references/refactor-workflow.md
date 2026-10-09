@@ -18,6 +18,11 @@ Collect:
 
 Do not modify code during discovery.
 
+Before the first production change, add and run focused characterization,
+invariant, contract, or architecture tests. A missing target boundary should be
+captured by an initially failing structural test. Preserve existing tests as
+behavioral evidence rather than rewriting them around the new structure.
+
 ## 2. CLASSIFY
 
 Classify every relevant component by:
@@ -66,6 +71,12 @@ For each moved responsibility, state:
 Keep use-case models with their owning capability, adapter representations in
 Infrastructure, and HTTP contracts in Web/API. Do not turn structural
 similarity into a shared abstraction or move a type outward merely for reuse.
+
+Target Application packages as `application/<use-case>/<command|query>/`.
+Commands must route through the authoritative Domain Model operation that
+enforces constraints. Query ports/read models belong in the Application use
+case's `query` package; their technical adapters belong in Infrastructure and
+do not execute Domain Model constraints.
 
 Prefer the smallest design that restores correct responsibility ownership.
 

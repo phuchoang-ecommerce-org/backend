@@ -1,7 +1,7 @@
 package org.phuchoang.ecp.catalog.internal.infrastructure.persistence.write.product;
 
 import org.phuchoang.ecp.catalog.internal.domain.model.Product;
-import org.phuchoang.ecp.catalog.internal.domain.repository.DuplicateSkuException;
+import org.phuchoang.ecp.catalog.internal.domain.error.DuplicateSkuException;
 import org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;

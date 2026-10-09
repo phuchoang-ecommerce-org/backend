@@ -1,7 +1,7 @@
 package org.phuchoang.ecp.catalog.internal.infrastructure.persistence.browse.listing;
 
 import org.junit.jupiter.api.Test;
-import org.phuchoang.ecp.catalog.internal.application.browse.categoryproduct.ProductListingQuery;
+import org.phuchoang.ecp.catalog.internal.application.browse.query.categoryproduct.ProductListingQuery;
 import org.phuchoang.ecp.catalog.internal.infrastructure.persistence.browse.listing.ProductListingCursorCodec.SeekPosition;
 import org.phuchoang.ecp.catalog.internal.infrastructure.persistence.browse.listing.ProductListingSqlBuilder.ListingSql;
 import org.phuchoang.ecp.catalog.internal.application.pagination.CursorValue;

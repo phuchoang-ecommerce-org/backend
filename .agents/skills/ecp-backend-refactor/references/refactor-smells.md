@@ -145,3 +145,15 @@ Symptom: application service accumulates unrelated public methods and becomes a 
 Risk: change impact and testing scope expand continuously.
 
 Preferred correction: organize around use cases/capabilities with explicit command/query contracts.
+
+## R19 — Technical-First Application Packaging
+
+Symptom: module-wide `commands`, `queries`, `services`, `dtos`, or `models`
+packages hide the use case that owns a type.
+
+Risk: unrelated workflows couple accidentally and command/query responsibilities
+become difficult to locate.
+
+Preferred correction: place code under
+`application/<use-case>/<command|query>/`; retain query ports/read models in
+the Application query package and their technical adapters in Infrastructure.

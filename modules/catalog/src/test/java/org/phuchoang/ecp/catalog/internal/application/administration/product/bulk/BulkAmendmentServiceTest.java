@@ -1,9 +1,9 @@
-package org.phuchoang.ecp.catalog.internal.application.administration.product.bulk;
+package org.phuchoang.ecp.catalog.internal.application.administration.command.product.bulk;
 
-import org.phuchoang.ecp.catalog.internal.application.administration.product.update.ProductChange;
-import org.phuchoang.ecp.catalog.internal.application.administration.product.update.UpdateProductService;
+import org.phuchoang.ecp.catalog.internal.application.administration.command.product.update.ProductChange;
+import org.phuchoang.ecp.catalog.internal.application.administration.command.product.update.UpdateProductService;
 import org.junit.jupiter.api.Test;
-import org.phuchoang.ecp.catalog.internal.application.administration.CatalogCommandContext;
+import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogCommandContext;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
 import org.phuchoang.ecp.catalog.internal.application.error.ApplicationErrorCode;
