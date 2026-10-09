@@ -66,6 +66,22 @@ public class GlobalExceptionHandler {
             exception.getMessage(), request, List.of());
     }
 
+    @ExceptionHandler(org.phuchoang.ecp.cart.api.CartQuantityExceededException.class)
+    public ResponseEntity<Problem> handleCartQuantity(org.phuchoang.ecp.cart.api.CartQuantityExceededException exception,
+            HttpServletRequest request) {
+        return problemResponse(exception.errorCode().code(), exception.errorCode().title(), exception.errorCode().httpStatus(),
+            exception.getMessage(), request, List.of());
+    }
+
+    @ExceptionHandler({org.phuchoang.ecp.cart.api.CartNotFoundException.class,
+        org.phuchoang.ecp.cart.api.CartVariantUnavailableException.class})
+    public ResponseEntity<Problem> handleCartLookup(RuntimeException exception, HttpServletRequest request) {
+        int status = exception instanceof org.phuchoang.ecp.cart.api.CartVariantUnavailableException ? 422 : GenErrorCode.NOT_FOUND.httpStatus();
+        String title = exception instanceof org.phuchoang.ecp.cart.api.CartVariantUnavailableException ? "Variant is not purchasable" : GenErrorCode.NOT_FOUND.title();
+        String code = exception instanceof org.phuchoang.ecp.cart.api.CartVariantUnavailableException ? "ECP-CRT-4220" : GenErrorCode.NOT_FOUND.code();
+        return problemResponse(code, title, status, exception.getMessage(), request, List.of());
+    }
+
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<Problem> handleValidation(ValidationException exception, HttpServletRequest request) {
         return problemResponse(GenErrorCode.VALIDATION_FAILED.code(), GenErrorCode.VALIDATION_FAILED.title(),

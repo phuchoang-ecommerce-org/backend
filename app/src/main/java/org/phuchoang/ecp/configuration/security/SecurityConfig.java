@@ -32,6 +32,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, ApiRoutes.OPERATIONAL_GET).permitAll()
                 .requestMatchers(HttpMethod.POST, ApiRoutes.PUBLIC_POST).permitAll()
                 .requestMatchers(HttpMethod.GET, ApiRoutes.PUBLIC_GET).permitAll()
+                .requestMatchers(ApiRoutes.PUBLIC_CART).permitAll()
                 .anyRequest().authenticated())
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
         return http.build();

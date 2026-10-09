@@ -9,6 +9,7 @@ import org.phuchoang.ecp.catalog.internal.application.productpricing.MoneyValue;
 import org.phuchoang.ecp.catalog.internal.application.browse.query.product.ProductDetail;
 import org.phuchoang.ecp.catalog.internal.application.browse.query.product.ProductImage;
 import org.phuchoang.ecp.catalog.internal.application.browse.query.variant.VariantDetail;
+import org.phuchoang.ecp.catalog.internal.application.cart.query.CartVariantQuery;
 import org.phuchoang.ecp.catalog.internal.infrastructure.persistence.JdbcQuerySupport;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
@@ -24,7 +25,7 @@ import java.util.UUID;
 
 /** Catalog-owned published-product, image, and variant queries. */
 @Component
-class CatalogProductQueries extends JdbcQuerySupport implements ProductDetailPort, VariantBrowsePort {
+class CatalogProductQueries extends JdbcQuerySupport implements ProductDetailPort, VariantBrowsePort, CartVariantQuery {
 
   private static final TypeReference<Map<String, String>> STRING_MAP = new TypeReference<>() {
   };
@@ -81,6 +82,22 @@ class CatalogProductQueries extends JdbcQuerySupport implements ProductDetailPor
         SELECT id, sku, name, list_price_amount, list_price_currency, options, weight_grams, is_active, advisory_in_stock
         FROM catalog_variant WHERE product_id = ? AND id = ?
         """).params(productId, variantId).query(this::variantRow).optional();
+  }
+
+  @Override
+  public Optional<CurrentVariant> find(UUID variantId) {
+    return jdbc.sql("""
+        SELECT v.id, v.product_id, v.sku, p.name AS product_name, v.name AS variant_name,
+               v.list_price_amount, v.list_price_currency,
+               (p.publication_status = 'PUBLISHED' AND v.is_active) AS purchasable,
+               CASE WHEN v.advisory_in_stock IS FALSE THEN 0 ELSE NULL END AS available_quantity
+        FROM catalog_variant v JOIN catalog_product p ON p.id = v.product_id
+        WHERE v.id = ?
+        """).param(variantId).query((rs, ignored) -> new CurrentVariant(
+            rs.getObject("id", UUID.class), rs.getObject("product_id", UUID.class), rs.getString("sku"),
+            rs.getString("product_name"), rs.getString("variant_name"),
+            new MoneyValue(rs.getBigDecimal("list_price_amount"), rs.getString("list_price_currency")),
+            rs.getBoolean("purchasable"), rs.getObject("available_quantity", Integer.class))).optional();
   }
 
   private ProductDetailRow productDetailRow(ResultSet rs, int ignored) throws SQLException {

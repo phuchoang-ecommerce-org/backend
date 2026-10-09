@@ -33,6 +33,9 @@ final class ApiRoutes {
         "/api/v1/search/products"
     };
 
+    /** Guest carts authenticate by their HttpOnly opaque cookie; ownership is enforced by Cart. */
+    static final String[] PUBLIC_CART = { "/api/v1/carts/current", "/api/v1/carts/*", "/api/v1/carts/*/lines", "/api/v1/carts/*/lines/*" };
+
     private ApiRoutes() {
     }
 }
