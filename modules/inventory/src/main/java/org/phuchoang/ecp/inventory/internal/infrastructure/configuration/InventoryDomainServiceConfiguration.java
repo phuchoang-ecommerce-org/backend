@@ -1,5 +1,6 @@
 package org.phuchoang.ecp.inventory.internal.infrastructure.configuration;
 
+import org.phuchoang.ecp.inventory.internal.domain.service.AdjustStockDomainService;
 import org.phuchoang.ecp.inventory.internal.domain.service.CommitStockReservationDomainService;
 import org.phuchoang.ecp.inventory.internal.domain.service.ReleaseStockReservationDomainService;
 import org.phuchoang.ecp.inventory.internal.domain.service.ReservationRetryPolicy;
@@ -23,6 +24,11 @@ public class InventoryDomainServiceConfiguration {
     @Bean
     ReserveStockDomainService reserveStockDomainService(StockItemRepository stockItems) {
         return new ReserveStockDomainService(stockItems);
+    }
+
+    @Bean
+    AdjustStockDomainService adjustStockDomainService(StockItemRepository stockItems, Clock clock) {
+        return new AdjustStockDomainService(stockItems, clock);
     }
 
     @Bean

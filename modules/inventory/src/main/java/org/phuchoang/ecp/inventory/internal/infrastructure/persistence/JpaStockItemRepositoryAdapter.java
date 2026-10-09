@@ -1,6 +1,8 @@
 package org.phuchoang.ecp.inventory.internal.infrastructure.persistence;
 
+import jakarta.persistence.EntityManager;
 import org.phuchoang.ecp.inventory.internal.domain.model.ReservationStatus;
+import org.phuchoang.ecp.inventory.internal.domain.model.StockAdjustment;
 import org.phuchoang.ecp.inventory.internal.domain.model.StockItem;
 import org.phuchoang.ecp.inventory.internal.domain.model.StockReservation;
 import org.phuchoang.ecp.inventory.internal.domain.repository.StockItemRepository;
@@ -21,10 +23,12 @@ import java.util.stream.Collectors;
 class JpaStockItemRepositoryAdapter implements StockItemRepository {
 
     private final InventoryStockItemJpaRepository stockItems;
+    private final EntityManager entityManager;
     private final Clock clock;
 
-    JpaStockItemRepositoryAdapter(InventoryStockItemJpaRepository stockItems, Clock clock) {
+    JpaStockItemRepositoryAdapter(InventoryStockItemJpaRepository stockItems, EntityManager entityManager, Clock clock) {
         this.stockItems = stockItems;
+        this.entityManager = entityManager;
         this.clock = clock;
     }
 
@@ -45,6 +49,20 @@ class JpaStockItemRepositoryAdapter implements StockItemRepository {
 
     @Override
     public void saveAll(Collection<StockItem> aggregates) {
+        synchronize(aggregates);
+        // Surface an optimistic-lock conflict inside the attempt transaction so the caller can retry it.
+        stockItems.flush();
+    }
+
+    @Override
+    public void save(StockItem.Adjustment adjustment) {
+        synchronize(List.of(adjustment.stockItem()));
+        entityManager.persist(toEntity(adjustment.stockAdjustment()));
+        // The root update and its immutable child must conflict or commit together.
+        stockItems.flush();
+    }
+
+    private void synchronize(Collection<StockItem> aggregates) {
         Map<UUID, InventoryStockItemEntity> existing = stockItems.findAllByIdIn(aggregates.stream().map(StockItem::id)
             .toList()).stream().collect(Collectors.toMap(InventoryStockItemEntity::id, Function.identity()));
         Instant now = clock.instant();
@@ -60,8 +78,6 @@ class JpaStockItemRepositoryAdapter implements StockItemRepository {
             return entity;
         }).toList();
         stockItems.saveAll(entities);
-        // Surface an optimistic-lock conflict inside the attempt transaction so the caller can retry it.
-        stockItems.flush();
     }
 
     private static StockItem toDomain(InventoryStockItemEntity entity) {
@@ -81,5 +97,10 @@ class JpaStockItemRepositoryAdapter implements StockItemRepository {
         return new InventoryStockReservationEntity(reservation.id(), reservation.orderId(), reservation.orderLineId(),
             reservation.quantity(), reservation.status().name(), reservation.expiresAt(), reservation.resolvedAt(),
             reservation.orphanedAt(), createdAt, now);
+    }
+
+    private static InventoryStockAdjustmentEntity toEntity(StockAdjustment adjustment) {
+        return new InventoryStockAdjustmentEntity(adjustment.id(), adjustment.stockItemId(), adjustment.delta(),
+            adjustment.reasonCode(), adjustment.reason(), adjustment.actorId(), adjustment.occurredAt());
     }
 }

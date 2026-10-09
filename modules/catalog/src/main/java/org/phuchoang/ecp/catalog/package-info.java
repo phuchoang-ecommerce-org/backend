@@ -7,6 +7,6 @@
  */
 @org.springframework.modulith.ApplicationModule(
     type = org.springframework.modulith.ApplicationModule.Type.CLOSED,
-    allowedDependencies = { "identity::api" }
+    allowedDependencies = { "identity::api", "audit::api" }
 )
 package org.phuchoang.ecp.catalog;

@@ -4,6 +4,7 @@ plugins {
 
 dependencies {
     implementation(project(":identity"))
+    implementation(project(":audit"))
     implementation("org.springframework.modulith:spring-modulith-starter-core")
     implementation(libs.jmolecules.ddd)
     implementation(libs.jmolecules.events)

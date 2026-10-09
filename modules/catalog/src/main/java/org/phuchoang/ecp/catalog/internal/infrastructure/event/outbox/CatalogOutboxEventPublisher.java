@@ -14,10 +14,13 @@ import org.phuchoang.ecp.catalog.internal.domain.repository.CategoryRepository;
 import org.phuchoang.ecp.catalog.internal.application.event.EventMetadata;
 import org.phuchoang.ecp.catalog.internal.application.event.OutboxEvent;
 import org.phuchoang.ecp.catalog.internal.application.event.OutboxWriter;
+import org.phuchoang.ecp.audit.api.AuditRecord;
+import org.phuchoang.ecp.audit.api.AuditTrail;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 
 import java.time.Clock;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -36,14 +39,16 @@ public class CatalogOutboxEventPublisher implements CatalogEventPublisher {
     private final CatalogEventPayloadMapper payloads;
     private final ObjectMapper json;
     private final Clock clock;
+    private final AuditTrail audit;
 
     public CatalogOutboxEventPublisher(OutboxWriter outbox, CategoryRepository categories, ObjectMapper json,
-            Clock clock) {
+            Clock clock, AuditTrail audit) {
         this.outbox = outbox;
         this.categories = categories;
         this.payloads = new CatalogEventPayloadMapper();
         this.json = json;
         this.clock = clock;
+        this.audit = audit;
     }
 
     @Override
@@ -52,6 +57,11 @@ public class CatalogOutboxEventPublisher implements CatalogEventPublisher {
         EventMetadata metadata = new EventMetadata(UUID.randomUUID(), event.eventType(), EVENT_VERSION,
             clock.instant(), event.aggregateType(), event.aggregateId(), context.correlationId(), context.actor());
         outbox.append(new OutboxEvent(metadata, topic(event), serialize(payload)));
+        audit.record(new AuditRecord(metadata.eventId(), context.actor() == null ? null : context.actor().userId(),
+            context.actor() == null ? null : context.actor().role(), event.eventType(), event.aggregateType(),
+            event.aggregateId(), "catalog", Map.of(), Map.of("eventType", event.eventType()), null,
+            context.correlationId(), metadata.occurredAt(), context.actor() == null ? "catalog-command" : null,
+            context.actor() == null));
     }
 
     private static String topic(CatalogDomainEvent event) {

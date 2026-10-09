@@ -1,5 +1,7 @@
 package org.phuchoang.ecp.identity.internal.application.profile;
 
+import org.phuchoang.ecp.audit.api.AuditRecord;
+import org.phuchoang.ecp.audit.api.AuditTrail;
 import org.phuchoang.ecp.identity.internal.application.IdentityErrors;
 import org.phuchoang.ecp.identity.internal.application.port.DomainEventPublisher;
 import org.phuchoang.ecp.identity.internal.application.registration.VerificationTokenManager;
@@ -15,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Map;
+import java.util.UUID;
 
 /** `UC-CUS-08` — Manage Profile (`US-CUS-08`): {@code getOwnAccount}, {@code updateOwnProfile}. */
 @Service
@@ -25,14 +29,16 @@ public class ProfileUseCases {
     private final PermissionChecker permissions;
     private final DomainEventPublisher events;
     private final Clock clock;
+    private final AuditTrail audit;
 
     public ProfileUseCases(AccountRepository accounts, VerificationTokenManager verificationTokens,
-            PermissionChecker permissions, DomainEventPublisher events, Clock clock) {
+            PermissionChecker permissions, DomainEventPublisher events, Clock clock, AuditTrail audit) {
         this.accounts = accounts;
         this.verificationTokens = verificationTokens;
         this.permissions = permissions;
         this.events = events;
         this.clock = clock;
+        this.audit = audit;
     }
 
     @Transactional(readOnly = true)
@@ -47,6 +53,7 @@ public class ProfileUseCases {
         permissions.require(caller, PermissionMatrix.UPDATE_OWN_PROFILE);
 
         Account account = accounts.findById(caller.accountId()).orElseThrow(IdentityErrors::accountNotFound);
+        Map<String, Object> before = profile(account);
 
         // E2 — whole-or-nothing: validate every field before storing any of them.
         EmailAddress newEmail = requestedEmailChange(account, command.email());
@@ -67,6 +74,10 @@ public class ProfileUseCases {
             events.publishFrom(account);
         }
 
+        audit.record(new AuditRecord(UUID.randomUUID(), caller.accountId(), caller.roles().stream().map(Enum::name)
+            .sorted().findFirst().orElse(null), "updateOwnProfile", "account", account.id(), "identity", before,
+            profile(account), null, null, Instant.now(clock), null, false));
+
         return AccountSummary.of(account);
     }
 
@@ -84,5 +95,10 @@ public class ProfileUseCases {
             throw IdentityErrors.emailUnavailable();
         });
         return newEmail;
+    }
+
+    private static Map<String, Object> profile(Account account) {
+        return Map.of("email", account.email().value(), "displayName", account.displayName() == null ? "" : account.displayName(),
+            "pendingEmail", account.pendingEmail() == null ? "" : account.pendingEmail().value());
     }
 }

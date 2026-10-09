@@ -58,6 +58,14 @@ public class GlobalExceptionHandler {
             ordering.errorCode().httpStatus(), ordering.getMessage(), request, List.of());
     }
 
+    @ExceptionHandler(org.phuchoang.ecp.inventory.api.management.StockAdjustmentDeclinedException.class)
+    public ResponseEntity<Problem> handleInventoryAdjustment(
+            org.phuchoang.ecp.inventory.api.management.StockAdjustmentDeclinedException exception,
+            HttpServletRequest request) {
+        return problemResponse(exception.errorCode().code(), exception.errorCode().title(), exception.errorCode().httpStatus(),
+            exception.getMessage(), request, List.of());
+    }
+
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<Problem> handleValidation(ValidationException exception, HttpServletRequest request) {
         return problemResponse(GenErrorCode.VALIDATION_FAILED.code(), GenErrorCode.VALIDATION_FAILED.title(),

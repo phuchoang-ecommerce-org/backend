@@ -38,6 +38,23 @@ public record StockItem(
         return quantityOnHand - quantityReserved;
     }
 
+    /**
+     * Records a counted physical movement while preserving already-promised units (BR-INV-01).
+     * The resulting child fact is persisted only through this aggregate root.
+     */
+    public Adjustment adjust(StockAdjustment proposedAdjustment, UUID adjustmentId, Instant occurredAt) {
+        if (proposedAdjustment.recorded()) {
+            throw new IllegalArgumentException("StockItem can only record a proposed stock adjustment.");
+        }
+        int adjustedOnHand = quantityOnHand + proposedAdjustment.delta();
+        if (adjustedOnHand < quantityReserved) {
+            throw new InsufficientAvailableStockException(availableQuantity());
+        }
+        StockItem adjusted = new StockItem(id, sku, warehouseId, ownerId, adjustedOnHand, quantityReserved, version,
+            reservations);
+        return new Adjustment(adjusted, proposedAdjustment.recordFor(adjustmentId, id, occurredAt));
+    }
+
     public StockItem reserve(UUID reservationId, UUID orderId, UUID orderLineId, int quantity, Instant expiresAt) {
         if (quantity <= 0) {
             throw new IllegalArgumentException("Reservation quantity must be positive.");
@@ -88,6 +105,18 @@ public record StockItem(
     }
 
     public record Transition(StockItem stockItem, StockReservation reservation, TransitionOutcome outcome) { }
+
+    /** A root-owned state transition and its immutable movement child. */
+    public record Adjustment(StockItem stockItem, StockAdjustment stockAdjustment) {
+        public Adjustment {
+            if (!stockItem.id().equals(stockAdjustment.stockItemId())) {
+                throw new IllegalArgumentException("A stock adjustment must belong to its changed stock item.");
+            }
+            if (!stockAdjustment.recorded()) {
+                throw new IllegalArgumentException("Only a recorded stock adjustment can be persisted with a stock item.");
+            }
+        }
+    }
 
     public enum TransitionOutcome {
         RELEASED,

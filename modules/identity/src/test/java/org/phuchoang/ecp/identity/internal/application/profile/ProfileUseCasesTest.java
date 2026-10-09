@@ -1,6 +1,7 @@
 package org.phuchoang.ecp.identity.internal.application.profile;
 
 import org.junit.jupiter.api.Test;
+import org.phuchoang.ecp.audit.api.AuditTrail;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -30,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -51,7 +53,7 @@ class ProfileUseCasesTest {
 
     private ProfileUseCases useCases() {
         return new ProfileUseCases(accountRepository, new VerificationTokenManager(tokenStore, clock), permissions,
-            events, clock);
+            events, clock, mock(AuditTrail.class));
     }
 
     private CallerContext caller() {

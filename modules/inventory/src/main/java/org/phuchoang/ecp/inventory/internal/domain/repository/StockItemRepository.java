@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/** Aggregate-oriented persistence boundary for StockItem and its child reservations. */
+/** Aggregate-oriented write boundary for StockItem and all of its child entities. */
 @Repository
 public interface StockItemRepository {
 
@@ -19,4 +19,7 @@ public interface StockItemRepository {
     List<StockItem> findByOrderId(UUID orderId);
 
     void saveAll(Collection<StockItem> stockItems);
+
+    /** Persists a root-owned adjustment together with its changed StockItem. */
+    void save(StockItem.Adjustment adjustment);
 }

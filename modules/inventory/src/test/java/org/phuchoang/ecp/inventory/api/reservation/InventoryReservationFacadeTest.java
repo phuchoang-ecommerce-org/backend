@@ -2,16 +2,16 @@ package org.phuchoang.ecp.inventory.api.reservation;
 
 import org.junit.jupiter.api.Test;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
-import org.phuchoang.ecp.inventory.internal.application.command.reservation.commit.CommitStockReservationRequest;
-import org.phuchoang.ecp.inventory.internal.application.command.reservation.commit.CommitStockReservationResult;
-import org.phuchoang.ecp.inventory.internal.application.command.reservation.commit.CommitStockReservationService;
-import org.phuchoang.ecp.inventory.internal.application.command.reservation.release.ReleaseStockReservationRequest;
-import org.phuchoang.ecp.inventory.internal.application.command.reservation.release.ReleaseStockReservationResult;
-import org.phuchoang.ecp.inventory.internal.application.command.reservation.release.ReleaseStockReservationService;
-import org.phuchoang.ecp.inventory.internal.application.command.reservation.reserve.ReserveStockRequest;
-import org.phuchoang.ecp.inventory.internal.application.command.reservation.reserve.ReserveStockResult;
-import org.phuchoang.ecp.inventory.internal.application.command.reservation.reserve.ReserveStockService;
-import org.phuchoang.ecp.inventory.internal.application.command.reservation.reserve.ReservedStock;
+import org.phuchoang.ecp.inventory.internal.application.reservation.command.commit.CommitStockReservationRequest;
+import org.phuchoang.ecp.inventory.internal.application.reservation.command.commit.CommitStockReservationResult;
+import org.phuchoang.ecp.inventory.internal.application.reservation.command.commit.CommitStockReservationService;
+import org.phuchoang.ecp.inventory.internal.application.reservation.command.release.ReleaseStockReservationRequest;
+import org.phuchoang.ecp.inventory.internal.application.reservation.command.release.ReleaseStockReservationResult;
+import org.phuchoang.ecp.inventory.internal.application.reservation.command.release.ReleaseStockReservationService;
+import org.phuchoang.ecp.inventory.internal.application.reservation.command.reserve.ReserveStockRequest;
+import org.phuchoang.ecp.inventory.internal.application.reservation.command.reserve.ReserveStockResult;
+import org.phuchoang.ecp.inventory.internal.application.reservation.command.reserve.ReserveStockService;
+import org.phuchoang.ecp.inventory.internal.application.reservation.command.reserve.ReservedStock;
 
 import java.time.Instant;
 import java.util.List;
@@ -56,8 +56,8 @@ class InventoryReservationFacadeTest {
         InventoryReservationFacade facade = facade(reserve);
         UUID orderLineId = UUID.randomUUID();
         when(reserve.reserve(any())).thenThrow(
-            new org.phuchoang.ecp.inventory.internal.application.command.reservation.reserve.InsufficientStockException(List.of(
-                new org.phuchoang.ecp.inventory.internal.application.command.reservation.reserve.StockShortfall(
+            new org.phuchoang.ecp.inventory.internal.application.reservation.command.reserve.InsufficientStockException(List.of(
+                new org.phuchoang.ecp.inventory.internal.application.reservation.command.reserve.StockShortfall(
                     orderLineId, "SKU-1", 3, 1))));
 
         ReserveStockCommand command = new ReserveStockCommand(UUID.randomUUID(),

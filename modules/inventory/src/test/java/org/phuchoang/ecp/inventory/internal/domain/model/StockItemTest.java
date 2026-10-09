@@ -53,7 +53,36 @@ class StockItemTest {
             .isEqualTo(1);
     }
 
+    @Test
+    void adjustmentCannotWriteOffUnitsAlreadyReservedForOrders() {
+        StockItem held = stock(5).reserve(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), 3,
+            NOW.plusSeconds(300));
+
+        assertThatThrownBy(() -> held.adjust(draft(-3), UUID.randomUUID(), NOW))
+            .isInstanceOf(InsufficientAvailableStockException.class)
+            .extracting(error -> ((InsufficientAvailableStockException) error).availableQuantity())
+            .isEqualTo(2);
+    }
+
+    @Test
+    void adjustmentChangesOnHandWhileKeepingReservedUnitsUntouched() {
+        StockItem held = stock(5).reserve(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), 3,
+            NOW.plusSeconds(300));
+
+        StockItem.Adjustment adjustment = held.adjust(draft(4), UUID.randomUUID(), NOW);
+        StockItem adjusted = adjustment.stockItem();
+
+        assertThat(adjusted.quantityOnHand()).isEqualTo(9);
+        assertThat(adjusted.quantityReserved()).isEqualTo(3);
+        assertThat(adjusted.availableQuantity()).isEqualTo(6);
+        assertThat(adjustment.stockAdjustment().stockItemId()).isEqualTo(held.id());
+    }
+
     private static StockItem stock(int quantity) {
         return StockItem.open(UUID.randomUUID(), "SKU-1", UUID.randomUUID(), quantity);
+    }
+
+    private static StockAdjustment draft(int delta) {
+        return StockAdjustment.proposed(delta, "COUNT", "Cycle count", UUID.randomUUID());
     }
 }

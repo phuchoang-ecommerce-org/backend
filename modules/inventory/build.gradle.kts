@@ -4,6 +4,7 @@ plugins {
 
 dependencies {
     implementation(project(":identity"))
+    implementation(project(":audit"))
     implementation("org.springframework.modulith:spring-modulith-starter-core")
     implementation(libs.jmolecules.ddd)
     // ADR-0011: StockItem is the authoritative, optimistically locked write aggregate.

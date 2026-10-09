@@ -12,6 +12,7 @@ import org.phuchoang.ecp.catalog.internal.domain.repository.CategoryRepository;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.catalog.internal.application.event.OutboxEvent;
 import org.phuchoang.ecp.catalog.internal.application.event.OutboxWriter;
+import org.phuchoang.ecp.audit.api.AuditTrail;
 import tools.jackson.databind.ObjectMapper;
 
 import java.time.Clock;
@@ -33,8 +34,9 @@ class CatalogOutboxEventPublisherTest {
     private final Clock clock = Clock.fixed(Instant.parse("2026-09-18T10:00:00Z"), ZoneOffset.UTC);
     private final OutboxWriter outbox = mock(OutboxWriter.class);
     private final CategoryRepository categories = mock(CategoryRepository.class);
+    private final AuditTrail audit = mock(AuditTrail.class);
     private final CatalogOutboxEventPublisher publisher = new CatalogOutboxEventPublisher(outbox, categories,
-        new ObjectMapper(), clock);
+        new ObjectMapper(), clock, audit);
 
     @Test
     void productFactsGoToTheProductTopicWithTheSubtreeBeneathTheirCategory() {

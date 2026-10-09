@@ -3,9 +3,9 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":identity"))
     implementation("org.springframework.modulith:spring-modulith-starter-core")
-    implementation(libs.jmolecules.ddd)
+    implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
+    implementation("org.springframework.boot:spring-boot-starter-json")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.modulith:spring-modulith-starter-test")

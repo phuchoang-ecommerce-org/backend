@@ -1,16 +1,16 @@
 package org.phuchoang.ecp.inventory.api.reservation;
 
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
-import org.phuchoang.ecp.inventory.internal.application.command.reservation.commit.CommitStockReservationRequest;
-import org.phuchoang.ecp.inventory.internal.application.command.reservation.commit.CommitStockReservationResult;
-import org.phuchoang.ecp.inventory.internal.application.command.reservation.commit.CommitStockReservationService;
-import org.phuchoang.ecp.inventory.internal.application.command.reservation.release.ReleaseStockReservationRequest;
-import org.phuchoang.ecp.inventory.internal.application.command.reservation.release.ReleaseStockReservationResult;
-import org.phuchoang.ecp.inventory.internal.application.command.reservation.release.ReleaseStockReservationService;
-import org.phuchoang.ecp.inventory.internal.application.command.reservation.reserve.ReserveStockRequest;
-import org.phuchoang.ecp.inventory.internal.application.command.reservation.reserve.ReserveStockResult;
-import org.phuchoang.ecp.inventory.internal.application.command.reservation.reserve.ReserveStockService;
-import org.phuchoang.ecp.inventory.internal.application.command.reservation.reserve.ReservedStock;
+import org.phuchoang.ecp.inventory.internal.application.reservation.command.commit.CommitStockReservationRequest;
+import org.phuchoang.ecp.inventory.internal.application.reservation.command.commit.CommitStockReservationResult;
+import org.phuchoang.ecp.inventory.internal.application.reservation.command.commit.CommitStockReservationService;
+import org.phuchoang.ecp.inventory.internal.application.reservation.command.release.ReleaseStockReservationRequest;
+import org.phuchoang.ecp.inventory.internal.application.reservation.command.release.ReleaseStockReservationResult;
+import org.phuchoang.ecp.inventory.internal.application.reservation.command.release.ReleaseStockReservationService;
+import org.phuchoang.ecp.inventory.internal.application.reservation.command.reserve.ReserveStockRequest;
+import org.phuchoang.ecp.inventory.internal.application.reservation.command.reserve.ReserveStockResult;
+import org.phuchoang.ecp.inventory.internal.application.reservation.command.reserve.ReserveStockService;
+import org.phuchoang.ecp.inventory.internal.application.reservation.command.reserve.ReservedStock;
 import org.springframework.stereotype.Component;
 
 /**
@@ -36,12 +36,12 @@ public final class InventoryReservationFacade {
             ReserveStockResult result = reserveStock.reserve(toApplicationRequest(command));
             return new ReservationSet(result.orderId(), result.reservations().stream()
                 .map(InventoryReservationFacade::toApiView).toList());
-        } catch (org.phuchoang.ecp.inventory.internal.application.command.reservation.reserve.InsufficientStockException exception) {
+        } catch (org.phuchoang.ecp.inventory.internal.application.reservation.command.reserve.InsufficientStockException exception) {
             throw new InsufficientStockException(exception.shortfalls().stream()
                 .map(shortfall -> new StockShortfall(shortfall.orderLineId(), shortfall.sku(),
                     shortfall.requestedQuantity(), shortfall.availableQuantity()))
                 .toList());
-        } catch (org.phuchoang.ecp.inventory.internal.application.command.reservation.reserve.UnpublishedProductException exception) {
+        } catch (org.phuchoang.ecp.inventory.internal.application.reservation.command.reserve.UnpublishedProductException exception) {
             throw new UnpublishedProductException(exception.orderLineId());
         }
     }
