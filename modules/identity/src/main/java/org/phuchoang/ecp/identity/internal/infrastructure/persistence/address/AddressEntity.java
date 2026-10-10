@@ -85,72 +85,72 @@ class AddressEntity {
         this.updatedAt = createdAt;
     }
 
-    UUID getId() {
+    public UUID getId() {
         return id;
     }
     public void setId(UUID id) { this.id = id; }
 
-    UUID getAccountId() {
+    public UUID getAccountId() {
         return accountId;
     }
     public void setAccountId(UUID accountId) { this.accountId = accountId; }
 
-    String getLabel() {
+    public String getLabel() {
         return label;
     }
     public void setLabel(String label) { this.label = label; }
 
-    String getRecipientName() {
+    public String getRecipientName() {
         return recipientName;
     }
     public void setRecipientName(String recipientName) { this.recipientName = recipientName; }
 
-    String getLine1() {
+    public String getLine1() {
         return line1;
     }
     public void setLine1(String line1) { this.line1 = line1; }
 
-    String getLine2() {
+    public String getLine2() {
         return line2;
     }
     public void setLine2(String line2) { this.line2 = line2; }
 
-    String getCity() {
+    public String getCity() {
         return city;
     }
     public void setCity(String city) { this.city = city; }
 
-    String getRegion() {
+    public String getRegion() {
         return region;
     }
     public void setRegion(String region) { this.region = region; }
 
-    String getPostalCode() {
+    public String getPostalCode() {
         return postalCode;
     }
     public void setPostalCode(String postalCode) { this.postalCode = postalCode; }
 
-    String getCountryCode() {
+    public String getCountryCode() {
         return countryCode;
     }
     public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
 
-    String getPhone() {
+    public String getPhone() {
         return phone;
     }
     public void setPhone(String phone) { this.phone = phone; }
 
-    boolean isDefaultShipping() {
+    public boolean isDefaultShipping() {
         return defaultShipping;
     }
     public void setDefaultShipping(boolean defaultShipping) { this.defaultShipping = defaultShipping; }
 
-    boolean isDefaultBilling() {
+    public boolean isDefaultBilling() {
         return defaultBilling;
     }
     public void setDefaultBilling(boolean defaultBilling) { this.defaultBilling = defaultBilling; }
 
-    Instant getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }

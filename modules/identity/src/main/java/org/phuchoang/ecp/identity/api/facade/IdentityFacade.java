@@ -13,11 +13,9 @@ import org.phuchoang.ecp.identity.api.view.AccountView;
 import org.phuchoang.ecp.identity.api.view.AddressPageView;
 import org.phuchoang.ecp.identity.api.view.AddressView;
 import org.phuchoang.ecp.identity.api.view.SessionResponse;
-import org.phuchoang.ecp.identity.internal.application.address.AddressPageResult;
 import org.phuchoang.ecp.identity.internal.application.address.AddressUseCases;
 import org.phuchoang.ecp.identity.internal.application.authentication.AuthenticationUseCases;
 import org.phuchoang.ecp.identity.internal.application.authentication.LoginResult;
-import org.phuchoang.ecp.identity.internal.application.password.ChangePasswordCommand;
 import org.phuchoang.ecp.identity.internal.application.password.PasswordUseCases;
 import org.phuchoang.ecp.identity.internal.application.profile.AccountSummary;
 import org.phuchoang.ecp.identity.internal.application.profile.ProfileUseCases;
@@ -99,9 +97,8 @@ public final class IdentityFacade {
 
     /** Changes the caller's password and, by default, ends other active sessions. */
     public void changeOwnPassword(IdentityActor actor, ChangePasswordRequest request) {
-        boolean endOtherSessions = request.endOtherSessions() == null || request.endOtherSessions();
         IdentityApiErrors.translate(() -> passwords.changeOwnPassword(toCaller(actor),
-            new ChangePasswordCommand(request.currentPassword(), request.newPassword(), endOtherSessions)));
+            mapper.changePasswordCommand(request)));
     }
 
     /** Starts password-reset delivery without revealing whether the supplied email is registered. */
@@ -130,8 +127,7 @@ public final class IdentityFacade {
     /** Lists only the authenticated account's addresses with opaque cursor pagination. */
     public AddressPageView listOwnAddresses(IdentityActor actor, String cursor, int size) {
         return IdentityApiErrors.translate(() -> {
-            AddressPageResult result = addresses.listOwnAddresses(toCaller(actor), cursor, size);
-            return new AddressPageView(result.items().stream().map(mapper::addressView).toList(), result.nextCursor());
+            return mapper.addressPageView(addresses.listOwnAddresses(toCaller(actor), cursor, size));
         });
     }
 

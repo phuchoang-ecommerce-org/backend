@@ -19,6 +19,7 @@ import org.phuchoang.ecp.identity.internal.domain.model.RoleCode;
 import org.phuchoang.ecp.identity.internal.domain.model.VerificationStatus;
 import org.phuchoang.ecp.identity.internal.domain.repository.AccountRepository;
 import org.phuchoang.ecp.identity.internal.application.error.ApplicationException;
+import org.mapstruct.factory.Mappers;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -53,7 +54,7 @@ class ProfileUseCasesTest {
 
     private ProfileUseCases useCases() {
         return new ProfileUseCases(accountRepository, new VerificationTokenManager(tokenStore, clock), permissions,
-            events, clock, mock(AuditTrail.class));
+            events, clock, mock(AuditTrail.class), Mappers.getMapper(AccountSummaryMapper.class));
     }
 
     private CallerContext caller() {

@@ -36,11 +36,14 @@ public class AddressUseCases {
     private final AddressStore addresses;
     private final PermissionChecker permissions;
     private final CursorCodec cursorCodec;
+    private final AddressSummaryMapper summaries;
 
-    public AddressUseCases(AddressStore addresses, PermissionChecker permissions, CursorCodec cursorCodec) {
+    public AddressUseCases(AddressStore addresses, PermissionChecker permissions, CursorCodec cursorCodec,
+            AddressSummaryMapper summaries) {
         this.addresses = addresses;
         this.permissions = permissions;
         this.cursorCodec = cursorCodec;
+        this.summaries = summaries;
     }
 
     @Transactional(readOnly = true)
@@ -52,7 +55,7 @@ public class AddressUseCases {
         boolean hasMore = rows.size() > size;
         List<CustomerAddress> page = hasMore ? rows.subList(0, size) : rows;
         String nextCursor = hasMore ? encodeCursor(caller.accountId(), addresses.cursorOf(page.getLast())) : null;
-        return new AddressPageResult(page.stream().map(AddressSummary::of).toList(), nextCursor);
+        return new AddressPageResult(page.stream().map(summaries::toSummary).toList(), nextCursor);
     }
 
     @Transactional
@@ -75,13 +78,13 @@ public class AddressUseCases {
 
         CustomerAddress address = CustomerAddress.add(UUID.randomUUID(), caller.accountId(), command.address(),
             defaultShipping, defaultBilling);
-        return AddressSummary.of(addresses.save(address));
+        return summaries.toSummary(addresses.save(address));
     }
 
     @Transactional(readOnly = true)
     public AddressSummary getOwnAddress(CallerContext caller, UUID addressId) {
         permissions.require(caller, PermissionMatrix.GET_OWN_ADDRESS);
-        return AddressSummary.of(ownedAddressOrNotFound(caller.accountId(), addressId));
+        return summaries.toSummary(ownedAddressOrNotFound(caller.accountId(), addressId));
     }
 
     @Transactional
@@ -97,7 +100,7 @@ public class AddressUseCases {
         }
 
         address.replace(command.address(), command.isDefaultShipping(), command.isDefaultBilling());
-        return AddressSummary.of(addresses.save(address));
+        return summaries.toSummary(addresses.save(address));
     }
 
     /** Idempotent — removing an address already gone (or another customer's) is 204, not 404. */

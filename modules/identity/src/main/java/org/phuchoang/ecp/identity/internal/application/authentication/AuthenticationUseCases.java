@@ -6,6 +6,7 @@ import org.phuchoang.ecp.identity.internal.application.port.AccessTokenIssuer;
 import org.phuchoang.ecp.identity.internal.application.port.DomainEventPublisher;
 import org.phuchoang.ecp.identity.internal.application.port.PasswordEncoder;
 import org.phuchoang.ecp.identity.internal.application.profile.AccountSummary;
+import org.phuchoang.ecp.identity.internal.application.profile.AccountSummaryMapper;
 import org.phuchoang.ecp.identity.internal.application.security.CallerContext;
 import org.phuchoang.ecp.identity.internal.application.security.PermissionChecker;
 import org.phuchoang.ecp.identity.internal.application.security.PermissionMatrix;
@@ -48,9 +49,11 @@ public class AuthenticationUseCases {
     private final PermissionChecker permissions;
     private final DomainEventPublisher events;
     private final Clock clock;
+    private final AccountSummaryMapper summaries;
 
     public AuthenticationUseCases(AccountRepository accounts, SessionManager sessions, PasswordEncoder passwordEncoder,
-            AccessTokenIssuer accessTokens, PermissionChecker permissions, DomainEventPublisher events, Clock clock) {
+            AccessTokenIssuer accessTokens, PermissionChecker permissions, DomainEventPublisher events, Clock clock,
+            AccountSummaryMapper summaries) {
         this.accounts = accounts;
         this.sessions = sessions;
         this.passwordEncoder = passwordEncoder;
@@ -58,6 +61,7 @@ public class AuthenticationUseCases {
         this.permissions = permissions;
         this.events = events;
         this.clock = clock;
+        this.summaries = summaries;
     }
 
     @Transactional
@@ -132,6 +136,6 @@ public class AuthenticationUseCases {
     private LoginResult session(Account account, String rawRefreshToken) {
         AccessTokenIssuer.IssuedAccessToken accessToken = accessTokens.issue(account.id(), account.roles());
         return new LoginResult(accessToken.token(), rawRefreshToken, accessToken.expiresInSeconds(),
-            !account.isVerified(), AccountSummary.of(account));
+            !account.isVerified(), summaries.toSummary(account));
     }
 }

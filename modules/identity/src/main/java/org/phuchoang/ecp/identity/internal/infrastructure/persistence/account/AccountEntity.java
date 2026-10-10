@@ -88,43 +88,43 @@ class AccountEntity {
         this.updatedAt = createdAt;
     }
 
-    UUID getId() {
+    public UUID getId() {
         return id;
     }
 
     public void setId(UUID id) { this.id = id; }
 
-    String getEmail() {
+    public String getEmail() {
         return email;
     }
 
     public void setEmail(String email) { this.email = email; }
 
-    String getCredentialHash() {
+    public String getCredentialHash() {
         return credentialHash;
     }
 
     public void setCredentialHash(String credentialHash) { this.credentialHash = credentialHash; }
 
-    String getDisplayName() {
+    public String getDisplayName() {
         return displayName;
     }
 
     public void setDisplayName(String displayName) { this.displayName = displayName; }
 
-    String getPendingEmail() {
+    public String getPendingEmail() {
         return pendingEmail;
     }
 
     public void setPendingEmail(String pendingEmail) { this.pendingEmail = pendingEmail; }
 
-    AccountStatus getStatus() {
+    public AccountStatus getStatus() {
         return status;
     }
 
     public void setStatus(AccountStatus status) { this.status = status; }
 
-    VerificationStatus getVerificationStatus() {
+    public VerificationStatus getVerificationStatus() {
         return verificationStatus;
     }
 
@@ -132,7 +132,7 @@ class AccountEntity {
         this.verificationStatus = verificationStatus;
     }
 
-    Instant getVerifiedAt() {
+    public Instant getVerifiedAt() {
         return verifiedAt;
     }
 
@@ -140,7 +140,7 @@ class AccountEntity {
         this.verifiedAt = verifiedAt;
     }
 
-    Instant getLastLoginAt() {
+    public Instant getLastLoginAt() {
         return lastLoginAt;
     }
 
@@ -148,7 +148,7 @@ class AccountEntity {
         this.lastLoginAt = lastLoginAt;
     }
 
-    int getFailedLoginCount() {
+    public int getFailedLoginCount() {
         return failedLoginCount;
     }
 
@@ -156,13 +156,13 @@ class AccountEntity {
         this.failedLoginCount = failedLoginCount;
     }
 
-    long getVersion() {
+    public long getVersion() {
         return version;
     }
 
     public void setVersion(long version) { this.version = version; }
 
-    Instant getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 

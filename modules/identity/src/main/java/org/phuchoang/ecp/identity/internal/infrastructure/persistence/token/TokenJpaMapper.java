@@ -1,7 +1,9 @@
 package org.phuchoang.ecp.identity.internal.infrastructure.persistence.token;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
 import org.phuchoang.ecp.identity.internal.domain.model.IdentityToken;
 import org.phuchoang.ecp.identity.internal.domain.model.TokenType;
@@ -15,15 +17,16 @@ interface TokenJpaMapper {
 
     TokenEntity toEntity(TokenState source);
 
+    @Mapping(target = "type", source = "tokenType")
+    IdentityToken toDomain(TokenEntity source);
+
     default TokenEntity toEntity(IdentityToken token) {
-        TokenEntity entity = toEntity(TokenState.from(token));
-        entity.initializeCreatedAt(token.issuedAt());
-        return entity;
+        return toEntity(TokenState.from(token));
     }
 
-    default IdentityToken toDomain(TokenEntity entity) {
-        return new IdentityToken(entity.getId(), entity.getAccountId(), entity.getTokenType(), entity.getTokenHash(),
-            entity.getIssuedAt(), entity.getExpiresAt(), entity.getConsumedAt(), entity.getReplacedBy(), entity.getChainId());
+    @AfterMapping
+    default void initializeCreatedAt(TokenState source, @MappingTarget TokenEntity target) {
+        target.initializeCreatedAt(source.issuedAt());
     }
 
     record TokenState(UUID id, UUID accountId, TokenType tokenType, String tokenHash, Instant issuedAt,

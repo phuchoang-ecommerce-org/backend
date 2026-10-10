@@ -1,7 +1,8 @@
 package org.phuchoang.ecp.identity.internal.infrastructure.persistence.address;
 
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import org.mapstruct.AfterMapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
 import org.phuchoang.ecp.identity.internal.domain.model.CustomerAddress;
 import org.phuchoang.ecp.identity.internal.domain.model.Address;
@@ -15,16 +16,19 @@ interface AddressJpaMapper {
 
     AddressEntity toEntity(AddressState source);
 
+    Address toAddress(AddressEntity entity);
+
     default AddressEntity toEntity(CustomerAddress address, Instant createdAt) {
-        AddressEntity entity = toEntity(AddressState.from(address, createdAt));
-        entity.initializeAuditTimestamps(createdAt);
-        return entity;
+        return toEntity(AddressState.from(address, createdAt));
+    }
+
+    @AfterMapping
+    default void initializeAuditTimestamps(AddressState address, @MappingTarget AddressEntity target) {
+        target.initializeAuditTimestamps(address.createdAt());
     }
 
     default CustomerAddress toDomain(AddressEntity entity) {
-        Address address = new Address(entity.getLabel(), entity.getRecipientName(), entity.getLine1(), entity.getLine2(),
-            entity.getCity(), entity.getRegion(), entity.getPostalCode(), entity.getCountryCode(), entity.getPhone());
-        return CustomerAddress.reconstitute(entity.getId(), entity.getAccountId(), address,
+        return CustomerAddress.reconstitute(entity.getId(), entity.getAccountId(), toAddress(entity),
             entity.isDefaultShipping(), entity.isDefaultBilling());
     }
 

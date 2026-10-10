@@ -18,6 +18,7 @@ import org.phuchoang.ecp.identity.internal.application.pagination.CursorValue;
 import org.phuchoang.ecp.identity.internal.application.pagination.HmacCursorCodec;
 import org.phuchoang.ecp.identity.internal.application.pagination.InvalidCursorException;
 import org.phuchoang.ecp.identity.internal.application.error.ApplicationException;
+import org.mapstruct.factory.Mappers;
 
 import java.time.Instant;
 import java.util.List;
@@ -47,7 +48,7 @@ class AddressUseCasesTest {
     private PermissionChecker permissions;
 
     private AddressUseCases useCases() {
-        return new AddressUseCases(addressStore, permissions, codec());
+        return new AddressUseCases(addressStore, permissions, codec(), Mappers.getMapper(AddressSummaryMapper.class));
     }
 
     private static Address anAddress() {

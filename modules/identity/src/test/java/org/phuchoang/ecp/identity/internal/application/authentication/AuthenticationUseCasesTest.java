@@ -23,6 +23,8 @@ import org.phuchoang.ecp.identity.internal.domain.model.TokenType;
 import org.phuchoang.ecp.identity.internal.domain.model.VerificationStatus;
 import org.phuchoang.ecp.identity.internal.domain.repository.AccountRepository;
 import org.phuchoang.ecp.identity.internal.application.error.ApplicationException;
+import org.phuchoang.ecp.identity.internal.application.profile.AccountSummaryMapper;
+import org.mapstruct.factory.Mappers;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -68,7 +70,8 @@ class AuthenticationUseCasesTest {
     @BeforeEach
     void setUp() {
         useCases = new AuthenticationUseCases(accountRepository, new RefreshTokenSessionManager(tokenStore, clock),
-            passwordEncoder, accessTokenIssuer, new PermissionMatrixPermissionChecker(new AccessControlPolicy()), events, clock);
+            passwordEncoder, accessTokenIssuer, new PermissionMatrixPermissionChecker(new AccessControlPolicy()), events, clock,
+            Mappers.getMapper(AccountSummaryMapper.class));
     }
 
     @Test

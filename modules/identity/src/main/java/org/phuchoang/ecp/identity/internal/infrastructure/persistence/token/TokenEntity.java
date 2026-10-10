@@ -65,47 +65,47 @@ class TokenEntity {
         this.createdAt = issuedAt;
     }
 
-    UUID getId() {
+    public UUID getId() {
         return id;
     }
     public void setId(UUID id) { this.id = id; }
 
-    UUID getAccountId() {
+    public UUID getAccountId() {
         return accountId;
     }
     public void setAccountId(UUID accountId) { this.accountId = accountId; }
 
-    TokenType getTokenType() {
+    public TokenType getTokenType() {
         return tokenType;
     }
     public void setTokenType(TokenType tokenType) { this.tokenType = tokenType; }
 
-    String getTokenHash() {
+    public String getTokenHash() {
         return tokenHash;
     }
     public void setTokenHash(String tokenHash) { this.tokenHash = tokenHash; }
 
-    Instant getIssuedAt() {
+    public Instant getIssuedAt() {
         return issuedAt;
     }
     public void setIssuedAt(Instant issuedAt) { this.issuedAt = issuedAt; }
 
-    Instant getExpiresAt() {
+    public Instant getExpiresAt() {
         return expiresAt;
     }
     public void setExpiresAt(Instant expiresAt) { this.expiresAt = expiresAt; }
 
-    Instant getConsumedAt() {
+    public Instant getConsumedAt() {
         return consumedAt;
     }
     public void setConsumedAt(Instant consumedAt) { this.consumedAt = consumedAt; }
 
-    UUID getReplacedBy() {
+    public UUID getReplacedBy() {
         return replacedBy;
     }
     public void setReplacedBy(UUID replacedBy) { this.replacedBy = replacedBy; }
 
-    UUID getChainId() {
+    public UUID getChainId() {
         return chainId;
     }
     public void setChainId(UUID chainId) { this.chainId = chainId; }
