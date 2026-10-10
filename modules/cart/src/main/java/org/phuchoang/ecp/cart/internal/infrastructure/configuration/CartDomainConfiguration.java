@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 class CartDomainConfiguration {
     @Bean
-    CartCommandService cartCommandService(CartRepository carts) {
-        return new CartCommandService(carts);
+    CartCommandService cartCommandService(CartRepository carts, CartLifetimeProperties lifetimes) {
+        return new CartCommandService(carts, lifetimes.guest(), lifetimes.customer());
     }
 }

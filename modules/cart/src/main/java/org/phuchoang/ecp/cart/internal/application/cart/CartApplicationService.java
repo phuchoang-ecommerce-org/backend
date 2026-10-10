@@ -1,16 +1,19 @@
 package org.phuchoang.ecp.cart.internal.application.cart;
 
-import org.phuchoang.ecp.cart.api.CartLineView;
-import org.phuchoang.ecp.cart.api.CartLineWrite;
-import org.phuchoang.ecp.cart.api.CartNotFoundException;
-import org.phuchoang.ecp.cart.api.CartQuantityExceededException;
-import org.phuchoang.ecp.cart.api.CartVariantUnavailableException;
-import org.phuchoang.ecp.cart.api.CartView;
-import org.phuchoang.ecp.cart.api.MoneyView;
+import org.phuchoang.ecp.cart.internal.application.cart.command.AddCartLineCommand;
+import org.phuchoang.ecp.cart.internal.application.cart.command.CartMergeNotice;
+import org.phuchoang.ecp.cart.internal.application.cart.command.CartMergeResult;
+import org.phuchoang.ecp.cart.internal.application.cart.command.CartNotFoundException;
+import org.phuchoang.ecp.cart.internal.application.cart.command.CartQuantityExceededException;
+import org.phuchoang.ecp.cart.internal.application.cart.command.CartVariantUnavailableException;
+import org.phuchoang.ecp.cart.internal.application.cart.query.CartLineView;
 import org.phuchoang.ecp.cart.internal.domain.model.Cart;
 import org.phuchoang.ecp.cart.internal.domain.model.CartOwner;
+import org.phuchoang.ecp.cart.internal.domain.policy.CartMergePolicy;
 import org.phuchoang.ecp.cart.internal.domain.service.CartCommandService;
 import org.phuchoang.ecp.cart.internal.application.cart.query.CartReadQuery;
+import org.phuchoang.ecp.cart.internal.application.cart.query.CartView;
+import org.phuchoang.ecp.cart.internal.application.cart.query.MoneyView;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,10 +51,10 @@ public class CartApplicationService {
     }
 
     @Transactional
-    public CartView add(IdentityActor caller, String guestToken, UUID cartId, CartLineWrite write) {
-        VariantGateway.Variant variant = requirePurchasable(write.variantId());
+    public CartView add(IdentityActor caller, String guestToken, UUID cartId, AddCartLineCommand command) {
+        VariantGateway.Variant variant = requirePurchasable(command.variantId());
         return view(readModel(command(() -> commands.add(owner(caller, guestToken), cartId,
-            new CartCommandService.Variant(variant.id(), variant.sku(), variant.availableQuantity()), write.quantity(), now()))), false);
+            new CartCommandService.Variant(variant.id(), variant.sku(), variant.availableQuantity()), command.quantity(), now()))), false);
     }
 
     @Transactional
@@ -66,21 +69,34 @@ public class CartApplicationService {
         command(() -> { commands.remove(owner(caller, guestToken), cartId, lineId, now()); return null; });
     }
 
+    /** UC-CRT-05. A transaction preserves both carts if persistence or concurrent updating fails. */
+    @Transactional
+    public CartMergeResult mergeGuestCart(UUID customerId, String guestToken) {
+        CartCommandService.MergeResult result = commands.mergeGuestCart(customerId, guestToken, variantId -> variants.find(variantId)
+            .map(value -> new CartMergePolicy.VariantAvailability(
+                value.purchasable(), value.availableQuantity(), value.productName()))
+            .orElse(null), now());
+        return new CartMergeResult(result.merged(), result.notices().stream()
+            .map(notice -> new CartMergeNotice(notice.variantId(), notice.sku(), notice.productName(),
+                CartMergeNotice.Reason.valueOf(notice.reason().name()), notice.quantity()))
+            .toList());
+    }
+
     private CartView view(CartReadQuery.CartReadModel cart, boolean expired) {
         List<CartLineView> lines = new ArrayList<>();
         BigDecimal subtotal = BigDecimal.ZERO;
         String currency = "USD";
         for (CartReadQuery.CartLineReadModel line : cart.lines()) {
             VariantGateway.Variant variant = variants.find(line.variantId()).orElse(null);
-            boolean purchasable = variant != null && variant.purchasable();
             Integer available = variant == null ? null : variant.availableQuantity();
+            boolean purchasable = variant != null && variant.purchasable() && (available == null || available > 0);
             boolean shortStock = available != null && available < line.quantity();
             MoneyView price = variant == null ? null : new MoneyView(variant.price(), variant.currency());
             MoneyView lineTotal = price == null ? null : new MoneyView(price.amount().multiply(BigDecimal.valueOf(line.quantity())), price.currency());
             if (lineTotal != null) { subtotal = subtotal.add(lineTotal.amount()); currency = lineTotal.currency(); }
             lines.add(new CartLineView(line.id(), line.variantId(), line.sku(), variant == null ? null : variant.productName(),
                 variant == null ? null : variant.variantName(), line.quantity(), price, lineTotal, shortStock, available,
-                purchasable, purchasable ? null : "Variant is no longer purchasable.", line.addedAt()));
+                purchasable, unavailableReason(variant, available), line.addedAt()));
         }
         return new CartView(cart.id(), cart.customerId(), cart.status(), lines, new MoneyView(subtotal, currency),
             cart.lastActivityAt(), cart.expiresAt(), expired);
@@ -89,6 +105,10 @@ public class CartApplicationService {
     private CartView expiredView(CartReadQuery.CartReadModel cart) {
         return new CartView(cart.id(), cart.customerId(), cart.status(), List.of(), new MoneyView(BigDecimal.ZERO, "USD"),
             cart.lastActivityAt(), cart.expiresAt(), true);
+    }
+    private static String unavailableReason(VariantGateway.Variant variant, Integer available) {
+        if (variant == null || !variant.purchasable()) return "Variant is no longer purchasable.";
+        return available != null && available == 0 ? "Variant is currently out of stock." : null;
     }
 
     private VariantGateway.Variant requirePurchasable(UUID variantId) {

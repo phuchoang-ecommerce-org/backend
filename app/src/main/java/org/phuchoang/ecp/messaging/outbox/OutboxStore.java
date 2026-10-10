@@ -11,6 +11,9 @@ public interface OutboxStore {
     /** The oldest unpublished rows in sequence order, at most {@code limit}. */
     List<OutboxRecord> unpublished(OutboxModule module, int limit);
 
+    /** An immutable event range for deliberate replay; publication state is intentionally ignored. */
+    List<OutboxRecord> eventRange(OutboxModule module, long firstSequence, long lastSequence);
+
     /** Records the broker's acknowledgement; a no-op if the row was marked concurrently. */
     void markPublished(OutboxModule module, OutboxRecord record);
 

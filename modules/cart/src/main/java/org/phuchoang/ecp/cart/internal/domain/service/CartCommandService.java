@@ -1,15 +1,20 @@
 package org.phuchoang.ecp.cart.internal.domain.service;
 
-import org.jmolecules.ddd.annotation.Service;
 import org.phuchoang.ecp.cart.internal.domain.model.Cart;
 import org.phuchoang.ecp.cart.internal.domain.model.CartLine;
 import org.phuchoang.ecp.cart.internal.domain.model.CartOwner;
+import org.phuchoang.ecp.cart.internal.domain.model.CartMergeNotice;
+import org.phuchoang.ecp.cart.internal.domain.policy.CartMergePolicy;
 import org.phuchoang.ecp.cart.internal.domain.repository.CartRepository;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 /**
  * Authoritative command-side cart workflow. All aggregate persistence caused by
@@ -17,15 +22,16 @@ import java.util.UUID;
  * transition is performed here, after this service has applied ownership,
  * expiry, and stock rules.
  */
-@Service
 public final class CartCommandService {
-  private static final long GUEST_LIFETIME_DAYS = 7;
-  private static final long CUSTOMER_LIFETIME_DAYS = 30;
-
   private final CartRepository carts;
+  private final Duration guestLifetime;
+  private final Duration customerLifetime;
+  private final CartMergePolicy mergePolicy = new CartMergePolicy();
 
-  public CartCommandService(CartRepository carts) {
+  public CartCommandService(CartRepository carts, Duration guestLifetime, Duration customerLifetime) {
     this.carts = carts;
+    this.guestLifetime = guestLifetime;
+    this.customerLifetime = customerLifetime;
   }
 
   public Cart current(CartOwner owner, Instant now) {
@@ -58,6 +64,35 @@ public final class CartCommandService {
       carts.save(changed); // an absent line is a successful no-op.
   }
 
+  /**
+   * Locks and changes both authoritative aggregates as one command. Catalog
+   * availability is supplied as an input because it belongs to Catalog, not Cart.
+   */
+  public MergeResult mergeGuestCart(UUID customerId, String guestToken, MergeVariantLookup variants, Instant now) {
+    Cart guest = carts.findActiveByGuestTokenForUpdate(guestToken).orElse(null);
+    if (guest == null || guest.lines().isEmpty()) return MergeResult.notFound();
+
+    Cart customer = carts.findActiveByCustomerIdForUpdate(customerId)
+        .orElseGet(() -> newCustomerCart(customerId, now));
+    Map<UUID, CartMergePolicy.VariantAvailability> availability = new HashMap<>();
+    for (CartLine line : guest.lines()) {
+      availability.computeIfAbsent(line.variantId(), variants::find);
+    }
+    CartMergePolicy.MergePlan plan = mergePolicy.merge(customer.lines(), guest.lines(), availability);
+    Cart persistedCustomer = carts.save(customer.replaceLines(plan.lines(), now));
+    carts.save(guest.mergeInto(persistedCustomer.id()));
+    return new MergeResult(true, plan.notices());
+  }
+
+  /** Marks due carts inactive unless an application-supplied checkout deferral applies. */
+  public void expireDueCarts(Instant now, int limit, Predicate<UUID> hasActiveCheckoutOrDraftOrder) {
+    carts.findExpiredActiveAt(now, limit).forEach(cart -> {
+      if (!hasActiveCheckoutOrDraftOrder.test(cart.id())) {
+        carts.save(cart.expire());
+      }
+    });
+  }
+
   private Cart resolve(CartOwner owner, UUID cartId, boolean replaceExpired, Instant now) {
     Cart cart = cartId == null ? findCurrent(owner).orElseGet(() -> newCart(owner, now))
         : carts.findById(cartId).filter(owner::owns).orElseThrow(CartNotFound::new);
@@ -74,10 +109,14 @@ public final class CartCommandService {
         : carts.findActiveByGuestToken(owner.guestToken());
   }
 
-  private static Cart newCart(CartOwner owner, Instant now) {
+  private Cart newCustomerCart(UUID customerId, Instant now) {
+    return Cart.customer(UUID.randomUUID(), customerId, now, now.plus(customerLifetime));
+  }
+
+  private Cart newCart(CartOwner owner, Instant now) {
     return owner.customerId() != null
-        ? Cart.customer(UUID.randomUUID(), owner.customerId(), now, now.plus(CUSTOMER_LIFETIME_DAYS, ChronoUnit.DAYS))
-        : Cart.guest(UUID.randomUUID(), owner.guestToken(), now, now.plus(GUEST_LIFETIME_DAYS, ChronoUnit.DAYS));
+        ? newCustomerCart(owner.customerId(), now)
+        : Cart.guest(UUID.randomUUID(), owner.guestToken(), now, now.plus(guestLifetime));
   }
 
   private static void requireAvailable(Variant variant, int quantity) {
@@ -92,6 +131,21 @@ public final class CartCommandService {
   @FunctionalInterface
   public interface VariantLookup {
     Variant find(UUID variantId);
+  }
+
+  @FunctionalInterface
+  public interface MergeVariantLookup {
+    CartMergePolicy.VariantAvailability find(UUID variantId);
+  }
+
+  public record MergeResult(boolean merged, List<CartMergeNotice> notices) {
+    public MergeResult {
+      notices = List.copyOf(notices);
+    }
+
+    public static MergeResult notFound() {
+      return new MergeResult(false, List.of());
+    }
   }
 
   public static final class CartNotFound extends RuntimeException {

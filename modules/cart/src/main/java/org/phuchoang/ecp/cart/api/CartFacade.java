@@ -11,4 +11,5 @@ public interface CartFacade {
     CartView addCartLine(IdentityActor caller, String guestToken, UUID cartId, CartLineWrite write);
     CartView updateCartLineQuantity(IdentityActor caller, String guestToken, UUID cartId, UUID lineId, int quantity);
     void removeCartLine(IdentityActor caller, String guestToken, UUID cartId, UUID lineId);
+    CartMergeResult mergeGuestCart(UUID customerId, String guestToken);
 }

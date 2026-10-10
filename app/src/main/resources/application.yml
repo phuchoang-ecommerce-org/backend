@@ -74,6 +74,11 @@ ecp:
   inventory:
     reservation:
       max-attempts: ${ECP_INVENTORY_RESERVATION_MAX_ATTEMPTS:8}
+  cart:
+    expiry:
+      guest: ${ECP_CART_GUEST_EXPIRY:P7D}
+      customer: ${ECP_CART_CUSTOMER_EXPIRY:P30D}
+      sweep-delay: ${ECP_CART_EXPIRY_SWEEP_DELAY:PT1M}
   rate-limit:
     auth-strict:
       limit: 10

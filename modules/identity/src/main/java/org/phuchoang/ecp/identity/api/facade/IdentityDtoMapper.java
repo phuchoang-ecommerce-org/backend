@@ -30,6 +30,7 @@ interface IdentityDtoMapper {
     UpdateProfileCommand updateProfileCommand(ProfileUpdateRequest request);
 
     @Mapping(target = "expiresIn", source = "expiresInSeconds")
+    @Mapping(target = "cartMergeNotices", ignore = true)
     SessionResponse sessionResponse(LoginResult result);
 
     AccountView accountView(AccountSummary summary);

@@ -28,34 +28,34 @@ The frontend lane starts the checkout funnel **three sprints before `ordering` e
 ## Backend Lane
 
 ### `US-CRT-05` Merge Guest Cart on Login (5 pts) — `mergeGuestCart`
-- [ ] Runs on the sign-in path, **server-side**, when a guest cart cookie is present — it has no route of its own ([`Routing.md`](../../../SA-docs/03-frontend/Routing.md) §4.2, `FR-CRT-06`)
-- [ ] `E1` — a guest line whose variant is unpublished is **not carried over, and the customer is told which product was dropped and why**. Silently discarding it is what `BR-CRT-03` forbids
-- [ ] `E2` — a wholly out-of-stock line **is** carried over, marked unpurchasable, so the customer can see it and decide
-- [ ] **`E3` — a failed merge leaves login standing.** The stored cart is untouched, the guest cart preserved for retry, and the customer told their items will be recovered. A cart failure must never deny account access (`UC-CUS-03` E4)
-- [ ] `E4` — concurrent merges from two sessions apply in sequence, each against the cart as it then stands; neither session's items are lost. L5 concurrency test on the `EN-DATA-4` rig
-- [ ] The guest cookie is cleared only after a successful merge, never before
+- [x] Runs on the sign-in path, **server-side**, when a guest cart cookie is present — it has no route of its own ([`Routing.md`](../../../SA-docs/03-frontend/Routing.md) §4.2, `FR-CRT-06`)
+- [x] `E1` — a guest line whose variant is unpublished is **not carried over, and the customer is told which product was dropped and why**. Silently discarding it is what `BR-CRT-03` forbids
+- [x] `E2` — a wholly out-of-stock line **is** carried over, marked unpurchasable, so the customer can see it and decide
+- [x] **`E3` — a failed merge leaves login standing.** The stored cart is untouched, the guest cart preserved for retry, and the customer told their items will be recovered. A cart failure must never deny account access (`UC-CUS-03` E4)
+- [x] `E4` — concurrent merges from two sessions apply in sequence, each against the cart as it then stands; neither session's items are lost. L5 concurrency test on the `EN-DATA-4` rig
+- [x] The guest cookie is cleared only after a successful merge, never before
 
 ### `US-CRT-06` Expire Inactive Cart (3 pts) — scheduler, no contract surface
-- [ ] Scheduled expiry against the `BR-CRT-01` lifetime defined in Sprint 13
-- [ ] `E1` — a cart in active checkout **defers** expiry. Expiring mid-checkout strands the customer at the moment of purchase
-- [ ] `E2` — a cart holding an order in `Draft` defers to order cancellation (`UC-ORD-08`), which releases any reservation. **The cart itself never releases stock, because it never took any** — this is the boundary between `cart` and `inventory` and it must not blur
-- [ ] `E3` — a failed expiry leaves the cart live and retries next run (`NFR-REL-04`). A failed expiry costs storage, not correctness
-- [ ] Two schedulers on two instances do not double-expire — same lease pattern as the Sprint 08 relay
-- [ ] ArchUnit: `cart` does not depend on `ordering` or `inventory`; the deferral checks go through ports
+- [x] Scheduled expiry against the `BR-CRT-01` lifetime defined in Sprint 13
+- [x] `E1` — a cart in active checkout **defers** expiry. Expiring mid-checkout strands the customer at the moment of purchase
+- [x] `E2` — a cart holding an order in `Draft` defers to order cancellation (`UC-ORD-08`), which releases any reservation. **The cart itself never releases stock, because it never took any** — this is the boundary between `cart` and `inventory` and it must not blur
+- [x] `E3` — a failed expiry leaves the cart live and retries next run (`NFR-REL-04`). A failed expiry costs storage, not correctness
+- [x] Two schedulers on two instances do not double-expire — same lease pattern as the Sprint 08 relay
+- [x] ArchUnit: `cart` does not depend on `ordering` or `inventory`; the deferral checks go through ports
 
 ### `EN-EVENT-4` Consumer obligations: retry, dead-lettering, replay (8 pts)
-- [ ] **Retry policy** — bounded, backed off, and applied per consumer rather than globally, so a slow projection does not inherit a fast one's budget
-- [ ] **Dead-letter topic** per the Sprint 08 catalogue, with the original envelope and the failure reason preserved. A DLQ entry that has lost its correlation id cannot be investigated
-- [ ] **Replay from the outbox** — a range of events can be republished deliberately. This is the mechanism `EN-EVENT-3`'s index rebuild and `EN-BENCH-2`'s Sprint 29 drill both stand on
-- [ ] Replay is safe because consumers are idempotent (`EN-EVENT-2`) — re-prove it here rather than assuming it, by replaying a range into the live search projection and asserting no duplication
-- [ ] DLQ depth as a Micrometer meter in the `EN-OBS-2` set. **A silently growing DLQ is the failure mode this item exists to prevent**
-- [ ] Demonstration, not assertion: a consumer that always fails fills the DLQ, the events are corrected and replayed, and the projection converges
+- [x] **Retry policy** — bounded, backed off, and applied per consumer rather than globally, so a slow projection does not inherit a fast one's budget
+- [x] **Dead-letter topic** per the Sprint 08 catalogue, with the original envelope and the failure reason preserved. A DLQ entry that has lost its correlation id cannot be investigated
+- [x] **Replay from the outbox** — a range of events can be republished deliberately. This is the mechanism `EN-EVENT-3`'s index rebuild and `EN-BENCH-2`'s Sprint 29 drill both stand on
+- [x] Replay is safe because consumers are idempotent (`EN-EVENT-2`) — re-prove it here rather than assuming it, by replaying a range into the live search projection and asserting no duplication
+- [x] DLQ depth as a Micrometer meter in the `EN-OBS-2` set. **A silently growing DLQ is the failure mode this item exists to prevent**
+- [x] Demonstration, not assertion: a consumer that always fails fills the DLQ, the events are corrected and replayed, and the projection converges
 
 ### `EN-DATA-4` L5 persistence & concurrency suite scaffolding (5 pts)
-- [ ] Schema-per-test-class against Testcontainers PostgreSQL, so concurrency tests do not contend with each other
-- [ ] The Sprint 11 oversell race and the Sprint 12 concurrent-adjustment test **migrate onto this rig** rather than keeping their own setup
-- [ ] Fast enough to stay in the default `check` task — [`ADR-0018`](../../../SA-docs/01-system/ADR/ADR-0018-architecture-governance-ci-gate.md) §5's "slow builds create pressure to skip them" applies directly here
-- [ ] Documented so `US-CRT-05` `E4`, and every later concurrency story, adds a test rather than a harness
+- [x] Schema-per-test-class against Testcontainers PostgreSQL, so concurrency tests do not contend with each other
+- [x] The Sprint 11 oversell race and the Sprint 12 concurrent-adjustment test **migrate onto this rig** rather than keeping their own setup
+- [x] Fast enough to stay in the default `check` task — [`ADR-0018`](../../../SA-docs/01-system/ADR/ADR-0018-architecture-governance-ci-gate.md) §5's "slow builds create pressure to skip them" applies directly here
+- [x] Documented so `US-CRT-05` `E4`, and every later concurrency story, adds a test rather than a harness
 
 ---
 

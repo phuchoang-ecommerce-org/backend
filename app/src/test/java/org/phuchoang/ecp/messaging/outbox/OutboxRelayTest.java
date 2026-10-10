@@ -29,6 +29,20 @@ class OutboxRelayTest {
         new EventEnvelopeCodec(JsonMapper.builder().build()), lock, new OutboxProperties(100, 1000));
 
     @Test
+    void replayRepublishesTheRequestedOutboxRangeWithoutChangingPublicationState() throws Exception {
+        OutboxRecord first = record(10);
+        OutboxRecord second = record(11);
+        when(store.eventRange(OutboxModule.CATALOG, 10, 11)).thenReturn(List.of(first, second));
+
+        new OutboxReplayService(store, publisher, new EventEnvelopeCodec(JsonMapper.builder().build()))
+            .replay(OutboxModule.CATALOG, 10, 11);
+
+        verify(publisher).publish(eq(first.topic()), envelopeOf(first));
+        verify(publisher).publish(eq(second.topic()), envelopeOf(second));
+        verify(store, never()).markPublished(any(), any());
+    }
+
+    @Test
     void lockUnavailableSkipsTheModuleEntirely() {
         when(lock.executeIfAcquired(eq(OutboxModule.CATALOG), any())).thenReturn(false);
 

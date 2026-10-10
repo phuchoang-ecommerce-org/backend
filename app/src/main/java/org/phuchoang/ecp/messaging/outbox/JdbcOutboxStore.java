@@ -34,6 +34,18 @@ class JdbcOutboxStore implements OutboxStore {
     }
 
     @Override
+    public List<OutboxRecord> eventRange(OutboxModule module, long firstSequence, long lastSequence) {
+        if (firstSequence > lastSequence) {
+            throw new IllegalArgumentException("Replay range start must not follow its end.");
+        }
+        return jdbc.query("""
+            SELECT sequence_no, event_id, event_type, event_version, occurred_at, aggregate_type, aggregate_id,
+                   correlation_id, actor_user_id, actor_role, payload::text, topic
+            FROM %s WHERE sequence_no BETWEEN ? AND ? ORDER BY sequence_no
+            """.formatted(module.table()), this::row, firstSequence, lastSequence);
+    }
+
+    @Override
     public void markPublished(OutboxModule module, OutboxRecord record) {
         jdbc.update("UPDATE %s SET published_at = now(), last_error = NULL WHERE event_id = ? AND published_at IS NULL"
             .formatted(module.table()), record.eventId());

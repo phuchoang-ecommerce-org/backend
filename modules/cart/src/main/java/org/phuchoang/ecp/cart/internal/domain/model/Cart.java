@@ -71,6 +71,16 @@ public record Cart(@Identity UUID id, UUID customerId, String guestToken, CartSt
         return new Cart(id, customerId, guestToken, CartStatus.EXPIRED, lastActivityAt, expiresAt, mergedIntoId, version, lines);
     }
 
+    public Cart mergeInto(UUID customerCartId) {
+        return new Cart(id, customerId, guestToken, CartStatus.MERGED, lastActivityAt, expiresAt,
+            Objects.requireNonNull(customerCartId, "customerCartId"), version, lines);
+    }
+
+    public Cart replaceLines(List<CartLine> replacement, Instant now) {
+        requireActive();
+        return withLines(replacement, now);
+    }
+
     public boolean isExpiredAt(Instant now) {
         return status == CartStatus.EXPIRED || !expiresAt.isAfter(now);
     }
