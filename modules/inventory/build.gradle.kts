@@ -7,6 +7,8 @@ dependencies {
     implementation(project(":audit"))
     implementation("org.springframework.modulith:spring-modulith-starter-core")
     implementation(libs.jmolecules.ddd)
+    implementation(libs.mapstruct)
+    annotationProcessor(libs.mapstruct.processor)
     // ADR-0011: StockItem is the authoritative, optimistically locked write aggregate.
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 

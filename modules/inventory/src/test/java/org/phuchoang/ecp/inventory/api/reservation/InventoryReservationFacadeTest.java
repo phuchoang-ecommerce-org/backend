@@ -1,6 +1,7 @@
 package org.phuchoang.ecp.inventory.api.reservation;
 
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.inventory.internal.application.reservation.command.commit.CommitStockReservationRequest;
 import org.phuchoang.ecp.inventory.internal.application.reservation.command.commit.CommitStockReservationResult;
@@ -75,7 +76,8 @@ class InventoryReservationFacadeTest {
         ReserveStockService reserve = mock(ReserveStockService.class);
         ReleaseStockReservationService release = mock(ReleaseStockReservationService.class);
         CommitStockReservationService commit = mock(CommitStockReservationService.class);
-        InventoryReservationFacade facade = new InventoryReservationFacade(reserve, release, commit);
+        InventoryReservationFacade facade = new InventoryReservationFacade(reserve, release, commit,
+            Mappers.getMapper(InventoryReservationApiMapper.class));
         UUID stockItemId = UUID.randomUUID();
         UUID reservationId = UUID.randomUUID();
         UUID orderId = UUID.randomUUID();
@@ -105,6 +107,6 @@ class InventoryReservationFacadeTest {
 
     private static InventoryReservationFacade facade(ReserveStockService reserve) {
         return new InventoryReservationFacade(reserve, mock(ReleaseStockReservationService.class),
-            mock(CommitStockReservationService.class));
+            mock(CommitStockReservationService.class), Mappers.getMapper(InventoryReservationApiMapper.class));
     }
 }

@@ -1,7 +1,6 @@
 package org.phuchoang.ecp.inventory.internal.application.reservation.command.release;
 
 import org.phuchoang.ecp.inventory.internal.domain.service.ReleaseStockReservationDomainService;
-import org.phuchoang.ecp.inventory.internal.domain.model.StockReservation;
 import org.phuchoang.ecp.inventory.internal.domain.model.StockItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,9 +15,11 @@ public class ReleaseStockReservationAttempt {
     private static final Logger log = LoggerFactory.getLogger(ReleaseStockReservationAttempt.class);
 
     private final ReleaseStockReservationDomainService reservations;
+    private final ReleaseStockReservationMapper mapper;
 
-    public ReleaseStockReservationAttempt(ReleaseStockReservationDomainService reservations) {
+    public ReleaseStockReservationAttempt(ReleaseStockReservationDomainService reservations, ReleaseStockReservationMapper mapper) {
         this.reservations = reservations;
+        this.mapper = mapper;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -28,15 +29,6 @@ public class ReleaseStockReservationAttempt {
             log.warn("Declined release of committed reservation {} on stock item {}; investigation required.",
                 request.reservationId(), request.stockItemId());
         }
-        return toResult(transition);
-    }
-
-    private static ReleaseStockReservationResult toResult(StockItem.Transition transition) {
-        StockReservation reservation = transition.reservation();
-        return new ReleaseStockReservationResult(reservation.id(), transition.stockItem().id(), reservation.orderId(),
-            reservation.orderLineId(), reservation.quantity(),
-            ReleaseStockReservationResult.Status.valueOf(reservation.status().name()), reservation.expiresAt(),
-            reservation.resolvedAt(), reservation.orphanedAt(),
-            ReleaseStockReservationResult.Outcome.valueOf(transition.outcome().name()));
+        return mapper.result(transition.stockItem(), transition.reservation(), transition.outcome());
     }
 }

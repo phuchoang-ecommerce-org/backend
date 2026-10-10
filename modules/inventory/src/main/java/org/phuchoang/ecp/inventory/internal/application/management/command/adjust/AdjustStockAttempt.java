@@ -18,9 +18,10 @@ import java.util.Map;
 class AdjustStockAttempt {
     private final AdjustStockDomainService stock;
     private final AuditTrail audit;
+    private final AdjustStockMapper mapper;
 
-    AdjustStockAttempt(AdjustStockDomainService stock, AuditTrail audit) {
-        this.stock = stock; this.audit = audit;
+    AdjustStockAttempt(AdjustStockDomainService stock, AuditTrail audit, AdjustStockMapper mapper) {
+        this.stock = stock; this.audit = audit; this.mapper = mapper;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -40,8 +41,7 @@ class AdjustStockAttempt {
         StockAdjustment stockAdjustment = adjustment.stockAdjustment();
         audit.record(new AuditRecord(stockAdjustment.id(), command.caller().accountId(), role(command.caller()), "adjustStock", "stockItem", after.id(),
             "inventory", quantities(before), quantities(after), command.reason(), command.correlationId(), stockAdjustment.occurredAt(), null, false));
-        return new AdjustStockResult(after.id(), after.sku(), after.warehouseId(), after.quantityOnHand(),
-            after.quantityReserved(), after.availableQuantity());
+        return mapper.result(after);
     }
 
     private static Map<String, Object> quantities(StockItem item) {

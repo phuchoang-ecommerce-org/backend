@@ -1,6 +1,7 @@
 package org.phuchoang.ecp.inventory.api.management;
 
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.inventory.internal.application.management.command.adjust.AdjustStockCommand;
 import org.phuchoang.ecp.inventory.internal.application.management.command.adjust.AdjustStockResult;
@@ -22,7 +23,8 @@ class InventoryManagementFacadeAdapterTest {
 
     private final AdjustStockService commands = mock(AdjustStockService.class);
     private final InventoryManagementQueryService queries = mock(InventoryManagementQueryService.class);
-    private final InventoryManagementFacadeAdapter facade = new InventoryManagementFacadeAdapter(commands, queries);
+    private final InventoryManagementFacadeAdapter facade = new InventoryManagementFacadeAdapter(commands, queries,
+        Mappers.getMapper(InventoryManagementApiMapper.class));
 
     @Test
     void mapsThePublishedAdjustmentInputAndApplicationResultAtTheApiBoundary() {

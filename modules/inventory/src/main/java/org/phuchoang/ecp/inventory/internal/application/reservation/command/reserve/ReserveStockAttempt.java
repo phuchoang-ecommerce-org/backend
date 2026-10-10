@@ -2,7 +2,6 @@ package org.phuchoang.ecp.inventory.internal.application.reservation.command.res
 
 import org.phuchoang.ecp.inventory.internal.domain.service.ReserveStockDomainService;
 import org.phuchoang.ecp.inventory.internal.domain.model.StockItem;
-import org.phuchoang.ecp.inventory.internal.domain.model.StockReservation;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,15 +15,17 @@ import java.util.UUID;
 public class ReserveStockAttempt {
 
     private final ReserveStockDomainService reservations;
+    private final ReserveStockMapper mapper;
 
-    public ReserveStockAttempt(ReserveStockDomainService reservations) {
+    public ReserveStockAttempt(ReserveStockDomainService reservations, ReserveStockMapper mapper) {
         this.reservations = reservations;
+        this.mapper = mapper;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public ReserveStockResult reserve(ReserveStockRequest command) {
         try {
-            return reservationSet(command.orderId(), reservations.reserve(toDomainRequest(command)));
+            return reservationSet(command.orderId(), reservations.reserve(mapper.domainRequest(command)));
         } catch (ReserveStockDomainService.InsufficientStockException exception) {
             throw new InsufficientStockException(exception.shortfalls().stream()
                 .map(shortfall -> new StockShortfall(shortfall.orderLineId(), skuFor(command, shortfall.orderLineId()),
@@ -34,27 +35,15 @@ public class ReserveStockAttempt {
         }
     }
 
-    private static ReserveStockDomainService.ReservationRequest toDomainRequest(ReserveStockRequest command) {
-        return new ReserveStockDomainService.ReservationRequest(command.orderId(), command.lines().stream()
-            .map(line -> new ReserveStockDomainService.ReservationLine(line.orderLineId(), line.stockItemId(),
-                line.quantity(), line.published())).toList(), command.expiresAt());
-    }
-
     private static String skuFor(ReserveStockRequest command, UUID orderLineId) {
         return command.lines().stream().filter(line -> line.orderLineId().equals(orderLineId)).findFirst()
             .map(ReserveStockRequest.Line::sku).orElseThrow();
     }
 
-    private static ReserveStockResult reservationSet(UUID orderId, List<StockItem> items) {
+    private ReserveStockResult reservationSet(UUID orderId, List<StockItem> items) {
         return new ReserveStockResult(orderId, items.stream().flatMap(item -> item.reservations().stream()
-                .filter(reservation -> reservation.orderId().equals(orderId)).map(reservation -> toResult(item, reservation)))
+                .filter(reservation -> reservation.orderId().equals(orderId)).map(reservation -> mapper.reservedStock(item, reservation)))
             .sorted(Comparator.comparing(ReservedStock::orderLineId).thenComparing(ReservedStock::stockItemId)
                 .thenComparing(ReservedStock::reservationId)).toList());
-    }
-
-    private static ReservedStock toResult(StockItem item, StockReservation reservation) {
-        return new ReservedStock(reservation.id(), item.id(), reservation.orderId(), reservation.orderLineId(),
-            reservation.quantity(), ReservedStock.Status.valueOf(reservation.status().name()), reservation.expiresAt(),
-            reservation.resolvedAt(), reservation.orphanedAt());
     }
 }
