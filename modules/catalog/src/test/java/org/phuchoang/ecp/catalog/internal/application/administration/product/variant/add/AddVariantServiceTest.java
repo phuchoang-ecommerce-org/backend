@@ -2,6 +2,8 @@ package org.phuchoang.ecp.catalog.internal.application.administration.command.pr
 
 import org.phuchoang.ecp.catalog.internal.application.administration.command.product.variant.VariantSnapshot;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
+import org.phuchoang.ecp.catalog.internal.application.administration.command.product.ProductSnapshotMapper;
 import org.mockito.ArgumentCaptor;
 import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogCommandContext;
 import org.phuchoang.ecp.catalog.internal.application.event.CatalogEventPublisher;
@@ -35,7 +37,7 @@ class AddVariantServiceTest {
     private final ProductRepository products = mock(ProductRepository.class);
     private final CatalogEventPublisher events = mock(CatalogEventPublisher.class);
     private final AddVariantService service = new AddVariantService(new ProductCommandService(products),
-        mock(IdentityAuthorization.class), events);
+        mock(IdentityAuthorization.class), events, Mappers.getMapper(ProductSnapshotMapper.class));
     private final CatalogCommandContext context = new CatalogCommandContext(
         new IdentityActor(UUID.randomUUID(), Set.of("STAFF")), UUID.randomUUID());
     private final AddVariant command = new AddVariant("MUG-001", "Blue", new BigDecimal("12.50"), "USD",

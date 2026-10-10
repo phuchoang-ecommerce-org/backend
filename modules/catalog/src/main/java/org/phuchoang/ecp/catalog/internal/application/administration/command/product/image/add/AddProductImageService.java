@@ -4,6 +4,7 @@ import org.phuchoang.ecp.catalog.internal.application.administration.command.Cat
 import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogLookups;
 import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogPermissions;
 import org.phuchoang.ecp.catalog.internal.application.administration.command.product.image.ImageSnapshot;
+import org.phuchoang.ecp.catalog.internal.application.administration.command.product.ProductSnapshotMapper;
 import org.phuchoang.ecp.catalog.internal.application.event.CatalogEventPublisher;
 import org.phuchoang.ecp.catalog.internal.domain.event.ProductUpdated;
 import org.phuchoang.ecp.catalog.internal.domain.model.Product;
@@ -21,12 +22,14 @@ public class AddProductImageService {
     private final ProductCommandService products;
     private final IdentityAuthorization authorization;
     private final CatalogEventPublisher events;
+    private final ProductSnapshotMapper snapshots;
 
     public AddProductImageService(ProductCommandService products, IdentityAuthorization authorization,
-            CatalogEventPublisher events) {
+            CatalogEventPublisher events, ProductSnapshotMapper snapshots) {
         this.products = products;
         this.authorization = authorization;
         this.events = events;
+        this.snapshots = snapshots;
     }
 
     @Transactional
@@ -38,6 +41,6 @@ public class AddProductImageService {
         Product after = products.addImage(product, image);
 
         events.publish(new ProductUpdated(after), context);
-        return ImageSnapshot.from(after.image(image.id()));
+        return snapshots.imageSnapshot(after.image(image.id()));
     }
 }

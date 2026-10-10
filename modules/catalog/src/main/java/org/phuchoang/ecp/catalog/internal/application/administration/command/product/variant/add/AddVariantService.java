@@ -4,6 +4,7 @@ import org.phuchoang.ecp.catalog.internal.application.administration.command.Cat
 import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogLookups;
 import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogPermissions;
 import org.phuchoang.ecp.catalog.internal.application.administration.command.product.variant.VariantSnapshot;
+import org.phuchoang.ecp.catalog.internal.application.administration.command.product.ProductSnapshotMapper;
 import org.phuchoang.ecp.catalog.internal.application.event.CatalogEventPublisher;
 import org.phuchoang.ecp.catalog.internal.domain.event.VariantAdded;
 import org.phuchoang.ecp.catalog.internal.domain.model.Product;
@@ -28,12 +29,14 @@ public class AddVariantService {
     private final ProductCommandService products;
     private final IdentityAuthorization authorization;
     private final CatalogEventPublisher events;
+    private final ProductSnapshotMapper snapshots;
 
     public AddVariantService(ProductCommandService products, IdentityAuthorization authorization,
-            CatalogEventPublisher events) {
+            CatalogEventPublisher events, ProductSnapshotMapper snapshots) {
         this.products = products;
         this.authorization = authorization;
         this.events = events;
+        this.snapshots = snapshots;
     }
 
     @Transactional
@@ -53,6 +56,6 @@ public class AddVariantService {
 
         Product.Variant added = after.variant(variant.id());
         events.publish(new VariantAdded(after, added), context);
-        return VariantSnapshot.from(added);
+        return snapshots.variantSnapshot(added);
     }
 }

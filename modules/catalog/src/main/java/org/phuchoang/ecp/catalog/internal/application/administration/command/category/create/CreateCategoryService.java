@@ -4,6 +4,7 @@ import org.phuchoang.ecp.catalog.internal.application.administration.command.Cat
 import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogLookups;
 import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogPermissions;
 import org.phuchoang.ecp.catalog.internal.application.administration.command.category.CategorySnapshot;
+import org.phuchoang.ecp.catalog.internal.application.administration.command.category.CategorySnapshotMapper;
 import org.phuchoang.ecp.catalog.internal.application.event.CatalogEventPublisher;
 import org.phuchoang.ecp.catalog.internal.domain.event.CategoryChanged;
 import org.phuchoang.ecp.catalog.internal.domain.model.Category;
@@ -22,12 +23,14 @@ public class CreateCategoryService {
     private final CategoryCommandService categories;
     private final IdentityAuthorization authorization;
     private final CatalogEventPublisher events;
+    private final CategorySnapshotMapper snapshots;
 
     public CreateCategoryService(CategoryCommandService categories, IdentityAuthorization authorization,
-            CatalogEventPublisher events) {
+            CatalogEventPublisher events, CategorySnapshotMapper snapshots) {
         this.categories = categories;
         this.authorization = authorization;
         this.events = events;
+        this.snapshots = snapshots;
     }
 
     @Transactional
@@ -40,6 +43,6 @@ public class CreateCategoryService {
             Slugs.normalize(command.name()), command.imageUrl(), command.sortOrder(), command.featured(), parent);
 
         events.publish(CategoryChanged.of(category), context);
-        return CategorySnapshot.from(category);
+        return snapshots.categorySnapshot(category);
     }
 }

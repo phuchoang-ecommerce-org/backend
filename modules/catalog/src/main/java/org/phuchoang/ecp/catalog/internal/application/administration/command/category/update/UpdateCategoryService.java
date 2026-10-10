@@ -4,6 +4,7 @@ import org.phuchoang.ecp.catalog.internal.application.administration.command.Cat
 import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogLookups;
 import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogPermissions;
 import org.phuchoang.ecp.catalog.internal.application.administration.command.category.CategorySnapshot;
+import org.phuchoang.ecp.catalog.internal.application.administration.command.category.CategorySnapshotMapper;
 import org.phuchoang.ecp.catalog.internal.application.event.CatalogEventPublisher;
 import org.phuchoang.ecp.catalog.internal.domain.event.CategoryChanged;
 import org.phuchoang.ecp.catalog.internal.domain.model.Category;
@@ -26,12 +27,14 @@ public class UpdateCategoryService {
     private final CategoryCommandService categories;
     private final IdentityAuthorization authorization;
     private final CatalogEventPublisher events;
+    private final CategorySnapshotMapper snapshots;
 
     public UpdateCategoryService(CategoryCommandService categories, IdentityAuthorization authorization,
-            CatalogEventPublisher events) {
+            CatalogEventPublisher events, CategorySnapshotMapper snapshots) {
         this.categories = categories;
         this.authorization = authorization;
         this.events = events;
+        this.snapshots = snapshots;
     }
 
     @Transactional
@@ -51,6 +54,6 @@ public class UpdateCategoryService {
         }
 
         events.publish(CategoryChanged.of(after), context);
-        return CategorySnapshot.from(after);
+        return snapshots.categorySnapshot(after);
     }
 }

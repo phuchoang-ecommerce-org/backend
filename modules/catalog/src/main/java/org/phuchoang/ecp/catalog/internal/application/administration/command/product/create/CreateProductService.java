@@ -3,6 +3,7 @@ package org.phuchoang.ecp.catalog.internal.application.administration.command.pr
 import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogCommandContext;
 import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogPermissions;
 import org.phuchoang.ecp.catalog.internal.application.administration.command.product.ProductSnapshot;
+import org.phuchoang.ecp.catalog.internal.application.administration.command.product.ProductSnapshotMapper;
 import org.phuchoang.ecp.catalog.internal.application.event.CatalogEventPublisher;
 import org.phuchoang.ecp.catalog.internal.domain.event.ProductCreated;
 import org.phuchoang.ecp.catalog.internal.domain.model.Product;
@@ -20,12 +21,14 @@ public class CreateProductService {
     private final ProductCommandService products;
     private final IdentityAuthorization authorization;
     private final CatalogEventPublisher events;
+    private final ProductSnapshotMapper snapshots;
 
     public CreateProductService(ProductCommandService products, IdentityAuthorization authorization,
-            CatalogEventPublisher events) {
+            CatalogEventPublisher events, ProductSnapshotMapper snapshots) {
         this.products = products;
         this.authorization = authorization;
         this.events = events;
+        this.snapshots = snapshots;
     }
 
     @Transactional
@@ -36,6 +39,6 @@ public class CreateProductService {
             command.brand(), command.attributes());
 
         events.publish(new ProductCreated(product), context);
-        return ProductSnapshot.from(product);
+        return snapshots.productSnapshot(product);
     }
 }

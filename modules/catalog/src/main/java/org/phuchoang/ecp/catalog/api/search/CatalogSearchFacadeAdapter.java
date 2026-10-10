@@ -12,15 +12,17 @@ import org.springframework.stereotype.Component;
 class CatalogSearchFacadeAdapter implements CatalogSearchFacade {
 
     private final SearchProductQueryService searches;
+    private final CatalogSearchMapper mapper;
 
-    public CatalogSearchFacadeAdapter(SearchProductQueryService searches) {
+    public CatalogSearchFacadeAdapter(SearchProductQueryService searches, CatalogSearchMapper mapper) {
         this.searches = searches;
+        this.mapper = mapper;
     }
 
     @Override
     public SearchResultPageView searchProducts(SearchProductsQuery query) {
         try {
-            return CatalogSearchMapper.page(searches.search(CatalogSearchMapper.query(query)));
+            return mapper.page(searches.search(mapper.query(query)));
         } catch (ApplicationException exception) {
             throw new DomainException(GenErrorCode.valueOf(exception.errorCode().name()), exception.getMessage());
         }

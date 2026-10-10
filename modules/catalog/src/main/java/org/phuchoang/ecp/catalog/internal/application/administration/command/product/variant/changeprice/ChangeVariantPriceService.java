@@ -3,6 +3,7 @@ package org.phuchoang.ecp.catalog.internal.application.administration.command.pr
 import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogCommandContext;
 import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogLookups;
 import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogPermissions;
+import org.phuchoang.ecp.catalog.internal.application.administration.command.product.ProductSnapshotMapper;
 import org.phuchoang.ecp.catalog.internal.application.administration.command.product.variant.VariantSnapshot;
 import org.phuchoang.ecp.catalog.internal.application.event.CatalogEventPublisher;
 import org.phuchoang.ecp.catalog.internal.domain.event.ProductPriceChanged;
@@ -21,12 +22,14 @@ public class ChangeVariantPriceService {
     private final ProductCommandService products;
     private final IdentityAuthorization authorization;
     private final CatalogEventPublisher events;
+    private final ProductSnapshotMapper snapshots;
 
     public ChangeVariantPriceService(ProductCommandService products, IdentityAuthorization authorization,
-            CatalogEventPublisher events) {
+            CatalogEventPublisher events, ProductSnapshotMapper snapshots) {
         this.products = products;
         this.authorization = authorization;
         this.events = events;
+        this.snapshots = snapshots;
     }
 
     @Transactional
@@ -42,6 +45,6 @@ public class ChangeVariantPriceService {
 
         Product.Variant changed = after.variant(variantId);
         events.publish(new ProductPriceChanged(productId, changed), context);
-        return VariantSnapshot.from(changed);
+        return snapshots.variantSnapshot(changed);
     }
 }

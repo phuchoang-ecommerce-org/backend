@@ -2,10 +2,8 @@ package org.phuchoang.ecp.catalog.internal.application.administration.command.pr
 
 import org.phuchoang.ecp.catalog.internal.application.administration.command.product.image.ImageSnapshot;
 import org.phuchoang.ecp.catalog.internal.application.administration.command.product.variant.VariantSnapshot;
-import org.phuchoang.ecp.catalog.internal.domain.model.Product;
 
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -15,12 +13,4 @@ public record ProductSnapshot(UUID id, String name, String slug, String descript
                               String publicationStatus, OffsetDateTime publishedAt,
                               Map<String, Object> attributes, List<ImageSnapshot> images,
                               List<VariantSnapshot> variants) {
-
-    public static ProductSnapshot from(Product product) {
-        return new ProductSnapshot(product.id(), product.name(), product.slug(), product.description(), product.brand(),
-            product.publicationStatus().name(),
-            product.publishedAt() == null ? null : product.publishedAt().atOffset(ZoneOffset.UTC),
-            product.attributes(), product.images().stream().map(ImageSnapshot::from).toList(),
-            product.variants().stream().map(VariantSnapshot::from).toList());
-    }
 }

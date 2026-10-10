@@ -98,33 +98,29 @@ interface CatalogDtoMapper {
 
     SetPublication setPublication(PublicationWrite request);
 
-    default AddVariant addVariant(VariantWrite request) {
-        return new AddVariant(request.sku(), request.name() == null ? request.sku() : request.name(),
-            request.listPrice().amount(), request.listPrice().currency(), request.options(), request.weightGrams(),
-            request.active() == null || request.active());
-    }
+    @Mapping(target = "name", expression = "java(request.name() == null ? request.sku() : request.name())")
+    @Mapping(target = "amount", source = "listPrice.amount")
+    @Mapping(target = "currency", source = "listPrice.currency")
+    @Mapping(target = "active", expression = "java(request.active() == null || request.active())")
+    AddVariant addVariant(VariantWrite request);
 
-    default Price price(PriceWrite request) {
-        return new Price(request.listPrice().amount(), request.listPrice().currency(), request.reason());
-    }
+    @Mapping(target = "amount", source = "listPrice.amount")
+    @Mapping(target = "currency", source = "listPrice.currency")
+    Price price(PriceWrite request);
 
-    default AddImage addImage(ImageWrite request) {
-        return new AddImage(request.url(), request.altText(), request.sortOrder() == null ? 0 : request.sortOrder());
-    }
+    @Mapping(target = "sortOrder", expression = "java(request.sortOrder() == null ? 0 : request.sortOrder())")
+    AddImage addImage(ImageWrite request);
 
-    default CreateCategory createCategory(CategoryWrite request) {
-        return new CreateCategory(request.parentId(), request.name(), request.imageUrl(),
-            request.sortOrder() == null ? 0 : request.sortOrder(), request.featured() != null && request.featured());
-    }
+    @Mapping(target = "sortOrder", expression = "java(request.sortOrder() == null ? 0 : request.sortOrder())")
+    @Mapping(target = "featured", expression = "java(request.featured() != null && request.featured())")
+    CreateCategory createCategory(CategoryWrite request);
 
-    default CategoryChange categoryChange(CategoryWrite request) {
-        return new CategoryChange(request.name(), request.parentId(), request.imageUrl(),
-            request.sortOrder() == null ? 0 : request.sortOrder(), request.featured() != null && request.featured());
-    }
+    @Mapping(target = "sortOrder", expression = "java(request.sortOrder() == null ? 0 : request.sortOrder())")
+    @Mapping(target = "featured", expression = "java(request.featured() != null && request.featured())")
+    CategoryChange categoryChange(CategoryWrite request);
 
-    default BulkAmendment bulkAmendment(BulkItem item) {
-        return new BulkAmendment(item.productId(), productChange(item.amendment()));
-    }
+    @Mapping(target = "change", source = "amendment")
+    BulkAmendment bulkAmendment(BulkItem item);
 
     // ---- command side: results -> views ----
 

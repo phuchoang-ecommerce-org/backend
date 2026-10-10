@@ -6,6 +6,7 @@ import org.phuchoang.ecp.catalog.internal.application.administration.command.cat
 import org.phuchoang.ecp.catalog.internal.application.administration.command.category.update.CategoryChange;
 import org.phuchoang.ecp.catalog.internal.application.administration.command.category.update.UpdateCategoryService;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.mockito.ArgumentCaptor;
 import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogCommandContext;
 import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogPermissions;
@@ -54,7 +55,8 @@ class CategoryCommandsTest {
         when(categories.findById(parent.id())).thenReturn(Optional.of(parent));
         when(categories.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        CategorySnapshot created = new CreateCategoryService(categoryCommands(), authorization, events)
+        CategorySnapshot created = new CreateCategoryService(categoryCommands(), authorization, events,
+            Mappers.getMapper(CategorySnapshotMapper.class))
             .create(context, new CreateCategory(parent.id(), "Living Room & Décor", null, 2, true));
 
         verify(authorization).assertAuthorized(context.caller(), CatalogPermissions.MANAGE_CATEGORIES);
@@ -71,7 +73,8 @@ class CategoryCommandsTest {
         when(categories.findById(root.id())).thenReturn(Optional.of(root));
         when(categories.findById(child.id())).thenReturn(Optional.of(child));
 
-        assertThatThrownBy(() -> new UpdateCategoryService(categoryCommands(), authorization, events)
+        assertThatThrownBy(() -> new UpdateCategoryService(categoryCommands(), authorization, events,
+            Mappers.getMapper(CategorySnapshotMapper.class))
             .update(context, root.id(), new CategoryChange("Root", child.id(), null, 0, false)))
             .isInstanceOf(ApplicationException.class).hasMessage("Invalid parentId.");
         verify(categories, never()).save(any());

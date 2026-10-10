@@ -2,6 +2,8 @@ package org.phuchoang.ecp.catalog.internal.application.administration.command.pr
 
 import org.phuchoang.ecp.catalog.internal.application.administration.command.product.ProductSnapshot;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
+import org.phuchoang.ecp.catalog.internal.application.administration.command.product.ProductSnapshotMapper;
 import org.mockito.ArgumentCaptor;
 import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogCommandContext;
 import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogPermissions;
@@ -42,7 +44,7 @@ class ProductPublicationServiceTest {
     private final IdentityAuthorization authorization = mock(IdentityAuthorization.class);
     private final CatalogEventPublisher events = mock(CatalogEventPublisher.class);
     private final ProductPublicationService service = new ProductPublicationService(new ProductCommandService(products),
-        authorization, events, clock);
+        authorization, events, clock, Mappers.getMapper(ProductSnapshotMapper.class));
     private final CatalogCommandContext context = new CatalogCommandContext(
         new IdentityActor(UUID.randomUUID(), Set.of("STAFF")), UUID.randomUUID());
 
