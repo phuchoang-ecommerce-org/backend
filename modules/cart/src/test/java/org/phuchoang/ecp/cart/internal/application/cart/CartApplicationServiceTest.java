@@ -10,6 +10,7 @@ import org.phuchoang.ecp.cart.internal.domain.service.CartCommandService;
 import org.phuchoang.ecp.cart.internal.infrastructure.configuration.CartLifetimeProperties;
 import org.phuchoang.ecp.cart.internal.application.cart.query.CartReadQuery;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
+import org.mapstruct.factory.Mappers;
 
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -28,9 +29,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class CartApplicationServiceTest {
     private final UUID variantId = UUID.randomUUID();
     private final InMemoryCarts carts = new InMemoryCarts();
+    private final CartApplicationMapper mapper = Mappers.getMapper(CartApplicationMapper.class);
     private final CartApplicationService service = new CartApplicationService(commands(carts), carts, id -> Optional.of(new VariantGateway.Variant(id,
         "SKU-1", "T-Shirt", "Red / M", new BigDecimal("12.50"), "USD", true, 2)),
-        Clock.fixed(Instant.parse("2026-10-09T00:00:00Z"), ZoneOffset.UTC));
+        Clock.fixed(Instant.parse("2026-10-09T00:00:00Z"), ZoneOffset.UTC), mapper);
 
     @Test
     void createsAGuestCartAndKeepsTheExistingQuantityWhenAnIncreaseExceedsStock() {
@@ -41,6 +43,21 @@ class CartApplicationServiceTest {
             added.lines().getFirst().id(), 3)).isInstanceOf(CartQuantityExceededException.class)
             .extracting(exception -> ((CartQuantityExceededException) exception).availableQuantity()).isEqualTo(2);
         assertThat(carts.findById(added.id()).orElseThrow().lines()).singleElement().extracting(line -> line.quantity()).isEqualTo(2);
+    }
+
+    @Test
+    void projectsAnExistingCartDomainAggregateIntoItsApplicationReadModel() {
+        Instant now = Instant.parse("2026-10-09T00:00:00Z");
+        Cart cart = Cart.guest(UUID.randomUUID(), "unguessable-token", now, now.plus(Duration.ofDays(7)))
+            .add(variantId, "SKU-1", 2, now);
+        carts.save(cart);
+
+        CartView result = service.current(IdentityActor.GUEST, "unguessable-token");
+
+        assertThat(result).extracting(CartView::id, CartView::status, CartView::subtotal)
+            .containsExactly(cart.id(), "ACTIVE", new org.phuchoang.ecp.cart.internal.application.cart.query.MoneyView(new BigDecimal("25.00"), "USD"));
+        assertThat(result.lines()).singleElement().extracting(line -> line.id(), line -> line.quantity(), line -> line.productName())
+            .containsExactly(cart.lines().getFirst().id(), 2, "T-Shirt");
     }
 
     @Test
@@ -64,7 +81,7 @@ class CartApplicationServiceTest {
             @Override public Cart save(Cart cart) { throw new AssertionError("query wrote aggregate repository"); }
         };
         CartApplicationService queryService = new CartApplicationService(commands(forbiddenOnRead), reads, id -> Optional.empty(),
-            Clock.fixed(Instant.parse("2026-10-09T00:00:00Z"), ZoneOffset.UTC));
+            Clock.fixed(Instant.parse("2026-10-09T00:00:00Z"), ZoneOffset.UTC), mapper);
 
         CartView result = queryService.get(IdentityActor.GUEST, "unguessable-token", cartId);
 

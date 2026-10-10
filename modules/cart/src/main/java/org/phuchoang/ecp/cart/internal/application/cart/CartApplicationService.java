@@ -1,7 +1,6 @@
 package org.phuchoang.ecp.cart.internal.application.cart;
 
 import org.phuchoang.ecp.cart.internal.application.cart.command.AddCartLineCommand;
-import org.phuchoang.ecp.cart.internal.application.cart.command.CartMergeNotice;
 import org.phuchoang.ecp.cart.internal.application.cart.command.CartMergeResult;
 import org.phuchoang.ecp.cart.internal.application.cart.command.CartNotFoundException;
 import org.phuchoang.ecp.cart.internal.application.cart.command.CartQuantityExceededException;
@@ -32,15 +31,17 @@ public class CartApplicationService {
     private final CartReadQuery reads;
     private final VariantGateway variants;
     private final Clock clock;
+    private final CartApplicationMapper mapper;
 
-    public CartApplicationService(CartCommandService commands, CartReadQuery reads, VariantGateway variants, Clock clock) {
-        this.commands = commands; this.reads = reads; this.variants = variants; this.clock = clock;
+    public CartApplicationService(CartCommandService commands, CartReadQuery reads, VariantGateway variants, Clock clock,
+                                  CartApplicationMapper mapper) {
+        this.commands = commands; this.reads = reads; this.variants = variants; this.clock = clock; this.mapper = mapper;
     }
 
     @Transactional
     public CartView current(IdentityActor caller, String guestToken) {
         Cart cart = commands.current(owner(caller, guestToken), now());
-        return cart.isExpiredAt(now()) ? expiredView(readModel(cart)) : view(readModel(cart), false);
+        return cart.isExpiredAt(now()) ? expiredView(mapper.readModel(cart)) : view(mapper.readModel(cart), false);
     }
 
     @Transactional(readOnly = true)
@@ -53,7 +54,7 @@ public class CartApplicationService {
     @Transactional
     public CartView add(IdentityActor caller, String guestToken, UUID cartId, AddCartLineCommand command) {
         VariantGateway.Variant variant = requirePurchasable(command.variantId());
-        return view(readModel(command(() -> commands.add(owner(caller, guestToken), cartId,
+        return view(mapper.readModel(command(() -> commands.add(owner(caller, guestToken), cartId,
             new CartCommandService.Variant(variant.id(), variant.sku(), variant.availableQuantity()), command.quantity(), now()))), false);
     }
 
@@ -61,7 +62,7 @@ public class CartApplicationService {
     public CartView changeQuantity(IdentityActor caller, String guestToken, UUID cartId, UUID lineId, int quantity) {
         Cart changed = command(() -> commands.changeQuantity(owner(caller, guestToken), cartId, lineId,
             quantity, this::commandVariant, now()));
-        return view(readModel(changed), false);
+        return view(mapper.readModel(changed), false);
     }
 
     @Transactional
@@ -76,10 +77,7 @@ public class CartApplicationService {
             .map(value -> new CartMergePolicy.VariantAvailability(
                 value.purchasable(), value.availableQuantity(), value.productName()))
             .orElse(null), now());
-        return new CartMergeResult(result.merged(), result.notices().stream()
-            .map(notice -> new CartMergeNotice(notice.variantId(), notice.sku(), notice.productName(),
-                CartMergeNotice.Reason.valueOf(notice.reason().name()), notice.quantity()))
-            .toList());
+        return mapper.mergeResult(result);
     }
 
     private CartView view(CartReadQuery.CartReadModel cart, boolean expired) {
@@ -134,11 +132,6 @@ public class CartApplicationService {
         catch (CartCommandService.CartNotFound exception) { throw new CartNotFoundException(); }
         catch (CartCommandService.QuantityExceeded exception) { throw new CartQuantityExceededException(exception.availableQuantity()); }
         catch (Exception exception) { throw new IllegalStateException(exception); }
-    }
-    private static CartReadQuery.CartReadModel readModel(Cart cart) {
-        return new CartReadQuery.CartReadModel(cart.id(), cart.customerId(), cart.guestToken(), cart.status().name(), cart.lastActivityAt(),
-            cart.expiresAt(), cart.lines().stream().map(line -> new CartReadQuery.CartLineReadModel(line.id(), line.variantId(), line.sku(),
-                line.quantity(), line.addedAt())).toList());
     }
     private static CartOwner owner(IdentityActor caller, String guestToken) {
         return isCustomer(caller) ? CartOwner.customer(caller.accountId()) : CartOwner.guest(requireGuestToken(guestToken));

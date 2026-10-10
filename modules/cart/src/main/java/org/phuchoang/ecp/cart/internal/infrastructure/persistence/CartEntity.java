@@ -18,38 +18,143 @@ import java.util.UUID;
 @Entity
 @Table(name = "cart_cart")
 class CartEntity {
-    @Id private UUID id;
-    @Column(name = "customer_id") private UUID customerId;
-    @Column(name = "session_token") private String guestToken;
-    @Column(nullable = false) private String status;
-    @Column(name = "last_activity_at", nullable = false) private Instant lastActivityAt;
-    @Column(name = "expires_at", nullable = false) private Instant expiresAt;
-    @Column(name = "merged_into_id") private UUID mergedIntoId;
-    @Version private long version;
-    @Column(name = "created_at", nullable = false) private Instant createdAt;
-    @Column(name = "updated_at", nullable = false) private Instant updatedAt;
-    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<CartLineEntity> lines = new ArrayList<>();
-    protected CartEntity() { }
-    CartEntity(UUID id, UUID customerId, String guestToken, String status, Instant lastActivityAt, Instant expiresAt,
-               UUID mergedIntoId, Instant now) {
-        this.id = id; this.customerId = customerId; this.guestToken = guestToken; this.status = status;
-        this.lastActivityAt = lastActivityAt; this.expiresAt = expiresAt; this.mergedIntoId = mergedIntoId;
-        this.createdAt = now; this.updatedAt = now;
+  @Id
+  private UUID id;
+  @Column(name = "customer_id")
+  private UUID customerId;
+  @Column(name = "session_token")
+  private String guestToken;
+  @Column(nullable = false)
+  private String status;
+  @Column(name = "last_activity_at", nullable = false)
+  private Instant lastActivityAt;
+  @Column(name = "expires_at", nullable = false)
+  private Instant expiresAt;
+  @Column(name = "merged_into_id")
+  private UUID mergedIntoId;
+  @Version
+  private long version;
+  @Column(name = "created_at", nullable = false)
+  private Instant createdAt;
+  @Column(name = "updated_at", nullable = false)
+  private Instant updatedAt;
+  @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  private List<CartLineEntity> lines = new ArrayList<>();
+
+  protected CartEntity() {
+  }
+
+  public UUID getId() {
+    return id;
+  }
+
+  public void setId(UUID id) {
+    this.id = id;
+  }
+
+  public UUID getCustomerId() {
+    return customerId;
+  }
+
+  public void setCustomerId(UUID customerId) {
+    this.customerId = customerId;
+  }
+
+  public String getGuestToken() {
+    return guestToken;
+  }
+
+  public void setGuestToken(String guestToken) {
+    this.guestToken = guestToken;
+  }
+
+  public String getStatus() {
+    return status;
+  }
+
+  public void setStatus(String status) {
+    this.status = status;
+  }
+
+  public Instant getLastActivityAt() {
+    return lastActivityAt;
+  }
+
+  public void setLastActivityAt(Instant lastActivityAt) {
+    this.lastActivityAt = lastActivityAt;
+  }
+
+  public Instant getExpiresAt() {
+    return expiresAt;
+  }
+
+  public void setExpiresAt(Instant expiresAt) {
+    this.expiresAt = expiresAt;
+  }
+
+  public UUID getMergedIntoId() {
+    return mergedIntoId;
+  }
+
+  public void setMergedIntoId(UUID mergedIntoId) {
+    this.mergedIntoId = mergedIntoId;
+  }
+
+  public long getVersion() {
+    return version;
+  }
+
+  public void setVersion(long version) {
+    this.version = version;
+  }
+
+  public Instant getCreatedAt() {
+    return createdAt;
+  }
+
+  public void setCreatedAt(Instant createdAt) {
+    this.createdAt = createdAt;
+  }
+
+  public Instant getUpdatedAt() {
+    return updatedAt;
+  }
+
+  public void setUpdatedAt(Instant updatedAt) {
+    this.updatedAt = updatedAt;
+  }
+
+  public List<CartLineEntity> getLines() {
+    return lines;
+  }
+
+  public void setLines(List<CartLineEntity> lines) {
+    this.lines = lines;
+  }
+
+  void initializeAuditTimestamps(Instant now) {
+    createdAt = now;
+    updatedAt = now;
+  }
+
+  void attachLines() {
+    lines.forEach(line -> line.attachTo(this));
+  }
+
+  void synchronizeLines(List<CartLineEntity> replacements, Instant now) {
+    updatedAt = now;
+    java.util.Map<UUID, CartLineEntity> existing = lines.stream()
+        .collect(java.util.stream.Collectors.toMap(CartLineEntity::getId, value -> value));
+    java.util.Set<UUID> retained = replacements.stream().map(CartLineEntity::getId)
+        .collect(java.util.stream.Collectors.toSet());
+    lines.removeIf(line -> !retained.contains(line.getId()));
+    for (CartLineEntity replacement : replacements) {
+      CartLineEntity current = existing.get(replacement.getId());
+      if (current == null) {
+        replacement.attachTo(this);
+        lines.add(replacement);
+      } else
+        current.synchronize(replacement);
     }
-    UUID id() { return id; } UUID customerId() { return customerId; } String guestToken() { return guestToken; }
-    String status() { return status; } Instant lastActivityAt() { return lastActivityAt; } Instant expiresAt() { return expiresAt; }
-    UUID mergedIntoId() { return mergedIntoId; } long version() { return version; } List<CartLineEntity> lines() { return lines; }
-    void synchronize(String newStatus, Instant newLastActivityAt, Instant newExpiresAt, UUID newMergedIntoId,
-                     List<CartLineEntity> replacements, Instant now) {
-        status = newStatus; lastActivityAt = newLastActivityAt; expiresAt = newExpiresAt; mergedIntoId = newMergedIntoId; updatedAt = now;
-        java.util.Map<UUID, CartLineEntity> existing = lines.stream().collect(java.util.stream.Collectors.toMap(CartLineEntity::id, value -> value));
-        java.util.Set<UUID> retained = replacements.stream().map(CartLineEntity::id).collect(java.util.stream.Collectors.toSet());
-        lines.removeIf(line -> !retained.contains(line.id()));
-        for (CartLineEntity replacement : replacements) {
-            CartLineEntity current = existing.get(replacement.id());
-            if (current == null) { replacement.attachTo(this); lines.add(replacement); }
-            else current.synchronize(replacement);
-        }
-    }
+  }
 }

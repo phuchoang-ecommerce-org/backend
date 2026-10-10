@@ -11,29 +11,25 @@ import java.util.UUID;
 @Repository
 class JpaCartReadQueryAdapter implements CartReadQuery {
     private final CartJpaRepository carts;
+    private final CartReadJpaMapper mapper;
 
-    JpaCartReadQueryAdapter(CartJpaRepository carts) {
+    JpaCartReadQueryAdapter(CartJpaRepository carts, CartReadJpaMapper mapper) {
         this.carts = carts;
+        this.mapper = mapper;
     }
 
     @Override
     public Optional<CartReadModel> readActiveByCustomerId(UUID customerId) {
-        return carts.findByCustomerIdAndStatus(customerId, CartStatus.ACTIVE.name()).map(JpaCartReadQueryAdapter::toReadModel);
+        return carts.findByCustomerIdAndStatus(customerId, CartStatus.ACTIVE.name()).map(mapper::toReadModel);
     }
 
     @Override
     public Optional<CartReadModel> readActiveByGuestToken(String guestToken) {
-        return carts.findByGuestTokenAndStatus(guestToken, CartStatus.ACTIVE.name()).map(JpaCartReadQueryAdapter::toReadModel);
+        return carts.findByGuestTokenAndStatus(guestToken, CartStatus.ACTIVE.name()).map(mapper::toReadModel);
     }
 
     @Override
     public Optional<CartReadModel> readById(UUID cartId) {
-        return carts.findAggregateById(cartId).map(JpaCartReadQueryAdapter::toReadModel);
-    }
-
-    private static CartReadModel toReadModel(CartEntity entity) {
-        return new CartReadModel(entity.id(), entity.customerId(), entity.guestToken(), entity.status(), entity.lastActivityAt(),
-            entity.expiresAt(), entity.lines().stream().map(line -> new CartLineReadModel(line.id(), line.variantId(),
-                line.sku(), line.quantity(), line.addedAt())).toList());
+        return carts.findAggregateById(cartId).map(mapper::toReadModel);
     }
 }
