@@ -16,16 +16,11 @@ import java.util.UUID;
  * edits.
  */
 @Repository
+@lombok.RequiredArgsConstructor(access = lombok.AccessLevel.PACKAGE)
 class JpaCartRepositoryAdapter implements CartRepository {
   private final CartJpaRepository carts;
   private final CartJpaMapper mapper;
   private final Clock clock;
-
-  JpaCartRepositoryAdapter(CartJpaRepository carts, CartJpaMapper mapper, Clock clock) {
-    this.carts = carts;
-    this.mapper = mapper;
-    this.clock = clock;
-  }
 
   @Override
   public Optional<Cart> findById(UUID id) {

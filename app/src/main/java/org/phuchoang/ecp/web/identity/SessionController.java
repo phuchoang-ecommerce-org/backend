@@ -29,18 +29,13 @@ import java.util.UUID;
 
 /** `logIn`, `logOut`, `endAllOwnSessions` (`UC-CUS-03`, `UC-CUS-04`), `renewSession` (`UC-CUS-05`). */
 @RestController
+@lombok.RequiredArgsConstructor(access = lombok.AccessLevel.PACKAGE)
 class SessionController {
     private static final String GUEST_CART_COOKIE = "ecp_guest_cart";
 
     private final IdentityFacade identityFacade;
     private final CartFacade carts;
     private final RequestContextResolver requestContext;
-
-    SessionController(IdentityFacade identityFacade, CartFacade carts, RequestContextResolver requestContext) {
-        this.identityFacade = identityFacade;
-        this.carts = carts;
-        this.requestContext = requestContext;
-    }
 
     @PostMapping("/api/v1/sessions")
     ResponseEntity<SessionResponse> logIn(@Valid @RequestBody LoginRequest request,

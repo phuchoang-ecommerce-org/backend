@@ -25,12 +25,11 @@ import java.util.UUID;
 
 /** HTTP and cookie adapter; Cart's application layer receives only resolved ownership identity. */
 @RestController
+@lombok.RequiredArgsConstructor(access = lombok.AccessLevel.PACKAGE)
 class CartController {
     static final String GUEST_CART_COOKIE = "ecp_guest_cart";
     private final CartFacade carts;
     private final RequestContextResolver requestContext;
-    CartController(CartFacade carts, RequestContextResolver requestContext) { this.carts = carts; this.requestContext = requestContext; }
-
     @GetMapping("/api/v1/carts/current")
     CartView current(@AuthenticationPrincipal Jwt jwt, @CookieValue(name = GUEST_CART_COOKIE, required = false) String cookie,
                      HttpServletResponse response) {

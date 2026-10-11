@@ -38,6 +38,7 @@ import java.util.UUID;
  * the use-case services and {@link CatalogDtoMapper}.
  */
 @Component
+@lombok.RequiredArgsConstructor(access = lombok.AccessLevel.PACKAGE)
 class CatalogAdministrationFacadeAdapter implements CatalogAdministrationFacade {
 
     private final CreateProductService createProduct;
@@ -54,28 +55,6 @@ class CatalogAdministrationFacadeAdapter implements CatalogAdministrationFacade 
     private final UpdateCategoryService updateCategory;
     private final DeleteCategoryService deleteCategory;
     private final CatalogDtoMapper mapper;
-
-    CatalogAdministrationFacadeAdapter(CreateProductService createProduct, UpdateProductService updateProduct,
-            DeleteProductService deleteProduct, ProductPublicationService publication,
-            BulkAmendmentService bulkAmendment, AddVariantService addVariant, RemoveVariantService removeVariant,
-            ChangeVariantPriceService changePrice, AddProductImageService addImage,
-            RemoveProductImageService removeImage, CreateCategoryService createCategory,
-            UpdateCategoryService updateCategory, DeleteCategoryService deleteCategory, CatalogDtoMapper mapper) {
-        this.createProduct = createProduct;
-        this.updateProduct = updateProduct;
-        this.deleteProduct = deleteProduct;
-        this.publication = publication;
-        this.bulkAmendment = bulkAmendment;
-        this.addVariant = addVariant;
-        this.removeVariant = removeVariant;
-        this.changePrice = changePrice;
-        this.addImage = addImage;
-        this.removeImage = removeImage;
-        this.createCategory = createCategory;
-        this.updateCategory = updateCategory;
-        this.deleteCategory = deleteCategory;
-        this.mapper = mapper;
-    }
 
     @Override
     public ProductDetailView createProduct(IdentityActor caller, UUID correlationId, ProductWrite request) {

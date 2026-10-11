@@ -13,15 +13,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 /** `getOwnAccount`, `updateOwnProfile` (`UC-CUS-08`). */
 @RestController
+@lombok.RequiredArgsConstructor(access = lombok.AccessLevel.PACKAGE)
 class ProfileController {
 
     private final IdentityFacade identityFacade;
     private final RequestContextResolver requestContext;
-
-    ProfileController(IdentityFacade identityFacade, RequestContextResolver requestContext) {
-        this.identityFacade = identityFacade;
-        this.requestContext = requestContext;
-    }
 
     @GetMapping("/api/v1/accounts/me")
     AccountView getOwnAccount(@AuthenticationPrincipal Jwt jwt) {

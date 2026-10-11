@@ -33,17 +33,13 @@ import java.util.UUID;
 
 /** `listOwnAddresses`, `addOwnAddress`, `getOwnAddress`, `replaceOwnAddress`, `removeOwnAddress` (`UC-CUS-09`). */
 @RestController
+@lombok.RequiredArgsConstructor(access = lombok.AccessLevel.PACKAGE)
 class AddressController {
 
     private static final Set<String> LIST_QUERY_PARAMS = Set.of("cursor", "size");
 
     private final IdentityFacade identityFacade;
     private final RequestContextResolver requestContext;
-
-    AddressController(IdentityFacade identityFacade, RequestContextResolver requestContext) {
-        this.identityFacade = identityFacade;
-        this.requestContext = requestContext;
-    }
 
     @GetMapping("/api/v1/accounts/me/addresses")
     PageEnvelope<AddressView> listOwnAddresses(@AuthenticationPrincipal Jwt jwt, HttpServletRequest request,

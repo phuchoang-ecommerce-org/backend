@@ -14,15 +14,11 @@ import java.nio.charset.StandardCharsets;
  * the record — the relay relies on that to mark the outbox row afterwards, never before.
  */
 @Component
+@lombok.RequiredArgsConstructor
 public class KafkaEventPublisher {
 
     private final KafkaTemplate<String, String> kafka;
     private final EventEnvelopeCodec codec;
-
-    public KafkaEventPublisher(KafkaTemplate<String, String> kafka, EventEnvelopeCodec codec) {
-        this.kafka = kafka;
-        this.codec = codec;
-    }
 
     public void publish(String topic, EventEnvelope envelope) throws Exception {
         kafka.send(recordFor(topic, envelope)).get();

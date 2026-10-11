@@ -6,6 +6,10 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.phuchoang.ecp.identity.internal.domain.model.TokenType;
 
 import java.time.Instant;
@@ -14,6 +18,9 @@ import java.util.UUID;
 /** JPA mapping of {@code identity_token} (Database.md §4.1). */
 @Entity
 @Table(name = "identity_token")
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 class TokenEntity {
 
     @Id
@@ -45,11 +52,8 @@ class TokenEntity {
     private UUID chainId;
 
     @Column(name = "created_at", nullable = false)
+    @Setter(AccessLevel.NONE)
     private Instant createdAt;
-
-    protected TokenEntity() {
-        // JPA
-    }
 
     TokenEntity(UUID id, UUID accountId, TokenType tokenType, String tokenHash, Instant issuedAt,
             Instant expiresAt, Instant consumedAt, UUID replacedBy, UUID chainId) {
@@ -64,51 +68,6 @@ class TokenEntity {
         this.chainId = chainId;
         this.createdAt = issuedAt;
     }
-
-    public UUID getId() {
-        return id;
-    }
-    public void setId(UUID id) { this.id = id; }
-
-    public UUID getAccountId() {
-        return accountId;
-    }
-    public void setAccountId(UUID accountId) { this.accountId = accountId; }
-
-    public TokenType getTokenType() {
-        return tokenType;
-    }
-    public void setTokenType(TokenType tokenType) { this.tokenType = tokenType; }
-
-    public String getTokenHash() {
-        return tokenHash;
-    }
-    public void setTokenHash(String tokenHash) { this.tokenHash = tokenHash; }
-
-    public Instant getIssuedAt() {
-        return issuedAt;
-    }
-    public void setIssuedAt(Instant issuedAt) { this.issuedAt = issuedAt; }
-
-    public Instant getExpiresAt() {
-        return expiresAt;
-    }
-    public void setExpiresAt(Instant expiresAt) { this.expiresAt = expiresAt; }
-
-    public Instant getConsumedAt() {
-        return consumedAt;
-    }
-    public void setConsumedAt(Instant consumedAt) { this.consumedAt = consumedAt; }
-
-    public UUID getReplacedBy() {
-        return replacedBy;
-    }
-    public void setReplacedBy(UUID replacedBy) { this.replacedBy = replacedBy; }
-
-    public UUID getChainId() {
-        return chainId;
-    }
-    public void setChainId(UUID chainId) { this.chainId = chainId; }
 
     void initializeCreatedAt(Instant now) { this.createdAt = now; }
 }

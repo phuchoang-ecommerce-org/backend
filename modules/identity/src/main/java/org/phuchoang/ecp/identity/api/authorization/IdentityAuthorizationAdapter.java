@@ -20,13 +20,10 @@ import org.springframework.stereotype.Component;
  * translation happens exactly once, here, on this side of the boundary.
  */
 @Component
+@lombok.RequiredArgsConstructor(access = lombok.AccessLevel.PACKAGE)
 final class IdentityAuthorizationAdapter implements IdentityAuthorization {
 
     private final PermissionChecker permissions;
-
-    IdentityAuthorizationAdapter(PermissionChecker permissions) {
-        this.permissions = permissions;
-    }
 
     @Override
     public void assertAuthorized(IdentityActor caller, String operationId) {

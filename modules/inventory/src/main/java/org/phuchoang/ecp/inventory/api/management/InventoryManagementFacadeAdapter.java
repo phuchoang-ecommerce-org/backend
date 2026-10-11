@@ -10,14 +10,11 @@ import java.util.UUID;
 
 /** Public adapter delegating separately owned command and query use cases. */
 @Component
+@lombok.RequiredArgsConstructor(access = lombok.AccessLevel.PACKAGE)
 class InventoryManagementFacadeAdapter implements InventoryManagementFacade {
     private final AdjustStockService commands;
     private final InventoryManagementQueryService queries;
     private final InventoryManagementApiMapper mapper;
-    InventoryManagementFacadeAdapter(AdjustStockService commands, InventoryManagementQueryService queries,
-                                     InventoryManagementApiMapper mapper) {
-        this.commands = commands; this.queries = queries; this.mapper = mapper;
-    }
     @Override public StockItemView adjustStock(IdentityActor caller, UUID correlationId, UUID stockItemId, StockAdjustmentWrite adjustment) {
         try {
             return mapper.stockItemView(commands.adjust(mapper.adjustStockCommand(adjustment, caller, correlationId, stockItemId)));

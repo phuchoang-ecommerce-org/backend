@@ -7,6 +7,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -14,6 +18,9 @@ import java.util.UUID;
 /** Persistence-only child of {@link InventoryStockItemEntity}. */
 @Entity
 @Table(name = "inventory_stock_reservation")
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 class InventoryStockReservationEntity {
 
   @Id
@@ -39,98 +46,6 @@ class InventoryStockReservationEntity {
   private Instant createdAt;
   @Column(name = "updated_at", nullable = false)
   private Instant updatedAt;
-
-  protected InventoryStockReservationEntity() {
-    // JPA
-  }
-
-  public UUID getId() {
-    return id;
-  }
-
-  public void setId(UUID id) {
-    this.id = id;
-  }
-
-  public InventoryStockItemEntity getStockItem() {
-    return stockItem;
-  }
-
-  public void setStockItem(InventoryStockItemEntity stockItem) {
-    this.stockItem = stockItem;
-  }
-
-  public UUID getOrderId() {
-    return orderId;
-  }
-
-  public void setOrderId(UUID orderId) {
-    this.orderId = orderId;
-  }
-
-  public UUID getOrderLineId() {
-    return orderLineId;
-  }
-
-  public void setOrderLineId(UUID orderLineId) {
-    this.orderLineId = orderLineId;
-  }
-
-  public int getQuantity() {
-    return quantity;
-  }
-
-  public void setQuantity(int quantity) {
-    this.quantity = quantity;
-  }
-
-  public String getStatus() {
-    return status;
-  }
-
-  public void setStatus(String status) {
-    this.status = status;
-  }
-
-  public Instant getExpiresAt() {
-    return expiresAt;
-  }
-
-  public void setExpiresAt(Instant expiresAt) {
-    this.expiresAt = expiresAt;
-  }
-
-  public Instant getResolvedAt() {
-    return resolvedAt;
-  }
-
-  public void setResolvedAt(Instant resolvedAt) {
-    this.resolvedAt = resolvedAt;
-  }
-
-  public Instant getOrphanedAt() {
-    return orphanedAt;
-  }
-
-  public void setOrphanedAt(Instant orphanedAt) {
-    this.orphanedAt = orphanedAt;
-  }
-
-  public Instant getCreatedAt() {
-    return createdAt;
-  }
-
-  public void setCreatedAt(Instant createdAt) {
-    this.createdAt = createdAt;
-  }
-
-  public Instant getUpdatedAt() {
-    return updatedAt;
-  }
-
-  public void setUpdatedAt(Instant updatedAt) {
-    this.updatedAt = updatedAt;
-  }
 
   void initializeAuditTimestamps(Instant createdAt, Instant updatedAt) {
     this.createdAt = createdAt;

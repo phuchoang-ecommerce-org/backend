@@ -4,6 +4,10 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -11,6 +15,9 @@ import java.util.UUID;
 /** Persistence representation of an immutable inventory movement. */
 @Entity
 @Table(name = "inventory_stock_adjustment")
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 class InventoryStockAdjustmentEntity {
   @Id
   private UUID id;
@@ -27,62 +34,4 @@ class InventoryStockAdjustmentEntity {
   @Column(name = "occurred_at", nullable = false)
   private Instant occurredAt;
 
-  protected InventoryStockAdjustmentEntity() {
-  }
-
-  public UUID getId() {
-    return id;
-  }
-
-  public void setId(UUID id) {
-    this.id = id;
-  }
-
-  public UUID getStockItemId() {
-    return stockItemId;
-  }
-
-  public void setStockItemId(UUID stockItemId) {
-    this.stockItemId = stockItemId;
-  }
-
-  public int getDelta() {
-    return delta;
-  }
-
-  public void setDelta(int delta) {
-    this.delta = delta;
-  }
-
-  public String getReasonCode() {
-    return reasonCode;
-  }
-
-  public void setReasonCode(String reasonCode) {
-    this.reasonCode = reasonCode;
-  }
-
-  public String getReason() {
-    return reason;
-  }
-
-  public void setReason(String reason) {
-    this.reason = reason;
-  }
-
-  public UUID getActorId() {
-    return actorId;
-  }
-
-  public void setActorId(UUID actorId) {
-    this.actorId = actorId;
-  }
-
-  public Instant getOccurredAt() {
-    return occurredAt;
-  }
-
-  public void setOccurredAt(Instant occurredAt) {
-    this.occurredAt = occurredAt;
-  }
 }

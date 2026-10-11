@@ -9,16 +9,11 @@ import org.springframework.stereotype.Service;
  * replay is an explicit at-least-once delivery and downstream idempotency remains authoritative.
  */
 @Service
+@lombok.RequiredArgsConstructor
 public class OutboxReplayService {
     private final OutboxStore outbox;
     private final KafkaEventPublisher publisher;
     private final EventEnvelopeCodec codec;
-
-    public OutboxReplayService(OutboxStore outbox, KafkaEventPublisher publisher, EventEnvelopeCodec codec) {
-        this.outbox = outbox;
-        this.publisher = publisher;
-        this.codec = codec;
-    }
 
     public void replay(OutboxModule module, long firstSequence, long lastSequence) {
         for (OutboxRecord record : outbox.eventRange(module, firstSequence, lastSequence)) {

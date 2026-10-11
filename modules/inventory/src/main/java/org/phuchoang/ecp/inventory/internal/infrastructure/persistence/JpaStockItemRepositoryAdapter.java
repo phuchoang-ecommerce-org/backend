@@ -21,20 +21,13 @@ import java.util.stream.Collectors;
  * on every save.
  */
 @Repository
+@lombok.RequiredArgsConstructor(access = lombok.AccessLevel.PACKAGE)
 class JpaStockItemRepositoryAdapter implements StockItemRepository {
 
   private final InventoryStockItemJpaRepository stockItems;
   private final EntityManager entityManager;
   private final Clock clock;
   private final StockItemJpaMapper mapper;
-
-  JpaStockItemRepositoryAdapter(InventoryStockItemJpaRepository stockItems, EntityManager entityManager, Clock clock,
-      StockItemJpaMapper mapper) {
-    this.stockItems = stockItems;
-    this.entityManager = entityManager;
-    this.clock = clock;
-    this.mapper = mapper;
-  }
 
   @Override
   public Optional<StockItem> findById(UUID stockItemId) {

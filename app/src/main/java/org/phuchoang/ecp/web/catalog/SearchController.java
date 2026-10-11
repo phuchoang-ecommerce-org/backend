@@ -14,15 +14,11 @@ import java.util.UUID;
 
 /** Public search endpoint backed exclusively by Catalog's Elasticsearch projection. */
 @RestController
+@lombok.RequiredArgsConstructor(access = lombok.AccessLevel.PACKAGE)
 class SearchController {
 
     private final CatalogSearchFacade search;
     private final SearchHttpRequestMapper requests;
-
-    SearchController(CatalogSearchFacade search, SearchHttpRequestMapper requests) {
-        this.search = search;
-        this.requests = requests;
-    }
 
     @GetMapping("/api/v1/search/products")
     SearchResponse searchProducts(HttpServletRequest request, @RequestParam(name = "q", required = false) String keyword,

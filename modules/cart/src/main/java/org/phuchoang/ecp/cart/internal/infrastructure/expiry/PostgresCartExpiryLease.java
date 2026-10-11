@@ -9,11 +9,10 @@ import java.sql.ResultSet;
 
 /** PostgreSQL session advisory lease, matching the outbox relay's multi-instance coordination pattern. */
 @Component
+@lombok.RequiredArgsConstructor(access = lombok.AccessLevel.PACKAGE)
 class PostgresCartExpiryLease implements CartExpiryLease {
     private static final String KEY = "ecp.cart.expiry";
     private final DataSource dataSource;
-
-    PostgresCartExpiryLease(DataSource dataSource) { this.dataSource = dataSource; }
 
     @Override
     public boolean executeIfAcquired(Runnable operation) {

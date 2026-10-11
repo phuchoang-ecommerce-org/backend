@@ -22,6 +22,7 @@ import java.util.UUID;
 
 /** `UC-CUS-08` — Manage Profile (`US-CUS-08`): {@code getOwnAccount}, {@code updateOwnProfile}. */
 @Service
+@lombok.RequiredArgsConstructor
 public class ProfileUseCases {
 
     private final AccountRepository accounts;
@@ -31,18 +32,6 @@ public class ProfileUseCases {
     private final Clock clock;
     private final AuditTrail audit;
     private final AccountSummaryMapper summaries;
-
-    public ProfileUseCases(AccountRepository accounts, VerificationTokenManager verificationTokens,
-            PermissionChecker permissions, DomainEventPublisher events, Clock clock, AuditTrail audit,
-            AccountSummaryMapper summaries) {
-        this.accounts = accounts;
-        this.verificationTokens = verificationTokens;
-        this.permissions = permissions;
-        this.events = events;
-        this.clock = clock;
-        this.audit = audit;
-        this.summaries = summaries;
-    }
 
     @Transactional(readOnly = true)
     public AccountSummary getOwnAccount(CallerContext caller) {

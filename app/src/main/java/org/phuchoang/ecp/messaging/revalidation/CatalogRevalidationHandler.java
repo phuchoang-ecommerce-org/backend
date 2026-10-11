@@ -20,6 +20,7 @@ import java.util.UUID;
  * roll back and Kafka redelivers the event (at-least-once, idempotent by construction).
  */
 @Component
+@lombok.RequiredArgsConstructor
 public class CatalogRevalidationHandler {
 
     private static final Logger log = LoggerFactory.getLogger(CatalogRevalidationHandler.class);
@@ -30,14 +31,6 @@ public class CatalogRevalidationHandler {
     private final RevalidationOrderingStore ordering;
     private final CatalogCacheInvalidator cache;
     private final WebRevalidationGateway web;
-
-    public CatalogRevalidationHandler(ProcessedEventStore processedEvents, RevalidationOrderingStore ordering,
-            CatalogCacheInvalidator cache, WebRevalidationGateway web) {
-        this.processedEvents = processedEvents;
-        this.ordering = ordering;
-        this.cache = cache;
-        this.web = web;
-    }
 
     @Transactional
     public void handle(EventEnvelope event, String originalBody) {

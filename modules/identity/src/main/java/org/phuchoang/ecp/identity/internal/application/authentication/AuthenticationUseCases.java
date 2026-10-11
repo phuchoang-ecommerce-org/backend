@@ -40,6 +40,7 @@ import java.time.Instant;
  * revoked since the last login takes effect on the very next refresh.
  */
 @Service
+@lombok.RequiredArgsConstructor
 public class AuthenticationUseCases {
 
     private final AccountRepository accounts;
@@ -50,19 +51,6 @@ public class AuthenticationUseCases {
     private final DomainEventPublisher events;
     private final Clock clock;
     private final AccountSummaryMapper summaries;
-
-    public AuthenticationUseCases(AccountRepository accounts, SessionManager sessions, PasswordEncoder passwordEncoder,
-            AccessTokenIssuer accessTokens, PermissionChecker permissions, DomainEventPublisher events, Clock clock,
-            AccountSummaryMapper summaries) {
-        this.accounts = accounts;
-        this.sessions = sessions;
-        this.passwordEncoder = passwordEncoder;
-        this.accessTokens = accessTokens;
-        this.permissions = permissions;
-        this.events = events;
-        this.clock = clock;
-        this.summaries = summaries;
-    }
 
     @Transactional
     public LoginResult logIn(LoginCommand command) {

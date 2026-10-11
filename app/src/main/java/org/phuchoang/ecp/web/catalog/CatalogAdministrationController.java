@@ -37,15 +37,11 @@ import java.util.UUID;
  * or minted), so the header is optional here like everywhere else.
  */
 @RestController
+@lombok.RequiredArgsConstructor(access = lombok.AccessLevel.PACKAGE)
 class CatalogAdministrationController {
 
     private final CatalogAdministrationFacade catalog;
     private final RequestContextResolver requestContext;
-
-    CatalogAdministrationController(CatalogAdministrationFacade catalog, RequestContextResolver requestContext) {
-        this.catalog = catalog;
-        this.requestContext = requestContext;
-    }
 
     // ---- products ----
 

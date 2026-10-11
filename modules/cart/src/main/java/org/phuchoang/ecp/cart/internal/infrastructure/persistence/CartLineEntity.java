@@ -7,6 +7,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -17,6 +21,9 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "cart_cart_line")
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 class CartLineEntity {
   @Id
   private UUID id;
@@ -35,73 +42,6 @@ class CartLineEntity {
   private Instant createdAt;
   @Column(name = "updated_at", nullable = false)
   private Instant updatedAt;
-
-  protected CartLineEntity() {
-  }
-
-  public UUID getId() {
-    return id;
-  }
-
-  public void setId(UUID id) {
-    this.id = id;
-  }
-
-  public CartEntity getCart() {
-    return cart;
-  }
-
-  public void setCart(CartEntity cart) {
-    this.cart = cart;
-  }
-
-  public UUID getVariantId() {
-    return variantId;
-  }
-
-  public void setVariantId(UUID variantId) {
-    this.variantId = variantId;
-  }
-
-  public String getSku() {
-    return sku;
-  }
-
-  public void setSku(String sku) {
-    this.sku = sku;
-  }
-
-  public int getQuantity() {
-    return quantity;
-  }
-
-  public void setQuantity(int quantity) {
-    this.quantity = quantity;
-  }
-
-  public Instant getAddedAt() {
-    return addedAt;
-  }
-
-  public void setAddedAt(Instant addedAt) {
-    this.addedAt = addedAt;
-  }
-
-  public Instant getCreatedAt() {
-    return createdAt;
-  }
-
-  public void setCreatedAt(Instant createdAt) {
-    this.createdAt = createdAt;
-  }
-
-  public Instant getUpdatedAt() {
-    return updatedAt;
-  }
-
-  public void setUpdatedAt(Instant updatedAt) {
-    this.updatedAt = updatedAt;
-  }
 
   void initializeAuditTimestamps(Instant now) {
     createdAt = now;

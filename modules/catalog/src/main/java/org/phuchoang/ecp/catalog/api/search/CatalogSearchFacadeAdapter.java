@@ -9,15 +9,11 @@ import org.springframework.stereotype.Component;
 
 /** Maps Catalog's internal Elasticsearch query model to its named public search interface. */
 @Component
+@lombok.RequiredArgsConstructor
 class CatalogSearchFacadeAdapter implements CatalogSearchFacade {
 
     private final SearchProductQueryService searches;
     private final CatalogSearchMapper mapper;
-
-    public CatalogSearchFacadeAdapter(SearchProductQueryService searches, CatalogSearchMapper mapper) {
-        this.searches = searches;
-        this.mapper = mapper;
-    }
 
     @Override
     public SearchResultPageView searchProducts(SearchProductsQuery query) {

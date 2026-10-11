@@ -23,19 +23,12 @@ import java.util.UUID;
  * the only adapter through which the web composition root reaches browse behavior.
  */
 @Component
+@lombok.RequiredArgsConstructor
 public class CatalogBrowseFacadeAdapter implements CatalogBrowseFacade {
     private final CategoryQueryService categories;
     private final CategoryProductListingService categoryProducts;
     private final VariantQueryService variants;
     private final CatalogDtoMapper mapper;
-
-    public CatalogBrowseFacadeAdapter(CategoryQueryService categories, CategoryProductListingService categoryProducts,
-            VariantQueryService variants, CatalogDtoMapper mapper) {
-        this.categories = categories;
-        this.categoryProducts = categoryProducts;
-        this.variants = variants;
-        this.mapper = mapper;
-    }
 
     @Override
     /** {@inheritDoc} */

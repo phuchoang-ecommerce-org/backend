@@ -26,17 +26,13 @@ import java.util.UUID;
 
 /** Command and authoritative PostgreSQL-backed read orchestration for Sprint 13. */
 @Service
+@lombok.RequiredArgsConstructor
 public class CartApplicationService {
     private final CartCommandService commands;
     private final CartReadQuery reads;
     private final VariantGateway variants;
     private final Clock clock;
     private final CartApplicationMapper mapper;
-
-    public CartApplicationService(CartCommandService commands, CartReadQuery reads, VariantGateway variants, Clock clock,
-                                  CartApplicationMapper mapper) {
-        this.commands = commands; this.reads = reads; this.variants = variants; this.clock = clock; this.mapper = mapper;
-    }
 
     @Transactional
     public CartView current(IdentityActor caller, String guestToken) {

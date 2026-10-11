@@ -22,6 +22,7 @@ import java.util.UUID;
  * always returns an empty page until Sprint 18 (`ordering` has no order-placement code yet).
  */
 @RestController
+@lombok.RequiredArgsConstructor(access = lombok.AccessLevel.PACKAGE)
 class OrderController {
 
     private static final Set<String> LIST_QUERY_PARAMS = Set.of(
@@ -29,11 +30,6 @@ class OrderController {
 
     private final OrderFacade orderFacade;
     private final RequestContextResolver requestContext;
-
-    OrderController(OrderFacade orderFacade, RequestContextResolver requestContext) {
-        this.orderFacade = orderFacade;
-        this.requestContext = requestContext;
-    }
 
     @GetMapping("/api/v1/orders")
     PageEnvelope<Object> listOrders(@AuthenticationPrincipal Jwt jwt, HttpServletRequest request,

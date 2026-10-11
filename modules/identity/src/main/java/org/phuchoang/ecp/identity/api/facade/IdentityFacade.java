@@ -34,6 +34,7 @@ import java.util.UUID;
  * the capability that owns the workflow.
  */
 @Component
+@lombok.RequiredArgsConstructor(access = lombok.AccessLevel.PACKAGE)
 public final class IdentityFacade {
 
     private final RegistrationUseCases registration;
@@ -42,17 +43,6 @@ public final class IdentityFacade {
     private final ProfileUseCases profiles;
     private final AddressUseCases addresses;
     private final IdentityDtoMapper mapper;
-
-    IdentityFacade(RegistrationUseCases registration, AuthenticationUseCases authentication,
-            PasswordUseCases passwords, ProfileUseCases profiles, AddressUseCases addresses,
-            IdentityDtoMapper mapper) {
-        this.registration = registration;
-        this.authentication = authentication;
-        this.passwords = passwords;
-        this.profiles = profiles;
-        this.addresses = addresses;
-        this.mapper = mapper;
-    }
 
     /** Registers an account and starts its email-verification flow ({@code UC-CUS-01}). */
     public void registerAccount(RegisterAccountRequest request) {

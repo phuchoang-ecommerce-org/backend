@@ -31,20 +31,13 @@ import java.util.UUID;
  * {@code ux_identity_address_default_shipping/billing} enforce the invariant under concurrency.
  */
 @Service
+@lombok.RequiredArgsConstructor
 public class AddressUseCases {
 
     private final AddressStore addresses;
     private final PermissionChecker permissions;
     private final CursorCodec cursorCodec;
     private final AddressSummaryMapper summaries;
-
-    public AddressUseCases(AddressStore addresses, PermissionChecker permissions, CursorCodec cursorCodec,
-            AddressSummaryMapper summaries) {
-        this.addresses = addresses;
-        this.permissions = permissions;
-        this.cursorCodec = cursorCodec;
-        this.summaries = summaries;
-    }
 
     @Transactional(readOnly = true)
     public AddressPageResult listOwnAddresses(CallerContext caller, String cursor, int size) {

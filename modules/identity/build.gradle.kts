@@ -10,6 +10,7 @@ dependencies {
     implementation(libs.jmolecules.events)
     implementation(libs.mapstruct)
     annotationProcessor(libs.mapstruct.processor)
+    annotationProcessor(libs.lombok.mapstruct.binding)
 
     // identity.infrastructure: JPA persistence adapters, Argon2 password hashing, JWT issuance
     // (JwtEncoder/JwtDecoder beans are configured in :app, per ADR-0034/Security.md §5.5), and the

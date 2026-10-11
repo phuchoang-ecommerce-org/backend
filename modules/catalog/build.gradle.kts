@@ -10,6 +10,7 @@ dependencies {
     implementation(libs.jmolecules.events)
     implementation(libs.mapstruct)
     annotationProcessor(libs.mapstruct.processor)
+    annotationProcessor(libs.lombok.mapstruct.binding)
     // Command aggregates use JPA; explicit query views use JdbcClient.  Spring Data JDBC is
     // available for simple relational projection persistence, not as a replacement for SQL
     // views that need joins, keyset pagination, or guarded upserts.

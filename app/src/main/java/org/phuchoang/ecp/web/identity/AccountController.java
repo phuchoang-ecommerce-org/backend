@@ -11,13 +11,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 /** `registerAccount` — `POST /api/v1/accounts` (`UC-CUS-01`). */
 @RestController
+@lombok.RequiredArgsConstructor(access = lombok.AccessLevel.PACKAGE)
 class AccountController {
 
     private final IdentityFacade identityFacade;
-
-    AccountController(IdentityFacade identityFacade) {
-        this.identityFacade = identityFacade;
-    }
 
     @PostMapping("/api/v1/accounts")
     @ResponseStatus(HttpStatus.ACCEPTED)

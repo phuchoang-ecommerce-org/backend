@@ -30,6 +30,7 @@ import java.util.UUID;
 
 /** Public, guest-readable Sprint 06 catalog endpoints. */
 @RestController
+@lombok.RequiredArgsConstructor(access = lombok.AccessLevel.PACKAGE)
 class CatalogBrowseController {
 
   private static final Set<String> TREE_PARAMS = Set.of("rootId", "maxDepth");
@@ -38,10 +39,6 @@ class CatalogBrowseController {
   private static final Set<String> VARIANT_PARAMS = Set.of("options");
 
   private final CatalogBrowseFacade catalog;
-
-  CatalogBrowseController(CatalogBrowseFacade catalog) {
-    this.catalog = catalog;
-  }
 
   @GetMapping("/api/v1/categories")
   List<CategoryNodeView> listCategories(HttpServletRequest request,

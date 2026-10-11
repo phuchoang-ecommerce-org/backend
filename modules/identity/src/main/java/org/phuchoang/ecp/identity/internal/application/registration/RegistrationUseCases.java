@@ -28,6 +28,7 @@ import java.util.UUID;
  * in which event is raised, never in the outcome the controller sees.
  */
 @Service
+@lombok.RequiredArgsConstructor
 public class RegistrationUseCases {
 
     private final AccountRepository accounts;
@@ -36,17 +37,6 @@ public class RegistrationUseCases {
     private final PermissionChecker permissions;
     private final DomainEventPublisher events;
     private final Clock clock;
-
-    public RegistrationUseCases(AccountRepository accounts, VerificationTokenManager verificationTokens,
-            PasswordEncoder passwordEncoder, PermissionChecker permissions, DomainEventPublisher events,
-            Clock clock) {
-        this.accounts = accounts;
-        this.verificationTokens = verificationTokens;
-        this.passwordEncoder = passwordEncoder;
-        this.permissions = permissions;
-        this.events = events;
-        this.clock = clock;
-    }
 
     /**
      * {@code registerNew} below deliberately runs in its own REQUIRES_NEW transaction, since a

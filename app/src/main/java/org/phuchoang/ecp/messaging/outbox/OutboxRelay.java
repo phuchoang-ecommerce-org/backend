@@ -16,6 +16,7 @@ import java.util.List;
  * that fails leaves the row pending and it is delivered again — intentional redelivery, not a bug.
  */
 @Component
+@lombok.RequiredArgsConstructor
 public class OutboxRelay {
 
     private static final Logger log = LoggerFactory.getLogger(OutboxRelay.class);
@@ -25,15 +26,6 @@ public class OutboxRelay {
     private final EventEnvelopeCodec codec;
     private final OutboxRelayLock lock;
     private final OutboxProperties properties;
-
-    public OutboxRelay(OutboxStore outbox, KafkaEventPublisher publisher, EventEnvelopeCodec codec,
-            OutboxRelayLock lock, OutboxProperties properties) {
-        this.outbox = outbox;
-        this.publisher = publisher;
-        this.codec = codec;
-        this.lock = lock;
-        this.properties = properties;
-    }
 
     @Scheduled(fixedDelayString = "${ecp.outbox.poll-delay-ms:1000}")
     void relay() {

@@ -14,17 +14,13 @@ import java.util.UUID;
 
 /** {@link SessionManager} over {@code identity_token} rows of type {@code REFRESH}. */
 @Component
+@lombok.RequiredArgsConstructor
 public class RefreshTokenSessionManager implements SessionManager {
 
     static final Duration REFRESH_TOKEN_TTL = Duration.ofDays(14);
 
     private final TokenStore tokens;
     private final Clock clock;
-
-    public RefreshTokenSessionManager(TokenStore tokens, Clock clock) {
-        this.tokens = tokens;
-        this.clock = clock;
-    }
 
     @Override
     public String issue(UUID accountId) {

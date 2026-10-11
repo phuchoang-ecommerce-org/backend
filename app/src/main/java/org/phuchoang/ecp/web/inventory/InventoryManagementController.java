@@ -23,13 +23,10 @@ import java.util.UUID;
 
 /** HTTP transport only for the protected operational inventory surface. */
 @RestController
+@lombok.RequiredArgsConstructor(access = lombok.AccessLevel.PACKAGE)
 class InventoryManagementController {
     private final InventoryManagementFacade inventory;
     private final RequestContextResolver requestContext;
-    InventoryManagementController(InventoryManagementFacade inventory, RequestContextResolver requestContext) {
-        this.inventory = inventory; this.requestContext = requestContext;
-    }
-
     @PatchMapping("/api/v1/inventory/stock-items/{id}/adjustments")
     StockItemView adjust(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id, @RequestBody StockAdjustmentWrite body) {
         RequestContext context = requestContext.resolve(jwt);

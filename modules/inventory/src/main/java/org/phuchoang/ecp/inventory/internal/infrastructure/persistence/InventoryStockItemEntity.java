@@ -8,6 +8,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -17,6 +21,9 @@ import java.util.UUID;
 /** JPA-only representation of the StockItem aggregate root. */
 @Entity
 @Table(name = "inventory_stock_item")
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 class InventoryStockItemEntity {
 
   @Id
@@ -40,90 +47,6 @@ class InventoryStockItemEntity {
 
   @OneToMany(mappedBy = "stockItem", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
   private List<InventoryStockReservationEntity> reservations = new ArrayList<>();
-
-  protected InventoryStockItemEntity() {
-    // JPA
-  }
-
-  public UUID getId() {
-    return id;
-  }
-
-  public void setId(UUID id) {
-    this.id = id;
-  }
-
-  public String getSku() {
-    return sku;
-  }
-
-  public void setSku(String sku) {
-    this.sku = sku;
-  }
-
-  public UUID getWarehouseId() {
-    return warehouseId;
-  }
-
-  public void setWarehouseId(UUID warehouseId) {
-    this.warehouseId = warehouseId;
-  }
-
-  public UUID getOwnerId() {
-    return ownerId;
-  }
-
-  public void setOwnerId(UUID ownerId) {
-    this.ownerId = ownerId;
-  }
-
-  public int getQuantityOnHand() {
-    return quantityOnHand;
-  }
-
-  public void setQuantityOnHand(int quantityOnHand) {
-    this.quantityOnHand = quantityOnHand;
-  }
-
-  public int getQuantityReserved() {
-    return quantityReserved;
-  }
-
-  public void setQuantityReserved(int quantityReserved) {
-    this.quantityReserved = quantityReserved;
-  }
-
-  public long getVersion() {
-    return version;
-  }
-
-  public void setVersion(long version) {
-    this.version = version;
-  }
-
-  public Instant getCreatedAt() {
-    return createdAt;
-  }
-
-  public void setCreatedAt(Instant createdAt) {
-    this.createdAt = createdAt;
-  }
-
-  public Instant getUpdatedAt() {
-    return updatedAt;
-  }
-
-  public void setUpdatedAt(Instant updatedAt) {
-    this.updatedAt = updatedAt;
-  }
-
-  public List<InventoryStockReservationEntity> getReservations() {
-    return reservations;
-  }
-
-  public void setReservations(List<InventoryStockReservationEntity> reservations) {
-    this.reservations = reservations;
-  }
 
   void initializeAuditTimestamps(Instant now) {
     createdAt = now;

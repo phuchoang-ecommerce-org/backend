@@ -11,13 +11,10 @@ import java.util.UUID;
 
 /** Guest-readable product detail and its independently available rating summary. */
 @RestController
+@lombok.RequiredArgsConstructor(access = lombok.AccessLevel.PACKAGE)
 class ProductController {
 
     private final CatalogProductFacade catalog;
-
-    ProductController(CatalogProductFacade catalog) {
-        this.catalog = catalog;
-    }
 
     @GetMapping("/api/v1/products/{productId}")
     ProductDetailView getProduct(@PathVariable UUID productId) {

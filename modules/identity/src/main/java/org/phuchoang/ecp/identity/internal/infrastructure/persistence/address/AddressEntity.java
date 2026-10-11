@@ -6,6 +6,10 @@ import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -13,6 +17,9 @@ import java.util.UUID;
 /** JPA mapping of {@code identity_address} (Database.md §4.1) — persistence shape only. */
 @Entity
 @Table(name = "identity_address")
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 class AddressEntity {
 
     @Id
@@ -59,11 +66,8 @@ class AddressEntity {
     private Instant createdAt;
 
     @Column(name = "updated_at", nullable = false)
+    @Setter(AccessLevel.NONE)
     private Instant updatedAt;
-
-    protected AddressEntity() {
-        // JPA
-    }
 
     AddressEntity(UUID id, UUID accountId, String label, String recipientName, String line1, String line2,
             String city, String region, String postalCode, String countryCode, String phone,
@@ -84,76 +88,6 @@ class AddressEntity {
         this.createdAt = createdAt;
         this.updatedAt = createdAt;
     }
-
-    public UUID getId() {
-        return id;
-    }
-    public void setId(UUID id) { this.id = id; }
-
-    public UUID getAccountId() {
-        return accountId;
-    }
-    public void setAccountId(UUID accountId) { this.accountId = accountId; }
-
-    public String getLabel() {
-        return label;
-    }
-    public void setLabel(String label) { this.label = label; }
-
-    public String getRecipientName() {
-        return recipientName;
-    }
-    public void setRecipientName(String recipientName) { this.recipientName = recipientName; }
-
-    public String getLine1() {
-        return line1;
-    }
-    public void setLine1(String line1) { this.line1 = line1; }
-
-    public String getLine2() {
-        return line2;
-    }
-    public void setLine2(String line2) { this.line2 = line2; }
-
-    public String getCity() {
-        return city;
-    }
-    public void setCity(String city) { this.city = city; }
-
-    public String getRegion() {
-        return region;
-    }
-    public void setRegion(String region) { this.region = region; }
-
-    public String getPostalCode() {
-        return postalCode;
-    }
-    public void setPostalCode(String postalCode) { this.postalCode = postalCode; }
-
-    public String getCountryCode() {
-        return countryCode;
-    }
-    public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
-
-    public String getPhone() {
-        return phone;
-    }
-    public void setPhone(String phone) { this.phone = phone; }
-
-    public boolean isDefaultShipping() {
-        return defaultShipping;
-    }
-    public void setDefaultShipping(boolean defaultShipping) { this.defaultShipping = defaultShipping; }
-
-    public boolean isDefaultBilling() {
-        return defaultBilling;
-    }
-    public void setDefaultBilling(boolean defaultBilling) { this.defaultBilling = defaultBilling; }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 
     void initializeAuditTimestamps(Instant now) { this.createdAt = now; this.updatedAt = now; }
 }

@@ -3,20 +3,17 @@ package org.phuchoang.ecp.cart.api;
 import org.phuchoang.ecp.cart.internal.application.cart.CartApplicationService;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.springframework.stereotype.Component;
+import lombok.RequiredArgsConstructor;
 
 import java.util.UUID;
 import java.util.function.Supplier;
 
 /** Thin public adapter that keeps the application service module-private. */
 @Component
+@RequiredArgsConstructor(access = lombok.AccessLevel.PACKAGE)
 class CartFacadeAdapter implements CartFacade {
   private final CartApplicationService carts;
   private final CartApiMapper mapper;
-
-  CartFacadeAdapter(CartApplicationService carts, CartApiMapper mapper) {
-    this.carts = carts;
-    this.mapper = mapper;
-  }
 
   @Override
   public CartView getCurrentCart(IdentityActor caller, String guestToken) {

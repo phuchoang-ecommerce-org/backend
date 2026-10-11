@@ -17,15 +17,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 /** `changeOwnPassword` (`UC-CUS-06`), `requestPasswordReset`/`completePasswordReset` (`UC-CUS-07`). */
 @RestController
+@lombok.RequiredArgsConstructor(access = lombok.AccessLevel.PACKAGE)
 class PasswordController {
 
     private final IdentityFacade identityFacade;
     private final RequestContextResolver requestContext;
-
-    PasswordController(IdentityFacade identityFacade, RequestContextResolver requestContext) {
-        this.identityFacade = identityFacade;
-        this.requestContext = requestContext;
-    }
 
     @PutMapping("/api/v1/accounts/me/password")
     @ResponseStatus(HttpStatus.NO_CONTENT)

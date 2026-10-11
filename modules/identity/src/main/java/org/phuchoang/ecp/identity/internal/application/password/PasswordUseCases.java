@@ -31,6 +31,7 @@ import java.time.Instant;
  * learns whether the address exists, and every invalid-link case is reported identically.
  */
 @Service
+@lombok.RequiredArgsConstructor
 public class PasswordUseCases {
 
     private final AccountRepository accounts;
@@ -40,17 +41,6 @@ public class PasswordUseCases {
     private final PermissionChecker permissions;
     private final DomainEventPublisher events;
     private final Clock clock;
-
-    public PasswordUseCases(AccountRepository accounts, PasswordResetTokenManager resetTokens, SessionManager sessions,
-            PasswordEncoder passwordEncoder, PermissionChecker permissions, DomainEventPublisher events, Clock clock) {
-        this.accounts = accounts;
-        this.resetTokens = resetTokens;
-        this.sessions = sessions;
-        this.passwordEncoder = passwordEncoder;
-        this.permissions = permissions;
-        this.events = events;
-        this.clock = clock;
-    }
 
     @Transactional
     public void changeOwnPassword(CallerContext caller, ChangePasswordCommand command) {

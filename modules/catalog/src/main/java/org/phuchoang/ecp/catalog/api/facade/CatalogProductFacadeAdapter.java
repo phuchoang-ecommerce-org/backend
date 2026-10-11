@@ -14,14 +14,10 @@ import java.util.UUID;
 
 /** Maps catalog's internal product-detail read model to its named public interface. */
 @Component
+@lombok.RequiredArgsConstructor
 public class CatalogProductFacadeAdapter implements CatalogProductFacade {
     private final ProductDetailsQueryService service;
     private final CatalogDtoMapper mapper;
-
-    public CatalogProductFacadeAdapter(ProductDetailsQueryService service, CatalogDtoMapper mapper) {
-        this.service = service;
-        this.mapper = mapper;
-    }
 
     @Override
     public ProductDetailView getProduct(UUID productId) {

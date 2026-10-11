@@ -12,13 +12,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 /** `verifyEmailAddress` and `resendEmailVerification` (`UC-CUS-02`). */
 @RestController
+@lombok.RequiredArgsConstructor(access = lombok.AccessLevel.PACKAGE)
 class AccountVerificationController {
 
     private final IdentityFacade identityFacade;
-
-    AccountVerificationController(IdentityFacade identityFacade) {
-        this.identityFacade = identityFacade;
-    }
 
     @PostMapping("/api/v1/account-verifications")
     @ResponseStatus(HttpStatus.NO_CONTENT)

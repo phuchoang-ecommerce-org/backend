@@ -7,6 +7,10 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.phuchoang.ecp.identity.internal.domain.model.AccountStatus;
 import org.phuchoang.ecp.identity.internal.domain.model.VerificationStatus;
 
@@ -16,6 +20,9 @@ import java.util.UUID;
 /** JPA mapping of {@code identity_account} (Database.md §4.1) — the persistence shape only; {@link org.phuchoang.ecp.identity.internal.domain.model.Account} is the behaviour. */
 @Entity
 @Table(name = "identity_account")
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 class AccountEntity {
 
     @Id
@@ -58,17 +65,16 @@ class AccountEntity {
     private Instant createdAt;
 
     @Column(name = "created_by")
+    @Setter(AccessLevel.NONE)
     private UUID createdBy;
 
     @Column(name = "updated_at", nullable = false)
+    @Setter(AccessLevel.NONE)
     private Instant updatedAt;
 
     @Column(name = "updated_by")
+    @Setter(AccessLevel.NONE)
     private UUID updatedBy;
-
-    protected AccountEntity() {
-        // JPA
-    }
 
     AccountEntity(UUID id, String email, String pendingEmail, String credentialHash, String displayName,
             AccountStatus status, VerificationStatus verificationStatus, Instant verifiedAt, Instant lastLoginAt,
@@ -87,86 +93,6 @@ class AccountEntity {
         this.createdAt = createdAt;
         this.updatedAt = createdAt;
     }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) { this.id = id; }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) { this.email = email; }
-
-    public String getCredentialHash() {
-        return credentialHash;
-    }
-
-    public void setCredentialHash(String credentialHash) { this.credentialHash = credentialHash; }
-
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public void setDisplayName(String displayName) { this.displayName = displayName; }
-
-    public String getPendingEmail() {
-        return pendingEmail;
-    }
-
-    public void setPendingEmail(String pendingEmail) { this.pendingEmail = pendingEmail; }
-
-    public AccountStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(AccountStatus status) { this.status = status; }
-
-    public VerificationStatus getVerificationStatus() {
-        return verificationStatus;
-    }
-
-    public void setVerificationStatus(VerificationStatus verificationStatus) {
-        this.verificationStatus = verificationStatus;
-    }
-
-    public Instant getVerifiedAt() {
-        return verifiedAt;
-    }
-
-    public void setVerifiedAt(Instant verifiedAt) {
-        this.verifiedAt = verifiedAt;
-    }
-
-    public Instant getLastLoginAt() {
-        return lastLoginAt;
-    }
-
-    public void setLastLoginAt(Instant lastLoginAt) {
-        this.lastLoginAt = lastLoginAt;
-    }
-
-    public int getFailedLoginCount() {
-        return failedLoginCount;
-    }
-
-    public void setFailedLoginCount(int failedLoginCount) {
-        this.failedLoginCount = failedLoginCount;
-    }
-
-    public long getVersion() {
-        return version;
-    }
-
-    public void setVersion(long version) { this.version = version; }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 
     void initializeAuditTimestamps(Instant now) { this.createdAt = now; this.updatedAt = now; }
 }

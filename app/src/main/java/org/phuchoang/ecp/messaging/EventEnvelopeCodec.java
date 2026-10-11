@@ -9,13 +9,10 @@ import tools.jackson.databind.ObjectMapper;
  * {@link ObjectMapper}, in both directions. No hand-built JSON anywhere in the relay or listeners.
  */
 @Component
+@lombok.RequiredArgsConstructor
 public class EventEnvelopeCodec {
 
     private final ObjectMapper json;
-
-    public EventEnvelopeCodec(ObjectMapper json) {
-        this.json = json;
-    }
 
     public String serialize(EventEnvelope envelope) {
         return json.writeValueAsString(envelope);

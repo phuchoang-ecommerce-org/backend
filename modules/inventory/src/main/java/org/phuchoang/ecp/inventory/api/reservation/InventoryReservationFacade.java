@@ -12,20 +12,13 @@ import org.springframework.stereotype.Component;
  * {@code StockReservationPort} adapter that will call this facade inside order placement.
  */
 @Component
+@lombok.RequiredArgsConstructor(access = lombok.AccessLevel.PACKAGE)
 public final class InventoryReservationFacade {
 
     private final ReserveStockService reserveStock;
     private final ReleaseStockReservationService releaseStockReservation;
     private final CommitStockReservationService commitStockReservation;
     private final InventoryReservationApiMapper mapper;
-
-    InventoryReservationFacade(ReserveStockService reserve, ReleaseStockReservationService release,
-            CommitStockReservationService commit, InventoryReservationApiMapper mapper) {
-        this.reserveStock = reserve;
-        this.releaseStockReservation = release;
-        this.commitStockReservation = commit;
-        this.mapper = mapper;
-    }
 
     public ReservationSet reserve(ReserveStockCommand command) {
         try {
