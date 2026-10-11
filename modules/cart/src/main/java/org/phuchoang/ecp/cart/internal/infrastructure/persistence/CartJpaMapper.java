@@ -30,6 +30,9 @@ interface CartJpaMapper {
     @Mapping(target = "lines", ignore = true)
     void updateEntity(Cart cart, @MappingTarget CartEntity entity);
 
+    // Aggregate lifecycle commands are behavior, not persisted Cart fields.
+    @Mapping(target = "create", ignore = true)
+    @Mapping(target = "expire", ignore = true)
     @Mapping(target = "mergeInto", ignore = true)
     Cart toDomain(CartEntity entity);
 

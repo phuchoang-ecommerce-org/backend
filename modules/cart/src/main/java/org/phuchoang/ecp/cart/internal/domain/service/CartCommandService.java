@@ -37,7 +37,7 @@ public final class CartCommandService {
   }
 
   public Cart current(CartOwner owner, Instant now) {
-    return findCurrent(owner).orElseGet(() -> persist(newCart(owner, now)));
+    return findCurrent(owner).orElseGet(() -> newCart(owner, now).create(carts));
   }
 
   public Cart add(CartOwner owner, UUID cartId, Variant variant, int quantity, Instant now) {
@@ -45,7 +45,7 @@ public final class CartCommandService {
     int combined = cart.lines().stream().filter(line -> line.variantId().equals(variant.id()))
         .mapToInt(CartLine::quantity).findFirst().orElse(0) + quantity;
     requireAvailable(variant, combined);
-    return persist(cart.add(variant.id(), variant.sku(), quantity, now));
+    return cart.add(variant.id(), variant.sku(), quantity, now, carts);
   }
 
   public Cart changeQuantity(CartOwner owner, UUID cartId, UUID lineId, int quantity, VariantLookup variants,
@@ -56,14 +56,12 @@ public final class CartCommandService {
       return cart; // E2: a deleted line is not resurrected by a stale update.
     if (quantity > 0)
       requireAvailable(java.util.Objects.requireNonNull(variants.find(line.variantId()), "variant"), quantity);
-    return persist(cart.changeQuantity(lineId, quantity, now));
+    return cart.changeQuantity(lineId, quantity, now, carts);
   }
 
   public void remove(CartOwner owner, UUID cartId, UUID lineId, Instant now) {
     Cart cart = resolve(owner, cartId, false, now);
-    Cart changed = cart.remove(lineId, now);
-    if (changed != cart)
-      persist(changed); // an absent line is a successful no-op.
+    cart.remove(lineId, now, carts);
   }
 
   /**
@@ -82,9 +80,8 @@ public final class CartCommandService {
       availability.computeIfAbsent(line.variantId(), variants::find);
     }
     CartMergePolicy.MergePlan plan = mergePolicy.merge(customer.lines(), guest.lines(), availability);
-    Cart changedCustomer = customer.replaceLines(plan.lines(), now);
-    persist(changedCustomer);
-    persist(guest.mergeInto(changedCustomer.id()));
+    Cart changedCustomer = customer.replaceLines(plan.lines(), now, carts);
+    guest.mergeInto(changedCustomer.id(), carts);
     return new MergeResult(true, plan.notices());
   }
 
@@ -95,7 +92,7 @@ public final class CartCommandService {
   public void expireDueCarts(Instant now, int limit, Predicate<UUID> hasActiveCheckoutOrDraftOrder) {
     carts.findExpiredActiveAt(now, limit).forEach(cart -> {
       if (!hasActiveCheckoutOrDraftOrder.test(cart.id())) {
-        persist(cart.expire());
+        cart.expire(carts);
       }
     });
   }
@@ -124,14 +121,6 @@ public final class CartCommandService {
     return owner.customerId() != null
         ? newCustomerCart(owner.customerId(), now)
         : Cart.guest(UUID.randomUUID(), owner.guestToken(), now, now.plus(guestLifetime));
-  }
-
-  /**
-   * The only write path: persistence receives the Cart aggregate root, whose
-   * owned lines are persisted atomically by the aggregate repository adapter.
-   */
-  private Cart persist(Cart cart) {
-    return carts.save(cart);
   }
 
   private static void requireAvailable(Variant variant, int quantity) {
