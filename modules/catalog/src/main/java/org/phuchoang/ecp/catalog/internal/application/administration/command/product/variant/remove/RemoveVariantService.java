@@ -3,7 +3,6 @@ package org.phuchoang.ecp.catalog.internal.application.administration.command.pr
 import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogCommandContext;
 import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogPermissions;
 import org.phuchoang.ecp.catalog.internal.application.event.CatalogEventPublisher;
-import org.phuchoang.ecp.catalog.internal.domain.event.ProductUpdated;
 import org.phuchoang.ecp.catalog.internal.domain.model.Product;
 import org.phuchoang.ecp.catalog.internal.domain.service.ProductCommandService;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;

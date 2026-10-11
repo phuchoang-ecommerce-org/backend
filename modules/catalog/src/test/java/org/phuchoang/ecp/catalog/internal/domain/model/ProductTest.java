@@ -1,6 +1,7 @@
 package org.phuchoang.ecp.catalog.internal.domain.model;
 
 import org.junit.jupiter.api.Test;
+import org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -12,6 +13,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /** L1 — the product aggregate owns immutable snapshots of its variants and images. */
 class ProductTest {
@@ -73,5 +77,18 @@ class ProductTest {
         Product product = Product.create(id, UUID.randomUUID(), "  Travel Mug: 500ml! ", null, null, Map.of());
         assertThat(product.slug()).isEqualTo("travel-mug-500ml-" + id.toString().substring(0, 8));
         assertThat(Slugs.normalize("Café & Bar")).isEqualTo("caf-bar");
+    }
+
+    @Test
+    void ownsItsRepositoryPersistenceOperations() {
+        ProductRepository repository = mock(ProductRepository.class);
+        Product product = Product.create(UUID.randomUUID(), UUID.randomUUID(), "Shirt", null, null, Map.of());
+        when(repository.save(product)).thenReturn(product);
+
+        product.persist(repository);
+        product.discontinue(repository);
+
+        verify(repository).save(product);
+        verify(repository).deleteById(product.id());
     }
 }

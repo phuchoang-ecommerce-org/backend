@@ -1,11 +1,16 @@
 package org.phuchoang.ecp.catalog.internal.domain.model;
 
 import org.junit.jupiter.api.Test;
+import org.phuchoang.ecp.catalog.internal.domain.repository.CategoryRepository;
+import org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository;
 
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class CategoryTest {
 
@@ -28,5 +33,23 @@ class CategoryTest {
         assertThat(category.mayMoveBelow(descendant)).isFalse();
         assertThatThrownBy(() -> category.change(descendant.id(), category.name(), null, 0, false, descendant))
             .isInstanceOf(CategoryHierarchyViolation.class);
+    }
+
+    @Test
+    void ownsItsRepositoryPersistenceAndOccupancyOperations() {
+        CategoryRepository categories = mock(CategoryRepository.class);
+        ProductRepository products = mock(ProductRepository.class);
+        Category category = new Category(UUID.randomUUID(), null, "Root", "root", "/root/", 0, null, 0, false);
+        when(categories.save(category)).thenReturn(category);
+        when(categories.countByParentId(category.id())).thenReturn(3L);
+        when(products.countByCategoryId(category.id())).thenReturn(5L);
+
+        category.persist(categories);
+        assertThat(category.childCategoryCount(categories)).isEqualTo(3L);
+        assertThat(category.assignedProductCount(products)).isEqualTo(5L);
+        category.remove(categories);
+
+        verify(categories).save(category);
+        verify(categories).deleteById(category.id());
     }
 }

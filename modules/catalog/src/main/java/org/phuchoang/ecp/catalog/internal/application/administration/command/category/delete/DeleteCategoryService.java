@@ -3,7 +3,7 @@ package org.phuchoang.ecp.catalog.internal.application.administration.command.ca
 import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogCommandContext;
 import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogPermissions;
 import org.phuchoang.ecp.catalog.internal.application.event.CatalogEventPublisher;
-import org.phuchoang.ecp.catalog.internal.domain.event.CategoryChanged;
+import org.phuchoang.ecp.catalog.internal.domain.model.Category;
 import org.phuchoang.ecp.catalog.internal.domain.service.CategoryCommandService;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
 import org.phuchoang.ecp.catalog.internal.application.error.ApplicationErrorCode;

@@ -6,7 +6,6 @@ import org.phuchoang.ecp.catalog.internal.application.administration.command.Cat
 import org.phuchoang.ecp.catalog.internal.application.administration.command.category.CategorySnapshot;
 import org.phuchoang.ecp.catalog.internal.application.administration.command.category.CategorySnapshotMapper;
 import org.phuchoang.ecp.catalog.internal.application.event.CatalogEventPublisher;
-import org.phuchoang.ecp.catalog.internal.domain.event.CategoryChanged;
 import org.phuchoang.ecp.catalog.internal.domain.model.Category;
 import org.phuchoang.ecp.catalog.internal.domain.model.CategoryHierarchyViolation;
 import org.phuchoang.ecp.catalog.internal.domain.service.CategoryCommandService;

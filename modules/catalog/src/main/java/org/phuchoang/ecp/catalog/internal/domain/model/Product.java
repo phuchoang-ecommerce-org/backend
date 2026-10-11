@@ -12,12 +12,14 @@ import org.phuchoang.ecp.catalog.internal.domain.event.ProductPriceChanged;
 import org.phuchoang.ecp.catalog.internal.domain.event.ProductPublished;
 import org.phuchoang.ecp.catalog.internal.domain.event.ProductUpdated;
 import org.phuchoang.ecp.catalog.internal.domain.event.VariantAdded;
+import org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 /** Catalog's product aggregate. Variants and images are changed only through this root. */
@@ -62,6 +64,11 @@ public final class Product implements CatalogEventSource {
             PublicationStatus.DRAFT, null, attributes, List.of(), List.of());
         product.domainEvents.add(new ProductCreated(product.snapshot()));
         return product;
+    }
+
+    /** Loads this aggregate through its domain persistence boundary. */
+    public static Optional<Product> findById(UUID id, ProductRepository repository) {
+        return repository.findById(id);
     }
 
     public Product change(UUID updatedCategoryId, String updatedName, String updatedDescription, String updatedBrand,
@@ -126,9 +133,20 @@ public final class Product implements CatalogEventSource {
         return this;
     }
 
-    /** Records removal before the application deletes this aggregate's persistent state. */
+    /** Records removal before deleting this aggregate through its persistence boundary. */
     public void discontinue() {
         domainEvents.add(new ProductDiscontinued(id, variantIds(), variantSkus()));
+    }
+
+    /** Persists this aggregate after a valid domain transition. */
+    public void persist(ProductRepository repository) {
+        repository.save(this);
+    }
+
+    /** Records discontinuation and removes this aggregate through its persistence boundary. */
+    public void discontinue(ProductRepository repository) {
+        discontinue();
+        repository.deleteById(id);
     }
 
     public Variant variant(UUID variantId) {

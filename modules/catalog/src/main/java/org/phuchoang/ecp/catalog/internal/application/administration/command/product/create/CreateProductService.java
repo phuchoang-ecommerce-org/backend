@@ -5,7 +5,6 @@ import org.phuchoang.ecp.catalog.internal.application.administration.command.Cat
 import org.phuchoang.ecp.catalog.internal.application.administration.command.product.ProductSnapshot;
 import org.phuchoang.ecp.catalog.internal.application.administration.command.product.ProductSnapshotMapper;
 import org.phuchoang.ecp.catalog.internal.application.event.CatalogEventPublisher;
-import org.phuchoang.ecp.catalog.internal.domain.event.ProductCreated;
 import org.phuchoang.ecp.catalog.internal.domain.model.Product;
 import org.phuchoang.ecp.catalog.internal.domain.service.ProductCommandService;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;

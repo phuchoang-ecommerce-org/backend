@@ -4,7 +4,6 @@ import org.phuchoang.ecp.catalog.internal.application.administration.command.Cat
 import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogLookups;
 import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogPermissions;
 import org.phuchoang.ecp.catalog.internal.application.event.CatalogEventPublisher;
-import org.phuchoang.ecp.catalog.internal.domain.event.ProductUpdated;
 import org.phuchoang.ecp.catalog.internal.domain.model.Product;
 import org.phuchoang.ecp.catalog.internal.domain.service.ProductCommandService;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
@@ -36,8 +35,8 @@ public class RemoveProductImageService {
     public void remove(CatalogCommandContext context, UUID productId, UUID imageId) {
         authorization.assertAuthorized(context.caller(), CatalogPermissions.MANAGE_PRODUCTS);
 
-        Product product = CatalogLookups.requireProduct(products.find(productId));
-        Product after = products.removeImage(product, imageId);
+        Product before = CatalogLookups.requireProduct(products.find(productId));
+        Product after = products.removeImage(before, imageId);
 
         events.publishFrom(after, context);
     }

@@ -6,9 +6,12 @@ import org.jmolecules.ddd.annotation.AggregateRoot;
 import org.jmolecules.ddd.annotation.Identity;
 import org.phuchoang.ecp.catalog.internal.domain.event.CatalogDomainEvent;
 import org.phuchoang.ecp.catalog.internal.domain.event.CategoryChanged;
+import org.phuchoang.ecp.catalog.internal.domain.repository.CategoryRepository;
+import org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /** Category hierarchy aggregate and owner of category-change facts. */
@@ -53,6 +56,11 @@ public final class Category implements CatalogEventSource {
         return category;
     }
 
+    /** Loads this aggregate through its domain persistence boundary. */
+    public static Optional<Category> findById(UUID id, CategoryRepository repository) {
+        return repository.findById(id);
+    }
+
     public Category change(UUID updatedParentId, String updatedName, String updatedImageUrl, int updatedSortOrder,
             boolean updatedFeatured, Category parent) {
         if (!mayMoveBelow(parent)) {
@@ -73,8 +81,25 @@ public final class Category implements CatalogEventSource {
         return proposedParent == null || !proposedParent.path.startsWith(path);
     }
 
-    /** Records removal before the application deletes this aggregate's persistent state. */
+    /** Records removal before deleting this aggregate through its persistence boundary. */
     public void remove() { domainEvents.add(new CategoryChanged(snapshot(), true)); }
+
+    public void persist(CategoryRepository repository) {
+        repository.save(this);
+    }
+
+    public long childCategoryCount(CategoryRepository repository) {
+        return repository.countByParentId(id);
+    }
+
+    public long assignedProductCount(ProductRepository repository) {
+        return repository.countByCategoryId(id);
+    }
+
+    public void remove(CategoryRepository repository) {
+        remove();
+        repository.deleteById(id);
+    }
 
     public UUID id() { return id; }
     public UUID parentId() { return parentId; }
