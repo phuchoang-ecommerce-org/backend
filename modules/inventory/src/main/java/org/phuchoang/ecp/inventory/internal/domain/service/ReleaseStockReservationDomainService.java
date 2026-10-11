@@ -5,7 +5,6 @@ import org.phuchoang.ecp.inventory.internal.domain.model.StockItem;
 import org.phuchoang.ecp.inventory.internal.domain.repository.StockItemRepository;
 
 import java.time.Clock;
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -24,11 +23,7 @@ public final class ReleaseStockReservationDomainService {
 
   public StockItem.Transition release(UUID stockItemId, UUID reservationId, boolean orphaned) {
     StockItem item = requireStockItem(stockItemId);
-    StockItem.Transition transition = item.release(reservationId, clock.instant(), orphaned);
-    if (transition.stockItem() != item) {
-      stockItems.saveAll(List.of(transition.stockItem()));
-    }
-    return transition;
+    return item.release(reservationId, clock.instant(), orphaned, stockItems);
   }
 
   private StockItem requireStockItem(UUID stockItemId) {

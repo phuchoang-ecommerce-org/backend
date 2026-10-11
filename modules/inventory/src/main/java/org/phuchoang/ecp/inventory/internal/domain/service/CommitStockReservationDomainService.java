@@ -5,7 +5,6 @@ import org.phuchoang.ecp.inventory.internal.domain.model.StockItem;
 import org.phuchoang.ecp.inventory.internal.domain.repository.StockItemRepository;
 
 import java.time.Clock;
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -25,11 +24,7 @@ public final class CommitStockReservationDomainService {
 
   public StockItem.Transition commit(UUID stockItemId, UUID reservationId) {
     StockItem item = requireStockItem(stockItemId);
-    StockItem.Transition transition = item.commit(reservationId, clock.instant());
-    if (transition.stockItem() != item) {
-      stockItems.saveAll(List.of(transition.stockItem()));
-    }
-    return transition;
+    return item.commit(reservationId, clock.instant(), stockItems);
   }
 
   private StockItem requireStockItem(UUID stockItemId) {

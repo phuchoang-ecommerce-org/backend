@@ -2,9 +2,11 @@ package org.phuchoang.ecp.inventory.internal.domain.model;
 
 import org.jmolecules.ddd.annotation.AggregateRoot;
 import org.jmolecules.ddd.annotation.Identity;
+import org.phuchoang.ecp.inventory.internal.domain.repository.StockItemRepository;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -39,6 +41,15 @@ public record StockItem(
     }
 
     /**
+     * Persists a validated set of changed StockItem roots as one aggregate-oriented write.
+     * Callers must first complete every reservation decision so a shortfall cannot leave a
+     * partial reservation write.
+     */
+    public static void persistAll(Collection<StockItem> stockItems, StockItemRepository repository) {
+        repository.saveAll(List.copyOf(stockItems));
+    }
+
+    /**
      * Records a counted physical movement while preserving already-promised units (BR-INV-01).
      * The resulting child fact is persisted only through this aggregate root.
      */
@@ -53,6 +64,14 @@ public record StockItem(
         StockItem adjusted = new StockItem(id, sku, warehouseId, ownerId, adjustedOnHand, quantityReserved, version,
             reservations);
         return new Adjustment(adjusted, proposedAdjustment.recordFor(adjustmentId, id, occurredAt));
+    }
+
+    /** Records and persists a physical movement through this aggregate's repository. */
+    public Adjustment adjust(StockAdjustment proposedAdjustment, UUID adjustmentId, Instant occurredAt,
+            StockItemRepository repository) {
+        Adjustment adjustment = adjust(proposedAdjustment, adjustmentId, occurredAt);
+        repository.save(adjustment);
+        return adjustment;
     }
 
     public StockItem reserve(UUID reservationId, UUID orderId, UUID orderLineId, int quantity, Instant expiresAt) {
@@ -80,6 +99,15 @@ public record StockItem(
             released, TransitionOutcome.RELEASED);
     }
 
+    /** Executes a release and persists it only when it changes aggregate state. */
+    public Transition release(UUID reservationId, Instant now, boolean orphaned, StockItemRepository repository) {
+        Transition transition = release(reservationId, now, orphaned);
+        if (transition.stockItem() != this) {
+            persistAll(List.of(transition.stockItem()), repository);
+        }
+        return transition;
+    }
+
     public Transition commit(UUID reservationId, Instant now) {
         StockReservation reservation = requireReservation(reservationId);
         if (reservation.status() == ReservationStatus.COMMITTED) {
@@ -91,6 +119,15 @@ public record StockItem(
         StockReservation committed = reservation.commit(now);
         return new Transition(replace(reservationId, committed, quantityOnHand - reservation.quantity(),
             quantityReserved - reservation.quantity()), committed, TransitionOutcome.COMMITTED);
+    }
+
+    /** Executes a commitment and persists it only when it changes aggregate state. */
+    public Transition commit(UUID reservationId, Instant now, StockItemRepository repository) {
+        Transition transition = commit(reservationId, now);
+        if (transition.stockItem() != this) {
+            persistAll(List.of(transition.stockItem()), repository);
+        }
+        return transition;
     }
 
     private StockReservation requireReservation(UUID reservationId) {

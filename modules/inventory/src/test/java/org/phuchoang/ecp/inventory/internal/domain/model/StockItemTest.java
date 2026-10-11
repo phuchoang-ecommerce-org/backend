@@ -1,12 +1,16 @@
 package org.phuchoang.ecp.inventory.internal.domain.model;
 
 import org.junit.jupiter.api.Test;
+import org.phuchoang.ecp.inventory.internal.domain.repository.StockItemRepository;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 class StockItemTest {
 
@@ -76,6 +80,23 @@ class StockItemTest {
         assertThat(adjusted.quantityReserved()).isEqualTo(3);
         assertThat(adjusted.availableQuantity()).isEqualTo(6);
         assertThat(adjustment.stockAdjustment().stockItemId()).isEqualTo(held.id());
+    }
+
+    @Test
+    void aggregateRootOwnsPersistenceOfItsChangedState() {
+        StockItemRepository stockItems = mock(StockItemRepository.class);
+        UUID reservationId = UUID.randomUUID();
+        StockItem held = stock(3).reserve(reservationId, UUID.randomUUID(), UUID.randomUUID(), 2, NOW.plusSeconds(300));
+
+        StockItem.persistAll(List.of(held), stockItems);
+        StockItem.Transition committed = held.commit(reservationId, NOW, stockItems);
+        StockItem.Transition released = held.release(reservationId, NOW, false, stockItems);
+        StockItem.Adjustment adjustment = held.adjust(draft(1), UUID.randomUUID(), NOW, stockItems);
+
+        verify(stockItems).saveAll(List.of(held));
+        verify(stockItems).saveAll(List.of(committed.stockItem()));
+        verify(stockItems).saveAll(List.of(released.stockItem()));
+        verify(stockItems).save(adjustment);
     }
 
     private static StockItem stock(int quantity) {

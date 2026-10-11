@@ -25,11 +25,10 @@ public final class AdjustStockDomainService {
         .orElseThrow(() -> new IllegalArgumentException("Unknown stock item."));
     StockItem.Adjustment rootAdjustment;
     try {
-      rootAdjustment = before.adjust(proposedAdjustment, UUID.randomUUID(), clock.instant());
+      rootAdjustment = before.adjust(proposedAdjustment, UUID.randomUUID(), clock.instant(), stockItems);
     } catch (InsufficientAvailableStockException exception) {
       throw new AdjustmentDeclinedException(before);
     }
-    stockItems.save(rootAdjustment);
     return new Adjustment(before, rootAdjustment.stockItem(), rootAdjustment.stockAdjustment());
   }
 
