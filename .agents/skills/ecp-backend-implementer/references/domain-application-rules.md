@@ -113,6 +113,13 @@ does not naturally belong to one aggregate/entity/value object
 
 Do not create domain services merely as stateless containers for aggregate logic.
 
+For a command in ECP, the Domain service is the required domain entry point
+between Application and an Aggregate Root. It coordinates the Domain
+Repository with the Aggregate Root's behavior while keeping the actual state
+transition and invariant decision on the root. A Domain service must not set
+aggregate state, duplicate root validation, or persist child entities or
+partial aggregate state independently.
+
 ---
 
 ## 7. Domain Events
@@ -148,6 +155,13 @@ Avoid generic repository APIs that erase business semantics solely for code reus
 
 Read-side query repositories are separate concerns and need not mimic aggregate repositories.
 
+For command persistence, a repository persists the complete Aggregate Root
+and the state it owns. That persistence follows a completed root behavior;
+do not define separate external save/update methods for entities, fields, or
+individual transition fragments. The repository is a Domain port; its external
+persistence implementation belongs in Infrastructure. An Aggregate Root never
+depends on the adapter or a persistence framework.
+
 ---
 
 ## 9. Application Layer Responsibility
@@ -159,21 +173,23 @@ Typical sequence:
 ```text
 accept command
 authenticate/obtain actor context where appropriate
-load required state
-invoke domain behavior
-persist changes
+delegate to domain service
+domain service invokes aggregate-root behavior
+domain repository persists the aggregate
 record events
 return application result
 ```
 
-It owns orchestration, not core invariant logic.
+It owns orchestration, not core invariant logic. Application must not invoke a
+Domain Repository or Aggregate Root directly for a command; that interaction is
+owned by the Domain service.
 
 Application packages are organized as
 `application/<use-case>/<command|query>/`, never by module-wide technical
-categories. A command use case must load the authoritative Domain Model and
-invoke the domain operation that enforces the transition. Input validation and
-orchestration may happen in Application, but they cannot replace that
-constraint.
+categories. A command use case must delegate to the Domain service that loads
+the authoritative Domain Model and invokes the operation enforcing the
+transition. Input validation and orchestration may happen in Application, but
+they cannot replace that constraint.
 
 For a query use case, put its port, query contract, and returned read model in
 `application/<use-case>/query`; its technical adapter belongs in
@@ -246,7 +262,21 @@ Infrastructure adapts the domain to technical mechanisms.
 
 ---
 
-## 14. Domain Implementation Checklist
+## 14. API Boundary Isolation
+
+Within a module, `api` is an outer adapter boundary. Types in `application`,
+`domain`, `infrastructure`, and any other internal package must not import,
+call, implement, or depend on their own module's `api` package. Map from API
+contracts at the boundary and invoke Application contracts inward instead.
+
+An approved interaction with another module may depend only on that other
+module's published `api`; it must never bypass that boundary through internal
+packages. This exception for a target module's published API does not permit a
+module's internals to route through their own API.
+
+---
+
+## 15. Domain Implementation Checklist
 
 Before implementing domain behavior answer:
 

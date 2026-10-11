@@ -1,7 +1,6 @@
 ---
 name: ecp-backend-implementer
 description: Architecture-aware implementing protocol for the ECP Java/Spring modular monolith. Use when analyzing or implementing existing backend code while preserving business invariants, module boundaries, CQRS semantics, transaction boundaries, integration contracts, security guarantees, and operational behavior.
-version: 1.2.0
 ---
 # ECP Backend Feature Implementation Skill
 
@@ -113,6 +112,15 @@ Apply Clean Architecture strictly. Dependencies point inward: Web/API and
 Infrastructure adapt Application contracts; Application depends on Domain;
 Domain depends on none of those outer layers. Do not make an exception because
 an existing implementation has the desired technical dependency.
+
+Within a module, `api` is an outer boundary. No type in that module's internal
+packages (`application`, `domain`, `infrastructure`, or another
+implementation-only package) may import, invoke, implement, or otherwise
+depend on the module's own `api` package. API adapts inward to Application;
+internal code must use its own Application and Domain contracts directly.
+This restriction does not replace the module-boundary rule: a permitted
+cross-module interaction uses the *target module's* published `api`, never its
+internal packages.
 
 Use test-first development for every behavior or structural correction:
 
@@ -259,12 +267,14 @@ For a command-side feature identify:
 
 ```text
 command
-aggregate loaded
-aggregate behavior invoked
+application use case
+domain service
+aggregate root and behavior invoked
 invariants checked
 state changed
 domain events produced
-repository operations
+domain repository operation over the aggregate root
+external persistence adapter
 transaction boundary
 outbox effects
 result returned
@@ -407,25 +417,39 @@ HTTP / caller
     ↓
 API adapter
     ↓
-Command / application use case
+Application command use case
     ↓
-Load aggregate
+Domain service
     ↓
-Execute aggregate behavior that enforces its constraints
+Aggregate root behavior that enforces its constraints
     ↓
-Persist aggregate
-    +
-Persist outbox event
+Domain repository (aggregate persistence port)
     ↓
-Commit
+Infrastructure persistence adapter
+    ↓
+External persistence
 ```
 
-The application use case may validate input shape and orchestrate dependencies,
-but it must not be the final authority for a business transition. The command
-must load the authoritative Domain Model and invoke its behavior; that model
-must accept or reject the transition according to its constraints. Neither a
-controller, application pre-check, database predicate, cache, nor projection
-may substitute for this Domain Model constraint.
+The Application use case validates application input, establishes the use-case
+transaction, and delegates command behavior to the Domain service. It does not
+load, mutate, or save an aggregate directly. The Domain service coordinates
+the domain repository and invokes the Aggregate Root's business operation; it
+does not duplicate the root's invariant or mutate the root's state itself.
+
+The Aggregate Root is the only write unit. Its completed behavior naturally
+becomes the repository's aggregate persistence operation: the Domain
+Repository persists the changed aggregate graph as one aggregate, and its
+Infrastructure adapter maps it to external persistence. Do not add an
+outside/auxiliary persistence method for child entities, individual aggregate
+fields, or a partial transition merely to save a command. Do not make the
+Aggregate Root depend on an adapter or framework; the repository is a
+domain-owned port and the adapter remains Infrastructure.
+
+The root must accept or reject the transition according to its constraints.
+Neither a controller, Application pre-check, Domain service, database
+predicate, cache, nor projection may substitute for that Domain Model
+constraint. Where the command emits events, persist aggregate state and the
+outbox record in the documented transaction before commit.
 
 ---
 

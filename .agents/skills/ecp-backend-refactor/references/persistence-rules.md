@@ -4,7 +4,12 @@
 
 Preferred shape:
 
-`Application use case -> aggregate/repository port -> JPA persistence adapter -> PostgreSQL`
+`Application use case -> Domain service -> Aggregate Root -> Domain repository port -> JPA persistence adapter -> PostgreSQL`
+
+Application does not access the Aggregate Root or Domain Repository directly.
+The Domain service invokes root behavior and coordinates persistence of the
+complete aggregate; do not retain partial child/entity persistence methods
+outside that aggregate repository operation.
 
 PostgreSQL remains the source of truth for authoritative business state.
 

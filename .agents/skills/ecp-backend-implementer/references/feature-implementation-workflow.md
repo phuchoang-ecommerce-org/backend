@@ -182,20 +182,20 @@ Define:
 
 ```text
 input command
-repositories required
-services required
-aggregate load
-aggregate invocation
-persistence
+domain service
+aggregate root behavior
+domain repository operation
+infrastructure persistence adapter
 outbox/event handling
 transaction boundary
 returned result
 ```
 
 Do not put invariant logic here if the invariant belongs to the aggregate.
-Every command must invoke the authoritative Domain Model operation that accepts
-or rejects the business transition; an application pre-check is never the
-final enforcement point.
+Every command delegates to the Domain service, which invokes the authoritative
+Aggregate Root operation that accepts or rejects the business transition and
+persists that aggregate through its Domain Repository. An Application pre-check
+is never the final enforcement point.
 
 ---
 

@@ -21,11 +21,16 @@ Owns:
 - commands and command handling/application services;
 - query ports and application-facing read contracts;
 - use-case orchestration;
-- aggregate loading and saving through ports;
 - use-case transaction boundaries where defined by the project;
 - mapping between domain results and application outputs.
 
 Application code must not absorb JDBC query construction, HTTP semantics, Kafka mechanics, or Redis commands.
+
+For a command, Application delegates to a Domain service; it must not call an
+Aggregate Root or Domain Repository directly. The Domain service coordinates
+the repository and invokes the root behavior. The repository persists the
+complete changed root and its owned state through Infrastructure; no partial
+child/entity persistence method is introduced outside that aggregate operation.
 
 Package Application code as `application/<use-case>/<command|query>/`, not
 module-wide `commands`, `queries`, `services`, `dtos`, or `models`. Command
@@ -45,6 +50,11 @@ Owns:
 - correlation/error contract integration.
 
 API must call application contracts, not infrastructure implementations.
+
+Within a module, `api` is an outer boundary. `application`, `domain`,
+`infrastructure`, and all other internal packages must not import, call,
+implement, or otherwise depend on the module's own `api` package. A legal
+cross-module dependency can use only the target module's published `api`.
 
 ## Infrastructure
 

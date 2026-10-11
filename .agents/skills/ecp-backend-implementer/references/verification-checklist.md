@@ -67,6 +67,12 @@ When aggregate behavior changes:
 ```text
 [ ] Use-case orchestration follows the specified flow.
 
+[ ] Command flow is Application → Domain Service → Aggregate Root → Domain Repository → Infrastructure adapter → external persistence.
+
+[ ] Application does not call an Aggregate Root or Domain Repository directly for the command.
+
+[ ] Domain service does not duplicate Aggregate Root state transitions or invariant decisions.
+
 [ ] Transaction boundary is explicit.
 
 [ ] Correct repositories/services are used.
@@ -110,6 +116,8 @@ When aggregate behavior changes:
 
 ```text
 [ ] Write repository preserves aggregate semantics.
+
+[ ] Write repository persists the complete Aggregate Root and owned state without separate child/partial persistence methods.
 
 [ ] Read query returns the required view.
 
@@ -266,6 +274,8 @@ When Redis is involved:
 [ ] No forbidden module edge was introduced.
 
 [ ] No implementation/internal package is imported across a forbidden boundary.
+
+[ ] No internal package depends on its own module's `api` package.
 
 [ ] Shared-kernel use is justified.
 

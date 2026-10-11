@@ -25,6 +25,14 @@ Application may depend on Domain, but not on a technology implementation.
 Infrastructure implements capabilities defined inward. Web/API adapts transport
 to Application contracts and must not access Infrastructure directly.
 
+Within one module, its `api` package is also an outer boundary. Its internal
+packages—including `application`, `domain`, `infrastructure`, and any
+implementation-only package—must not import, invoke, implement, or otherwise
+depend on that module's own `api` package. Map API representations at the
+boundary, then call inward Application contracts. This does not prohibit a
+legal cross-module dependency on the *other module's* published `api`; module
+internals remain forbidden in all cases.
+
 This is a strict Clean Architecture rule. An existing dependency in the wrong
 direction is technical debt to remove, not an allowable template for new code.
 
@@ -84,13 +92,20 @@ owns it. Do not create module-wide `application/commands`,
 `application/models` packages. Broaden a type only when its semantics are
 truly broader.
 
-Ports express a required capability, not a mechanism. An aggregate repository
-can be an Application or Domain port when its language is aggregate-oriented;
-a query port belongs in the owning Application `<use-case>/query` package and
+Ports express a required capability, not a mechanism. A command-side aggregate
+repository is a Domain port and is coordinated by the Domain service; a query
+port belongs in the owning Application `<use-case>/query` package and
 returns an Application-owned read model. Its adapter belongs in Infrastructure.
 Application must not construct SQL, use JPA/JDBC/Redis/Kafka APIs, or depend on
 an adapter class. It invokes Domain behavior rather than duplicating domain
 invariants.
+
+For a command, Application delegates to a Domain service. The Domain service
+coordinates the Domain Repository and invokes the Aggregate Root behavior;
+the root remains the authority for the transition and invariants. The
+repository naturally persists the changed root and its owned state through an
+Infrastructure adapter. Do not add partial or child-entity persistence methods
+outside the aggregate persistence operation.
 
 ## Infrastructure
 
@@ -125,10 +140,11 @@ same semantics.
 
 ## CQRS and Boundary Mapping
 
-Every command path uses an Application command, the authoritative Domain Model
-behavior that enforces the business constraint, and a persistence port/adapter.
-Application-level checks can improve feedback but cannot be the final authority
-for a state transition. Read-heavy query paths use an Application query port
+Every command path uses an Application command, Domain service, authoritative
+Aggregate Root behavior that enforces the business constraint, and a Domain
+Repository persistence port/adapter. Application-level checks can improve
+feedback but cannot be the final authority for a state transition. Read-heavy
+query paths use an Application query port
 and an optimized Infrastructure query adapter returning an Application-owned
 read model. Queries are observational: do not send them through Domain Model
 constraints or reconstruct an aggregate solely to serve a projection/listing.

@@ -20,7 +20,10 @@ Project-approved domain-oriented annotations such as JMolecules may be used wher
 
 ## AR-05 — Application owns use-case orchestration
 
-The application layer coordinates a business use case, transaction-level workflow, ports, aggregate loading, domain invocation, and output mapping. It must not become a generic SQL/data-access layer or HTTP adapter.
+The application layer coordinates a business use case, transaction-level
+workflow, Domain service invocation, and output mapping. It must not access an
+Aggregate Root or Domain Repository directly, or become a generic SQL/data-access
+layer or HTTP adapter.
 
 ## AR-06 — Infrastructure owns technology mechanics
 

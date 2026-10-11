@@ -1,7 +1,6 @@
 ---
 name: ecp-backend-refactor
 description: Architecture-aware refactoring protocol for the ECP Java/Spring modular monolith. Use when analyzing or refactoring existing backend code while preserving business invariants, module boundaries, CQRS semantics, transaction boundaries, integration contracts, security guarantees, and operational behavior.
-version: 1.2.0
 ---
 
 # Backend Refactor Skill
@@ -96,10 +95,15 @@ contracts and views under `application/browse/query`, and `Create` command
 inputs and handlers under `application/create/command`; never introduce a
 module-wide `commands`, `queries`, `services`, or `models` package.
 
-Every command must reach the authoritative Domain Model operation that enforces
-the relevant business constraints. Move business-transition decisions from
-controllers, application services, projections, caches, and adapters into the
-owning aggregate/domain policy. A query remains observational: its port and
+Every command follows `Application -> Domain Service -> Aggregate Root ->
+Domain Repository -> Infrastructure adapter -> external persistence`. The
+Domain service coordinates repository access and invokes the root; the root is
+the complete persistence unit, so do not retain partial child/entity
+persistence methods outside the aggregate repository operation. Move
+business-transition decisions from controllers, application services,
+projections, caches, and adapters into the owning aggregate/domain policy.
+No module-internal package may depend on its own module's `api` package; API
+adapts inward to Application. A query remains observational: its port and
 read model belong in the Application use-case query package and its technical
 adapter belongs in Infrastructure; it does not route through Domain Model
 constraints merely for symmetry.

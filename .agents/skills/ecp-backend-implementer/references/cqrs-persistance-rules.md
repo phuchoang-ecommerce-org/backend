@@ -37,10 +37,21 @@ The canonical path is:
 ```text
 Command
 → Application
-→ Aggregate
-→ Repository
-→ PostgreSQL
+→ Domain Service
+→ Aggregate Root
+→ Domain Repository
+→ Infrastructure persistence adapter
+→ External persistence
 ```
+
+Application hands the command to a Domain service rather than accessing the
+Aggregate Root or Domain Repository directly. The Domain service coordinates
+repository access and invokes the root behavior. The root is the complete
+write unit: after its behavior succeeds, the repository naturally persists the
+root and its owned state. Do not create separate external persistence methods
+for child entities, individual fields, or fragments of an aggregate
+transition. The repository is a domain port; PostgreSQL/JPA/JDBC and other
+external mechanisms remain in its Infrastructure adapter.
 
 If events are produced:
 
