@@ -5,6 +5,7 @@ import org.phuchoang.ecp.cart.internal.application.cart.command.AddCartLineComma
 import org.phuchoang.ecp.cart.internal.application.cart.command.CartQuantityExceededException;
 import org.phuchoang.ecp.cart.internal.application.cart.query.CartView;
 import org.phuchoang.ecp.cart.internal.domain.model.Cart;
+import org.phuchoang.ecp.cart.internal.domain.policy.CartMergePolicy;
 import org.phuchoang.ecp.cart.internal.domain.repository.CartRepository;
 import org.phuchoang.ecp.cart.internal.domain.service.CartCommandService;
 import org.phuchoang.ecp.cart.internal.infrastructure.configuration.CartLifetimeProperties;
@@ -133,6 +134,6 @@ class CartApplicationServiceTest {
 
     private static CartCommandService commands(CartRepository carts) {
         CartLifetimeProperties lifetimes = lifetimes();
-        return new CartCommandService(carts, lifetimes.guest(), lifetimes.customer());
+        return new CartCommandService(carts, lifetimes.guest(), lifetimes.customer(), new CartMergePolicy());
     }
 }

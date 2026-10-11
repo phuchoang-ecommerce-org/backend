@@ -3,6 +3,7 @@ package org.phuchoang.ecp.cart.internal.application.cart.expiry;
 import org.junit.jupiter.api.Test;
 import org.phuchoang.ecp.cart.internal.domain.model.Cart;
 import org.phuchoang.ecp.cart.internal.domain.model.CartStatus;
+import org.phuchoang.ecp.cart.internal.domain.policy.CartMergePolicy;
 import org.phuchoang.ecp.cart.internal.domain.repository.CartRepository;
 import org.phuchoang.ecp.cart.internal.domain.service.CartCommandService;
 
@@ -25,7 +26,8 @@ class CartExpiryServiceTest {
     private final CartExpiryDeferral deferral = mock(CartExpiryDeferral.class);
     private final Instant now = Instant.parse("2026-10-10T00:00:00Z");
     private final CartExpiryService expiry = new CartExpiryService(
-        new CartCommandService(carts, Duration.ofDays(7), Duration.ofDays(30)), deferral, Clock.fixed(now, ZoneOffset.UTC));
+        new CartCommandService(carts, Duration.ofDays(7), Duration.ofDays(30), new CartMergePolicy()), deferral,
+        Clock.fixed(now, ZoneOffset.UTC));
 
     @Test
     void expiresOnlyDueCartsThatAreNotInActiveCheckoutOrHoldingADraftOrder() {
