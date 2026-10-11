@@ -31,51 +31,36 @@ public final class ProductCommandService {
     public Product create(UUID id, UUID categoryId, String name, String description, String brand,
             Map<String, Object> attributes) {
         Product product = Product.create(id, categoryId, name, description, brand, attributes);
-        product.persist(products);
-        return product;
+        return product.create(products);
     }
 
     public Product change(Product product, UUID categoryId, String name, String description, String brand,
             Map<String, Object> attributes) {
-        product.change(categoryId, name, description, brand, attributes);
-        product.persist(products);
-        return product;
+        return product.change(categoryId, name, description, brand, attributes, products);
     }
 
     public Product transitionTo(Product product, PublicationStatus status, Instant now) {
-        product.transitionTo(status, now);
-        product.persist(products);
-        return product;
+        return product.transitionTo(status, now, products);
     }
 
     public Product addVariant(Product product, Product.Variant variant) {
-        product.addVariant(variant);
-        product.persist(products);
-        return product;
+        return product.addVariant(variant, products);
     }
 
     public Product removeVariant(Product product, UUID variantId) {
-        product.removeVariant(variantId);
-        product.persist(products);
-        return product;
+        return product.removeVariant(variantId, products);
     }
 
     public Product changePrice(Product product, UUID variantId, BigDecimal amount, String currency) {
-        product.changePrice(variantId, amount, currency);
-        product.persist(products);
-        return product;
+        return product.changePrice(variantId, amount, currency, products);
     }
 
     public Product addImage(Product product, Product.Image image) {
-        product.addImage(image);
-        product.persist(products);
-        return product;
+        return product.addImage(image, products);
     }
 
     public Product removeImage(Product product, UUID imageId) {
-        product.removeImage(imageId);
-        product.persist(products);
-        return product;
+        return product.removeImage(imageId, products);
     }
 
     public void discontinue(Product product) {

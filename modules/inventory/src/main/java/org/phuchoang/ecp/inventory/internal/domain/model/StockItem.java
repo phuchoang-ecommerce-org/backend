@@ -41,12 +41,16 @@ public record StockItem(
     }
 
     /**
-     * Persists a validated set of changed StockItem roots as one aggregate-oriented write.
-     * Callers must first complete every reservation decision so a shortfall cannot leave a
-     * partial reservation write.
+     * Finalizes a reservation after every participating aggregate passed its availability check.
+     * One participating root owns the aggregate-oriented batch write, so a shortfall cannot leave
+     * a partial reservation write.
      */
-    public static void persistAll(Collection<StockItem> stockItems, StockItemRepository repository) {
-        repository.saveAll(List.copyOf(stockItems));
+    public void finalizeReservationBatch(Collection<StockItem> reservedItems, StockItemRepository repository) {
+        List<StockItem> items = List.copyOf(reservedItems);
+        if (items.stream().noneMatch(item -> item.id().equals(id))) {
+            throw new IllegalArgumentException("The reservation batch must include its owning stock item.");
+        }
+        repository.saveAll(items);
     }
 
     /**
@@ -103,7 +107,7 @@ public record StockItem(
     public Transition release(UUID reservationId, Instant now, boolean orphaned, StockItemRepository repository) {
         Transition transition = release(reservationId, now, orphaned);
         if (transition.stockItem() != this) {
-            persistAll(List.of(transition.stockItem()), repository);
+            repository.saveAll(List.of(transition.stockItem()));
         }
         return transition;
     }
@@ -125,7 +129,7 @@ public record StockItem(
     public Transition commit(UUID reservationId, Instant now, StockItemRepository repository) {
         Transition transition = commit(reservationId, now);
         if (transition.stockItem() != this) {
-            persistAll(List.of(transition.stockItem()), repository);
+            repository.saveAll(List.of(transition.stockItem()));
         }
         return transition;
     }

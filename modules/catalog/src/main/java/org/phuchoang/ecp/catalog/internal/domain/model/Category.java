@@ -61,6 +61,11 @@ public final class Category implements CatalogEventSource {
         return repository.findById(id);
     }
 
+    /** Starts this new aggregate's lifecycle through its aggregate repository. */
+    public Category create(CategoryRepository repository) {
+        return save(repository);
+    }
+
     public Category change(UUID updatedParentId, String updatedName, String updatedImageUrl, int updatedSortOrder,
             boolean updatedFeatured, Category parent) {
         if (!mayMoveBelow(parent)) {
@@ -77,16 +82,19 @@ public final class Category implements CatalogEventSource {
         return this;
     }
 
+    /** Changes hierarchy and display state, then persists the resulting aggregate state. */
+    public Category change(UUID updatedParentId, String updatedName, String updatedImageUrl, int updatedSortOrder,
+            boolean updatedFeatured, Category parent, CategoryRepository repository) {
+        return change(updatedParentId, updatedName, updatedImageUrl, updatedSortOrder, updatedFeatured, parent)
+            .save(repository);
+    }
+
     public boolean mayMoveBelow(Category proposedParent) {
         return proposedParent == null || !proposedParent.path.startsWith(path);
     }
 
     /** Records removal before deleting this aggregate through its persistence boundary. */
     public void remove() { domainEvents.add(new CategoryChanged(snapshot(), true)); }
-
-    public void persist(CategoryRepository repository) {
-        repository.save(this);
-    }
 
     public long childCategoryCount(CategoryRepository repository) {
         return repository.countByParentId(id);
@@ -99,6 +107,11 @@ public final class Category implements CatalogEventSource {
     public void remove(CategoryRepository repository) {
         remove();
         repository.deleteById(id);
+    }
+
+    private Category save(CategoryRepository repository) {
+        repository.save(this);
+        return this;
     }
 
     public UUID id() { return id; }

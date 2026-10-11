@@ -85,10 +85,11 @@ class ProductTest {
         Product product = Product.create(UUID.randomUUID(), UUID.randomUUID(), "Shirt", null, null, Map.of());
         when(repository.save(product)).thenReturn(product);
 
-        product.persist(repository);
+        product.create(repository);
+        product.transitionTo(PublicationStatus.PUBLISHED, Instant.parse("2026-09-18T10:00:00Z"), repository);
         product.discontinue(repository);
 
-        verify(repository).save(product);
+        verify(repository, org.mockito.Mockito.times(2)).save(product);
         verify(repository).deleteById(product.id());
     }
 }

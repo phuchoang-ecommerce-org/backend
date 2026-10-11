@@ -71,6 +71,11 @@ public final class Product implements CatalogEventSource {
         return repository.findById(id);
     }
 
+    /** Starts this new aggregate's lifecycle through its aggregate repository. */
+    public Product create(ProductRepository repository) {
+        return save(repository);
+    }
+
     public Product change(UUID updatedCategoryId, String updatedName, String updatedDescription, String updatedBrand,
             Map<String, Object> updatedAttributes) {
         categoryId = updatedCategoryId;
@@ -80,6 +85,12 @@ public final class Product implements CatalogEventSource {
         attributes = updatedAttributes == null ? Map.of() : Map.copyOf(updatedAttributes);
         domainEvents.add(new ProductUpdated(snapshot()));
         return this;
+    }
+
+    /** Changes merchandising details and persists the resulting aggregate state. */
+    public Product change(UUID updatedCategoryId, String updatedName, String updatedDescription, String updatedBrand,
+            Map<String, Object> updatedAttributes, ProductRepository repository) {
+        return change(updatedCategoryId, updatedName, updatedDescription, updatedBrand, updatedAttributes).save(repository);
     }
 
     public Product transitionTo(PublicationStatus status, Instant now) {
@@ -96,6 +107,11 @@ public final class Product implements CatalogEventSource {
         return this;
     }
 
+    /** Transitions publication state and persists the resulting aggregate state. */
+    public Product transitionTo(PublicationStatus status, Instant now, ProductRepository repository) {
+        return transitionTo(status, now).save(repository);
+    }
+
     public Product addVariant(Variant variant) {
         List<Variant> updated = new ArrayList<>(variants);
         updated.add(variant);
@@ -104,10 +120,20 @@ public final class Product implements CatalogEventSource {
         return this;
     }
 
+    /** Adds an aggregate-owned variant and persists the resulting aggregate state. */
+    public Product addVariant(Variant variant, ProductRepository repository) {
+        return addVariant(variant).save(repository);
+    }
+
     public Product removeVariant(UUID variantId) {
         variants = variants.stream().filter(variant -> !variant.id().equals(variantId)).toList();
         domainEvents.add(new ProductUpdated(snapshot()));
         return this;
+    }
+
+    /** Removes an aggregate-owned variant and persists the resulting aggregate state. */
+    public Product removeVariant(UUID variantId, ProductRepository repository) {
+        return removeVariant(variantId).save(repository);
     }
 
     public Product changePrice(UUID variantId, BigDecimal amount, String currency) {
@@ -119,6 +145,11 @@ public final class Product implements CatalogEventSource {
         return this;
     }
 
+    /** Changes an aggregate-owned variant price and persists the resulting aggregate state. */
+    public Product changePrice(UUID variantId, BigDecimal amount, String currency, ProductRepository repository) {
+        return changePrice(variantId, amount, currency).save(repository);
+    }
+
     public Product addImage(Image image) {
         List<Image> updated = new ArrayList<>(images);
         updated.add(image);
@@ -127,10 +158,20 @@ public final class Product implements CatalogEventSource {
         return this;
     }
 
+    /** Adds an aggregate-owned image and persists the resulting aggregate state. */
+    public Product addImage(Image image, ProductRepository repository) {
+        return addImage(image).save(repository);
+    }
+
     public Product removeImage(UUID imageId) {
         images = images.stream().filter(image -> !image.id().equals(imageId)).toList();
         domainEvents.add(new ProductUpdated(snapshot()));
         return this;
+    }
+
+    /** Removes an aggregate-owned image and persists the resulting aggregate state. */
+    public Product removeImage(UUID imageId, ProductRepository repository) {
+        return removeImage(imageId).save(repository);
     }
 
     /** Records removal before deleting this aggregate through its persistence boundary. */
@@ -138,15 +179,15 @@ public final class Product implements CatalogEventSource {
         domainEvents.add(new ProductDiscontinued(id, variantIds(), variantSkus()));
     }
 
-    /** Persists this aggregate after a valid domain transition. */
-    public void persist(ProductRepository repository) {
-        repository.save(this);
-    }
-
     /** Records discontinuation and removes this aggregate through its persistence boundary. */
     public void discontinue(ProductRepository repository) {
         discontinue();
         repository.deleteById(id);
+    }
+
+    private Product save(ProductRepository repository) {
+        repository.save(this);
+        return this;
     }
 
     public Variant variant(UUID variantId) {

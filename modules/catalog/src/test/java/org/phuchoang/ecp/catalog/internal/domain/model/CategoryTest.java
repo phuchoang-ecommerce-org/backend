@@ -44,7 +44,7 @@ class CategoryTest {
         when(categories.countByParentId(category.id())).thenReturn(3L);
         when(products.countByCategoryId(category.id())).thenReturn(5L);
 
-        category.persist(categories);
+        category.create(categories);
         assertThat(category.childCategoryCount(categories)).isEqualTo(3L);
         assertThat(category.assignedProductCount(products)).isEqualTo(5L);
         category.remove(categories);

@@ -30,15 +30,12 @@ public final class CategoryCommandService {
     public Category create(UUID id, UUID parentId, String name, String slug, String imageUrl, int sortOrder,
             boolean featured, Category parent) {
         Category category = Category.create(id, parentId, name, slug, imageUrl, sortOrder, featured, parent);
-        category.persist(categories);
-        return category;
+        return category.create(categories);
     }
 
     public Category change(Category category, UUID parentId, String name, String imageUrl, int sortOrder,
             boolean featured, Category parent) {
-        category.change(parentId, name, imageUrl, sortOrder, featured, parent);
-        category.persist(categories);
-        return category;
+        return category.change(parentId, name, imageUrl, sortOrder, featured, parent, categories);
     }
 
     public DeletionDecision delete(UUID categoryId) {

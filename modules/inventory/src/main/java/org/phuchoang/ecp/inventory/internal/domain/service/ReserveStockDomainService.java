@@ -39,7 +39,8 @@ public final class ReserveStockDomainService {
     assertAllProductsPublished(request);
     ReservationChanges changes = reserveLines(request, stockItemsById(request.lines()));
     throwIfInsufficient(changes.shortfalls());
-    StockItem.persistAll(changes.stockItems().values(), stockItems);
+    changes.stockItems().values().iterator().next()
+        .finalizeReservationBatch(changes.stockItems().values(), stockItems);
     return List.copyOf(changes.stockItems().values());
   }
 

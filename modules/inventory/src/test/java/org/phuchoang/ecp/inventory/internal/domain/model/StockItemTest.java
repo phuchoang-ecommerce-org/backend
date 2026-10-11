@@ -88,7 +88,7 @@ class StockItemTest {
         UUID reservationId = UUID.randomUUID();
         StockItem held = stock(3).reserve(reservationId, UUID.randomUUID(), UUID.randomUUID(), 2, NOW.plusSeconds(300));
 
-        StockItem.persistAll(List.of(held), stockItems);
+        held.finalizeReservationBatch(List.of(held), stockItems);
         StockItem.Transition committed = held.commit(reservationId, NOW, stockItems);
         StockItem.Transition released = held.release(reservationId, NOW, false, stockItems);
         StockItem.Adjustment adjustment = held.adjust(draft(1), UUID.randomUUID(), NOW, stockItems);
