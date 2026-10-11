@@ -55,7 +55,7 @@ public class AddVariantService {
         }
 
         Product.Variant added = after.variant(variant.id());
-        events.publish(new VariantAdded(after, added), context);
+        events.publishFrom(after, context);
         return snapshots.variantSnapshot(added);
     }
 }

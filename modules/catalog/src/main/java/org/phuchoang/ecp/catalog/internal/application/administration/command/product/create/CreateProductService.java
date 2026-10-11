@@ -38,7 +38,7 @@ public class CreateProductService {
         Product product = products.create(UUID.randomUUID(), command.categoryId(), command.name(), command.description(),
             command.brand(), command.attributes());
 
-        events.publish(new ProductCreated(product), context);
+        events.publishFrom(product, context);
         return snapshots.productSnapshot(product);
     }
 }

@@ -40,6 +40,6 @@ public class DeleteProductService {
         }
         products.discontinue(before);
 
-        events.publish(new ProductDiscontinued(productId, before.variantIds(), before.variantSkus()), context);
+        events.publishFrom(before, context);
     }
 }

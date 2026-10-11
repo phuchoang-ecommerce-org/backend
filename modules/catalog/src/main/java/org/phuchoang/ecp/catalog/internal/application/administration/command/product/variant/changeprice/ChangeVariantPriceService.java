@@ -44,7 +44,7 @@ public class ChangeVariantPriceService {
         Product after = products.changePrice(product, variantId, price.amount(), price.currency());
 
         Product.Variant changed = after.variant(variantId);
-        events.publish(new ProductPriceChanged(productId, changed), context);
+        events.publishFrom(after, context);
         return snapshots.variantSnapshot(changed);
     }
 }

@@ -5,13 +5,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.phuchoang.ecp.identity.internal.application.port.DomainEventPublisher;
+import org.phuchoang.ecp.identity.internal.application.port.IdentityWorkflowEventPublisher;
 import org.phuchoang.ecp.identity.internal.application.port.PasswordEncoder;
 import org.phuchoang.ecp.identity.internal.application.port.TokenStore;
 import org.phuchoang.ecp.identity.internal.application.security.PermissionMatrixPermissionChecker;
 import org.phuchoang.ecp.identity.internal.domain.policy.AccessControlPolicy;
 import org.phuchoang.ecp.identity.internal.application.token.OpaqueTokens;
 import org.phuchoang.ecp.identity.internal.domain.event.AccountRegistered;
-import org.phuchoang.ecp.identity.internal.domain.event.DuplicateRegistrationAttempted;
+import org.phuchoang.ecp.identity.internal.application.event.DuplicateRegistrationAttempted;
 import org.phuchoang.ecp.identity.internal.domain.model.Account;
 import org.phuchoang.ecp.identity.internal.domain.model.AccountStatus;
 import org.phuchoang.ecp.identity.internal.domain.model.CredentialHash;
@@ -52,10 +53,12 @@ class RegistrationUseCasesTest {
     private PasswordEncoder passwordEncoder;
     @Mock
     private DomainEventPublisher events;
+    @Mock
+    private IdentityWorkflowEventPublisher workflowEvents;
 
     private RegistrationUseCases useCases() {
         return new RegistrationUseCases(accountRepository, new VerificationTokenManager(tokenStore, clock),
-            passwordEncoder, new PermissionMatrixPermissionChecker(new AccessControlPolicy()), events, clock);
+            passwordEncoder, new PermissionMatrixPermissionChecker(new AccessControlPolicy()), events, workflowEvents, clock);
     }
 
     @Test
@@ -66,7 +69,7 @@ class RegistrationUseCasesTest {
         useCases().registerAccount(new RegisterAccountCommand("new@example.com", "Str0ngPassword", "New"));
 
         verify(tokenStore).save(any(IdentityToken.class));
-        verify(events).publish(any(AccountRegistered.class));
+        verify(events).publishFrom(any(Account.class));
     }
 
     @Test
@@ -78,7 +81,7 @@ class RegistrationUseCasesTest {
         useCases().registerAccount(new RegisterAccountCommand("taken@example.com", "Str0ngPassword", "Dup"));
 
         verify(tokenStore, never()).save(any());
-        verify(events).publish(new DuplicateRegistrationAttempted("taken@example.com", Instant.now(clock)));
+        verify(workflowEvents).publish(new DuplicateRegistrationAttempted("taken@example.com", Instant.now(clock)));
     }
 
     @Test
@@ -136,7 +139,7 @@ class RegistrationUseCasesTest {
         useCases().resendEmailVerification("unknown@example.com");
 
         verify(tokenStore, never()).save(any());
-        verify(events, never()).publish(any());
+        verify(events, never()).publishFrom(any());
     }
 
     private IdentityToken verificationToken(String raw, UUID accountId) {

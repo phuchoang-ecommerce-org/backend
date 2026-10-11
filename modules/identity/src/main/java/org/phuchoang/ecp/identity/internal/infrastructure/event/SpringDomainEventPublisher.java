@@ -1,6 +1,8 @@
 package org.phuchoang.ecp.identity.internal.infrastructure.event;
 
 import org.phuchoang.ecp.identity.internal.application.port.DomainEventPublisher;
+import org.phuchoang.ecp.identity.internal.application.port.IdentityWorkflowEventPublisher;
+import org.phuchoang.ecp.identity.internal.application.event.IdentityWorkflowEvent;
 import org.phuchoang.ecp.identity.internal.domain.model.Account;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
@@ -11,7 +13,7 @@ import org.springframework.stereotype.Component;
  * after the publishing transaction commits.
  */
 @Component
-class SpringDomainEventPublisher implements DomainEventPublisher {
+class SpringDomainEventPublisher implements DomainEventPublisher, IdentityWorkflowEventPublisher {
 
     private final ApplicationEventPublisher events;
 
@@ -20,7 +22,7 @@ class SpringDomainEventPublisher implements DomainEventPublisher {
     }
 
     @Override
-    public void publish(Object event) {
+    public void publish(IdentityWorkflowEvent event) {
         events.publishEvent(event);
     }
 

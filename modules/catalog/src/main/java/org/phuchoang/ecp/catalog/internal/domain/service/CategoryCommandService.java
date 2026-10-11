@@ -34,12 +34,16 @@ public final class CategoryCommandService {
 
   public Category create(UUID id, UUID parentId, String name, String slug, String imageUrl, int sortOrder,
       boolean featured, Category parent) {
-    return categories.save(Category.create(id, parentId, name, slug, imageUrl, sortOrder, featured, parent));
+    Category category = Category.create(id, parentId, name, slug, imageUrl, sortOrder, featured, parent);
+    categories.save(category);
+    return category;
   }
 
   public Category change(Category category, UUID parentId, String name, String imageUrl, int sortOrder,
       boolean featured, Category parent) {
-    return categories.save(category.change(parentId, name, imageUrl, sortOrder, featured, parent));
+    category.change(parentId, name, imageUrl, sortOrder, featured, parent);
+    categories.save(category);
+    return category;
   }
 
   public DeletionDecision delete(UUID categoryId) {
@@ -54,6 +58,7 @@ public final class CategoryCommandService {
     if (!decision.accepted()) {
       return DeletionDecision.rejected(childCategoryCount, assignedProductCount);
     }
+    category.remove();
     categories.deleteById(categoryId);
     return DeletionDecision.deleted(category);
   }

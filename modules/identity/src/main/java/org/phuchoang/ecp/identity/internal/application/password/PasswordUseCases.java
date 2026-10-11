@@ -1,14 +1,15 @@
 package org.phuchoang.ecp.identity.internal.application.password;
 
 import org.phuchoang.ecp.identity.internal.application.IdentityErrors;
+import org.phuchoang.ecp.identity.internal.application.event.PasswordResetRequested;
 import org.phuchoang.ecp.identity.internal.application.authentication.SessionManager;
 import org.phuchoang.ecp.identity.internal.application.password.PasswordResetTokenManager.PendingReset;
 import org.phuchoang.ecp.identity.internal.application.port.DomainEventPublisher;
+import org.phuchoang.ecp.identity.internal.application.port.IdentityWorkflowEventPublisher;
 import org.phuchoang.ecp.identity.internal.application.port.PasswordEncoder;
 import org.phuchoang.ecp.identity.internal.application.security.CallerContext;
 import org.phuchoang.ecp.identity.internal.application.security.PermissionChecker;
 import org.phuchoang.ecp.identity.internal.application.security.PermissionMatrix;
-import org.phuchoang.ecp.identity.internal.domain.event.PasswordResetRequested;
 import org.phuchoang.ecp.identity.internal.domain.model.Account;
 import org.phuchoang.ecp.identity.internal.domain.model.CredentialHash;
 import org.phuchoang.ecp.identity.internal.domain.model.EmailAddress;
@@ -40,6 +41,7 @@ public class PasswordUseCases {
     private final PasswordEncoder passwordEncoder;
     private final PermissionChecker permissions;
     private final DomainEventPublisher events;
+    private final IdentityWorkflowEventPublisher workflowEvents;
     private final Clock clock;
 
     @Transactional
@@ -79,7 +81,7 @@ public class PasswordUseCases {
         // dispatched and nothing is disclosed to the caller either way.
         accounts.findByEmail(new EmailAddress(email)).ifPresent(account -> {
             String rawToken = resetTokens.issue(account.id());
-            events.publish(new PasswordResetRequested(account.id(), account.email().value(), rawToken,
+            workflowEvents.publish(new PasswordResetRequested(account.id(), account.email().value(), rawToken,
                 Instant.now(clock)));
         });
     }

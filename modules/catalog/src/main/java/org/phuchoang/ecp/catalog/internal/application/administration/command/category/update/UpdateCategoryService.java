@@ -53,7 +53,7 @@ public class UpdateCategoryService {
             throw CatalogLookups.invalid("parentId");
         }
 
-        events.publish(CategoryChanged.of(after), context);
+        events.publishFrom(after, context);
         return snapshots.categorySnapshot(after);
     }
 }

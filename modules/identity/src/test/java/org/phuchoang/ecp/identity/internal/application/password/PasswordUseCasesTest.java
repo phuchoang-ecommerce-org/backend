@@ -7,13 +7,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.phuchoang.ecp.identity.internal.application.authentication.RefreshTokenSessionManager;
 import org.phuchoang.ecp.identity.internal.application.port.DomainEventPublisher;
+import org.phuchoang.ecp.identity.internal.application.port.IdentityWorkflowEventPublisher;
 import org.phuchoang.ecp.identity.internal.application.port.PasswordEncoder;
 import org.phuchoang.ecp.identity.internal.application.port.TokenStore;
 import org.phuchoang.ecp.identity.internal.application.security.CallerContext;
 import org.phuchoang.ecp.identity.internal.application.security.PermissionChecker;
 import org.phuchoang.ecp.identity.internal.application.security.PermissionMatrix;
 import org.phuchoang.ecp.identity.internal.application.token.OpaqueTokens;
-import org.phuchoang.ecp.identity.internal.domain.event.PasswordResetRequested;
+import org.phuchoang.ecp.identity.internal.application.event.PasswordResetRequested;
+import org.phuchoang.ecp.identity.internal.application.event.IdentityWorkflowEvent;
 import org.phuchoang.ecp.identity.internal.domain.model.Account;
 import org.phuchoang.ecp.identity.internal.domain.model.AccountStatus;
 import org.phuchoang.ecp.identity.internal.domain.model.CredentialHash;
@@ -58,10 +60,12 @@ class PasswordUseCasesTest {
     private PermissionChecker permissions;
     @Mock
     private DomainEventPublisher events;
+    @Mock
+    private IdentityWorkflowEventPublisher workflowEvents;
 
     private PasswordUseCases useCases() {
         return new PasswordUseCases(accountRepository, new PasswordResetTokenManager(tokenStore, clock),
-            new RefreshTokenSessionManager(tokenStore, clock), passwordEncoder, permissions, events, clock);
+            new RefreshTokenSessionManager(tokenStore, clock), passwordEncoder, permissions, events, workflowEvents, clock);
     }
 
     private CallerContext caller() {
@@ -147,8 +151,8 @@ class PasswordUseCasesTest {
 
         verify(tokenStore).invalidateOutstanding(accountId, TokenType.PASSWORD_RESET);
         verify(tokenStore).save(any());
-        ArgumentCaptor<Object> published = ArgumentCaptor.forClass(Object.class);
-        verify(events).publish(published.capture());
+        ArgumentCaptor<IdentityWorkflowEvent> published = ArgumentCaptor.forClass(IdentityWorkflowEvent.class);
+        verify(workflowEvents).publish(published.capture());
         assertThat(published.getValue()).isInstanceOf(PasswordResetRequested.class);
     }
 
@@ -159,7 +163,7 @@ class PasswordUseCasesTest {
         useCases().requestPasswordReset("unknown@example.com");
 
         verify(tokenStore, never()).save(any());
-        verify(events, never()).publish(any());
+        verify(workflowEvents, never()).publish(any());
     }
 
     @Test

@@ -13,6 +13,7 @@ import org.phuchoang.ecp.catalog.internal.domain.event.ProductDiscontinued;
 import org.phuchoang.ecp.catalog.internal.domain.event.ProductPublished;
 import org.phuchoang.ecp.catalog.internal.domain.event.ProductUpdated;
 import org.phuchoang.ecp.catalog.internal.domain.model.Product;
+import org.phuchoang.ecp.catalog.internal.domain.model.CatalogEventSource;
 import org.phuchoang.ecp.catalog.internal.domain.model.PublicationStatus;
 import org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository;
 import org.phuchoang.ecp.catalog.internal.domain.service.ProductCommandService;
@@ -72,10 +73,11 @@ class ProductPublicationServiceTest {
         service.setPublication(context, published.id(), new SetPublication("DISCONTINUED", "eol"));
         service.setPublication(context, published.id(), new SetPublication("UNPUBLISHED", "pause"));
 
-        ArgumentCaptor<CatalogDomainEvent> emitted = ArgumentCaptor.forClass(CatalogDomainEvent.class);
-        verify(events, org.mockito.Mockito.times(2)).publish(emitted.capture(), eq(context));
-        assertThat(emitted.getAllValues().get(0)).isInstanceOf(ProductDiscontinued.class);
-        assertThat(emitted.getAllValues().get(1)).isInstanceOf(ProductUpdated.class);
+        ArgumentCaptor<CatalogEventSource> emitted = ArgumentCaptor.forClass(CatalogEventSource.class);
+        verify(events, org.mockito.Mockito.times(2)).publishFrom(emitted.capture(), eq(context));
+        assertThat(emitted.getAllValues().get(0).pullDomainEvents())
+            .anyMatch(ProductDiscontinued.class::isInstance)
+            .anyMatch(ProductUpdated.class::isInstance);
     }
 
     @Test
@@ -95,8 +97,8 @@ class ProductPublicationServiceTest {
     }
 
     private CatalogDomainEvent captured() {
-        ArgumentCaptor<CatalogDomainEvent> emitted = ArgumentCaptor.forClass(CatalogDomainEvent.class);
-        verify(events).publish(emitted.capture(), eq(context));
-        return emitted.getValue();
+        ArgumentCaptor<CatalogEventSource> emitted = ArgumentCaptor.forClass(CatalogEventSource.class);
+        verify(events).publishFrom(emitted.capture(), eq(context));
+        return emitted.getValue().pullDomainEvents().getLast();
     }
 }

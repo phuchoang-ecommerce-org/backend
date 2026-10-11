@@ -33,39 +33,56 @@ public final class ProductCommandService {
 
   public Product create(UUID id, UUID categoryId, String name, String description, String brand,
       Map<String, Object> attributes) {
-    return products.save(Product.create(id, categoryId, name, description, brand, attributes));
+    Product product = Product.create(id, categoryId, name, description, brand, attributes);
+    products.save(product);
+    return product;
   }
 
   public Product change(Product product, UUID categoryId, String name, String description, String brand,
       Map<String, Object> attributes) {
-    return products.save(product.change(categoryId, name, description, brand, attributes));
+    product.change(categoryId, name, description, brand, attributes);
+    products.save(product);
+    return product;
   }
 
   public Product transitionTo(Product product, PublicationStatus status, Instant now) {
-    return products.save(product.transitionTo(status, now));
+    product.transitionTo(status, now);
+    products.save(product);
+    return product;
   }
 
   public Product addVariant(Product product, Product.Variant variant) {
-    return products.save(product.addVariant(variant));
+    product.addVariant(variant);
+    products.save(product);
+    return product;
   }
 
   public Product removeVariant(Product product, UUID variantId) {
-    return products.save(product.removeVariant(variantId));
+    product.removeVariant(variantId);
+    products.save(product);
+    return product;
   }
 
   public Product changePrice(Product product, UUID variantId, BigDecimal amount, String currency) {
-    return products.save(product.changePrice(variantId, amount, currency));
+    product.changePrice(variantId, amount, currency);
+    products.save(product);
+    return product;
   }
 
   public Product addImage(Product product, Product.Image image) {
-    return products.save(product.addImage(image));
+    product.addImage(image);
+    products.save(product);
+    return product;
   }
 
   public Product removeImage(Product product, UUID imageId) {
-    return products.save(product.removeImage(imageId));
+    product.removeImage(imageId);
+    products.save(product);
+    return product;
   }
 
   public void discontinue(Product product) {
+    product.discontinue();
     products.deleteById(product.id());
   }
 }

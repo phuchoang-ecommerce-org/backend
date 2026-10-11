@@ -3,12 +3,13 @@ package org.phuchoang.ecp.identity.internal.application.profile;
 import org.phuchoang.ecp.audit.api.AuditRecord;
 import org.phuchoang.ecp.audit.api.AuditTrail;
 import org.phuchoang.ecp.identity.internal.application.IdentityErrors;
+import org.phuchoang.ecp.identity.internal.application.event.VerificationEmailRequested;
 import org.phuchoang.ecp.identity.internal.application.port.DomainEventPublisher;
+import org.phuchoang.ecp.identity.internal.application.port.IdentityWorkflowEventPublisher;
 import org.phuchoang.ecp.identity.internal.application.registration.VerificationTokenManager;
 import org.phuchoang.ecp.identity.internal.application.security.CallerContext;
 import org.phuchoang.ecp.identity.internal.application.security.PermissionChecker;
 import org.phuchoang.ecp.identity.internal.application.security.PermissionMatrix;
-import org.phuchoang.ecp.identity.internal.domain.event.EmailVerificationResent;
 import org.phuchoang.ecp.identity.internal.domain.model.Account;
 import org.phuchoang.ecp.identity.internal.domain.model.EmailAddress;
 import org.phuchoang.ecp.identity.internal.domain.repository.AccountRepository;
@@ -29,6 +30,7 @@ public class ProfileUseCases {
     private final VerificationTokenManager verificationTokens;
     private final PermissionChecker permissions;
     private final DomainEventPublisher events;
+    private final IdentityWorkflowEventPublisher workflowEvents;
     private final Clock clock;
     private final AuditTrail audit;
     private final AccountSummaryMapper summaries;
@@ -58,7 +60,7 @@ public class ProfileUseCases {
             String verificationToken = verificationTokens.issue(account.id());
             accounts.save(account);
             events.publishFrom(account);
-            events.publish(new EmailVerificationResent(account.id(), newEmail.value(), verificationToken,
+            workflowEvents.publish(new VerificationEmailRequested(account.id(), newEmail.value(), verificationToken,
                 Instant.now(clock)));
         } else {
             account.confirmProfileUpdate(clock);

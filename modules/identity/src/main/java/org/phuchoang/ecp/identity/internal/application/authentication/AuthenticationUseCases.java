@@ -3,15 +3,15 @@ package org.phuchoang.ecp.identity.internal.application.authentication;
 import org.phuchoang.ecp.identity.internal.application.IdentityErrors;
 import org.phuchoang.ecp.identity.internal.application.authentication.SessionManager.Presentation;
 import org.phuchoang.ecp.identity.internal.application.port.AccessTokenIssuer;
-import org.phuchoang.ecp.identity.internal.application.port.DomainEventPublisher;
+import org.phuchoang.ecp.identity.internal.application.event.SessionEnded;
+import org.phuchoang.ecp.identity.internal.application.event.SessionEstablished;
+import org.phuchoang.ecp.identity.internal.application.port.IdentityWorkflowEventPublisher;
 import org.phuchoang.ecp.identity.internal.application.port.PasswordEncoder;
 import org.phuchoang.ecp.identity.internal.application.profile.AccountSummary;
 import org.phuchoang.ecp.identity.internal.application.profile.AccountSummaryMapper;
 import org.phuchoang.ecp.identity.internal.application.security.CallerContext;
 import org.phuchoang.ecp.identity.internal.application.security.PermissionChecker;
 import org.phuchoang.ecp.identity.internal.application.security.PermissionMatrix;
-import org.phuchoang.ecp.identity.internal.domain.event.SessionEnded;
-import org.phuchoang.ecp.identity.internal.domain.event.SessionEstablished;
 import org.phuchoang.ecp.identity.internal.domain.model.Account;
 import org.phuchoang.ecp.identity.internal.domain.model.AccountStatus;
 import org.phuchoang.ecp.identity.internal.domain.model.EmailAddress;
@@ -48,7 +48,7 @@ public class AuthenticationUseCases {
     private final PasswordEncoder passwordEncoder;
     private final AccessTokenIssuer accessTokens;
     private final PermissionChecker permissions;
-    private final DomainEventPublisher events;
+    private final IdentityWorkflowEventPublisher workflowEvents;
     private final Clock clock;
     private final AccountSummaryMapper summaries;
 
@@ -72,7 +72,7 @@ public class AuthenticationUseCases {
         accounts.save(account);
 
         boolean restricted = !account.isVerified(); // A1 — restricted session, browse/cart only.
-        events.publish(new SessionEstablished(account.id(), restricted, Instant.now(clock)));
+        workflowEvents.publish(new SessionEstablished(account.id(), restricted, Instant.now(clock)));
 
         return session(account, sessions.issue(account.id()));
     }
@@ -84,14 +84,14 @@ public class AuthenticationUseCases {
         if (rawRefreshToken != null && !rawRefreshToken.isBlank()) {
             sessions.revoke(rawRefreshToken); // Absent, expired, or already consumed — E1: success, no action.
         }
-        events.publish(new SessionEnded(caller.accountId(), false, Instant.now(clock)));
+        workflowEvents.publish(new SessionEnded(caller.accountId(), false, Instant.now(clock)));
     }
 
     @Transactional
     public void endAllOwnSessions(CallerContext caller) {
         permissions.require(caller, PermissionMatrix.END_ALL_OWN_SESSIONS);
         sessions.revokeAll(caller.accountId());
-        events.publish(new SessionEnded(caller.accountId(), true, Instant.now(clock)));
+        workflowEvents.publish(new SessionEnded(caller.accountId(), true, Instant.now(clock)));
     }
 
     // noRollbackFor: a reuse rejection's whole point is a durable side effect (the chain
@@ -117,7 +117,7 @@ public class AuthenticationUseCases {
     }
 
     private ApplicationException chainEnded(java.util.UUID accountId) {
-        events.publish(new SessionEnded(accountId, true, Instant.now(clock)));
+        workflowEvents.publish(new SessionEnded(accountId, true, Instant.now(clock)));
         return IdentityErrors.refreshTokenReused();
     }
 

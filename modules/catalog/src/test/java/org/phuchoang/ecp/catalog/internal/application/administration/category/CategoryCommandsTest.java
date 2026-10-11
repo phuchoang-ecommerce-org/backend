@@ -14,6 +14,7 @@ import org.phuchoang.ecp.catalog.internal.application.event.CatalogEventPublishe
 import org.phuchoang.ecp.catalog.internal.domain.event.CatalogDomainEvent;
 import org.phuchoang.ecp.catalog.internal.domain.event.CategoryChanged;
 import org.phuchoang.ecp.catalog.internal.domain.model.Category;
+import org.phuchoang.ecp.catalog.internal.domain.model.CatalogEventSource;
 import org.phuchoang.ecp.catalog.internal.domain.repository.CategoryRepository;
 import org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository;
 import org.phuchoang.ecp.catalog.internal.domain.service.CategoryHierarchyPolicy;
@@ -94,7 +95,7 @@ class CategoryCommandsTest {
         UUID missing = UUID.randomUUID();
         when(categories.findById(missing)).thenReturn(Optional.empty());
         service.delete(context, missing);
-        verify(events, never()).publish(any(), any());
+        verify(events, never()).publishFrom(any(), any());
     }
 
     @Test
@@ -112,8 +113,8 @@ class CategoryCommandsTest {
     }
 
     private CatalogDomainEvent captured() {
-        ArgumentCaptor<CatalogDomainEvent> emitted = ArgumentCaptor.forClass(CatalogDomainEvent.class);
-        verify(events).publish(emitted.capture(), eq(context));
-        return emitted.getValue();
+        ArgumentCaptor<CatalogEventSource> emitted = ArgumentCaptor.forClass(CatalogEventSource.class);
+        verify(events).publishFrom(emitted.capture(), eq(context));
+        return emitted.getValue().pullDomainEvents().getLast();
     }
 }

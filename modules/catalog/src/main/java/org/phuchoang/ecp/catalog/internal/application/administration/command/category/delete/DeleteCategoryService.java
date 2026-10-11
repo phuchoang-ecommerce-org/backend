@@ -45,6 +45,6 @@ public class DeleteCategoryService {
                 + decision.assignedProductCount() + ", childCategoryCount=" + decision.childCategoryCount());
         }
 
-        events.publish(CategoryChanged.removed(decision.category()), context);
+        events.publishFrom(decision.category(), context);
     }
 }

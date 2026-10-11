@@ -1,7 +1,7 @@
 package org.phuchoang.ecp.catalog.internal.application.event;
 
 import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogCommandContext;
-import org.phuchoang.ecp.catalog.internal.domain.event.CatalogDomainEvent;
+import org.phuchoang.ecp.catalog.internal.domain.model.CatalogEventSource;
 
 /**
  * Application output port for publishing a Catalog business fact. The infrastructure adapter owns
@@ -9,5 +9,6 @@ import org.phuchoang.ecp.catalog.internal.domain.event.CatalogDomainEvent;
  */
 public interface CatalogEventPublisher {
 
-    void publish(CatalogDomainEvent event, CatalogCommandContext context);
+    /** Publishes facts drained from the aggregate root that raised them. */
+    void publishFrom(CatalogEventSource aggregate, CatalogCommandContext context);
 }

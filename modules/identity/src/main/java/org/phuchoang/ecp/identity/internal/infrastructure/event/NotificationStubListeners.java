@@ -1,11 +1,10 @@
 package org.phuchoang.ecp.identity.internal.infrastructure.event;
 
-import org.phuchoang.ecp.identity.internal.domain.event.AccountRegistered;
-import org.phuchoang.ecp.identity.internal.domain.event.DuplicateRegistrationAttempted;
+import org.phuchoang.ecp.identity.internal.application.event.DuplicateRegistrationAttempted;
+import org.phuchoang.ecp.identity.internal.application.event.PasswordResetRequested;
+import org.phuchoang.ecp.identity.internal.application.event.VerificationEmailRequested;
 import org.phuchoang.ecp.identity.internal.domain.event.EmailChangeRequested;
-import org.phuchoang.ecp.identity.internal.domain.event.EmailVerificationResent;
 import org.phuchoang.ecp.identity.internal.domain.event.PasswordChanged;
-import org.phuchoang.ecp.identity.internal.domain.event.PasswordResetRequested;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.modulith.events.ApplicationModuleListener;
@@ -17,7 +16,7 @@ class NotificationStubListeners {
     private static final Logger log = LoggerFactory.getLogger(NotificationStubListeners.class);
 
     @ApplicationModuleListener
-    void on(AccountRegistered event) {
+    void on(VerificationEmailRequested event) {
         log.info("[stub-notification] verification email would be sent to {} (accountId={}, token redacted)",
             event.email(), event.accountId());
     }
@@ -25,12 +24,6 @@ class NotificationStubListeners {
     @ApplicationModuleListener
     void on(DuplicateRegistrationAttempted event) {
         log.info("[stub-notification] registration warning would be sent to {}", event.email());
-    }
-
-    @ApplicationModuleListener
-    void on(EmailVerificationResent event) {
-        log.info("[stub-notification] verification email would be resent to {} (accountId={}, token redacted)",
-            event.email(), event.accountId());
     }
 
     @ApplicationModuleListener

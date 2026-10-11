@@ -6,6 +6,7 @@ import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchRule;
 import org.jmolecules.ddd.annotation.AggregateRoot;
 import org.jmolecules.ddd.annotation.Repository;
+import org.jmolecules.event.annotation.DomainEvent;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -157,6 +158,17 @@ class ArchitectureTests {
             .should().beInterfaces()
             .andShould().resideInAPackage("..internal.domain.repository..");
         locationRule.check(mainClasses);
+    }
+
+    @Test
+    void onlyAggregateRootsConstructDomainEvents() {
+        mainClasses.stream()
+            .flatMap(type -> type.getConstructorCallsFromSelf().stream())
+            .filter(call -> call.getTargetOwner().isAnnotatedWith(DomainEvent.class))
+            .forEach(call -> org.assertj.core.api.Assertions.assertThat(
+                call.getOriginOwner().isAnnotatedWith(AggregateRoot.class))
+                .as("%s constructs %s", call.getOriginOwner().getFullName(), call.getTargetOwner().getFullName())
+                .isTrue());
     }
 
     @Test

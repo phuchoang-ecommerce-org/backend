@@ -3,6 +3,7 @@ package org.phuchoang.ecp.identity.internal.domain.model;
 import org.jmolecules.ddd.annotation.AggregateRoot;
 import org.jmolecules.ddd.annotation.Identity;
 import org.phuchoang.ecp.identity.internal.domain.event.AccountProfileUpdated;
+import org.phuchoang.ecp.identity.internal.domain.event.AccountRegistered;
 import org.phuchoang.ecp.identity.internal.domain.event.AccountVerified;
 import org.phuchoang.ecp.identity.internal.domain.event.EmailChangeRequested;
 import org.phuchoang.ecp.identity.internal.domain.event.PasswordChanged;
@@ -66,15 +67,15 @@ public final class Account {
 
     /**
      * `UC-CUS-01` main scenario, step 4: a brand-new account, unverified, holding the Customer
-     * role. No event is raised here — {@code AccountRegistered} also carries the verification
-     * token (`VerificationTokenIssuing`, an application-layer concern the aggregate doesn't know
-     * about), so the application service raises it once both exist.
+     * role. The aggregate records registration; token delivery remains an application workflow.
      */
     public static Account register(UUID id, EmailAddress email, CredentialHash credentialHash,
             String displayName, Clock clock) {
         Instant now = Instant.now(clock);
-        return new Account(id, email, null, credentialHash, displayName, AccountStatus.ACTIVE,
+        Account account = new Account(id, email, null, credentialHash, displayName, AccountStatus.ACTIVE,
             VerificationStatus.UNVERIFIED, null, null, 0, 0L, EnumSet.of(RoleCode.CUSTOMER), now);
+        account.domainEvents.add(new AccountRegistered(id, email.value(), now));
+        return account;
     }
 
     /** Reconstitutes a persisted account. No event is raised — rehydration is not a business event. */

@@ -3,8 +3,6 @@ package org.phuchoang.ecp.catalog.internal.infrastructure.event.outbox;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.phuchoang.ecp.catalog.internal.application.administration.command.CatalogCommandContext;
-import org.phuchoang.ecp.catalog.internal.domain.event.CategoryChanged;
-import org.phuchoang.ecp.catalog.internal.domain.event.ProductCreated;
 import org.phuchoang.ecp.catalog.internal.domain.model.Category;
 import org.phuchoang.ecp.catalog.internal.domain.model.Product;
 import org.phuchoang.ecp.catalog.internal.domain.model.SubtreeCategory;
@@ -46,7 +44,7 @@ class CatalogOutboxEventPublisherTest {
         when(categories.findSubtree(product.categoryId()))
             .thenReturn(List.of(new SubtreeCategory(product.categoryId(), "shirts")));
 
-        publisher.publish(new ProductCreated(product),
+        publisher.publishFrom(product,
             new CatalogCommandContext(new IdentityActor(accountId, Set.of("STAFF")), correlationId));
 
         ArgumentCaptor<OutboxEvent> appended = ArgumentCaptor.forClass(OutboxEvent.class);
@@ -64,10 +62,10 @@ class CatalogOutboxEventPublisherTest {
 
     @Test
     void categoryFactsGoToTheCategoryTopicAndAGuestHasNoActor() {
-        Category category = new Category(UUID.randomUUID(), null, "Shirts", "shirts", "/x/", 0, null, 0, false);
+        Category category = Category.create(UUID.randomUUID(), null, "Shirts", "shirts", null, 0, false, null);
         when(categories.findSubtree(category.id())).thenReturn(List.of(new SubtreeCategory(category.id(), "shirts")));
 
-        publisher.publish(CategoryChanged.of(category),
+        publisher.publishFrom(category,
             new CatalogCommandContext(IdentityActor.GUEST, UUID.randomUUID()));
 
         ArgumentCaptor<OutboxEvent> appended = ArgumentCaptor.forClass(OutboxEvent.class);

@@ -40,7 +40,7 @@ public class AddProductImageService {
         Product.Image image = new Product.Image(UUID.randomUUID(), command.url(), command.altText(), command.sortOrder());
         Product after = products.addImage(product, image);
 
-        events.publish(new ProductUpdated(after), context);
+        events.publishFrom(after, context);
         return snapshots.imageSnapshot(after.image(image.id()));
     }
 }

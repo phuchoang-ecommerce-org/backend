@@ -40,6 +40,6 @@ public class RemoveVariantService {
         }
         Product after = products.removeVariant(product, variantId);
 
-        events.publish(new ProductUpdated(after), context);
+        events.publishFrom(after, context);
     }
 }

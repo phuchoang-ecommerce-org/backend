@@ -7,12 +7,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.phuchoang.ecp.identity.internal.application.port.AccessTokenIssuer;
 import org.phuchoang.ecp.identity.internal.application.port.DomainEventPublisher;
+import org.phuchoang.ecp.identity.internal.application.port.IdentityWorkflowEventPublisher;
 import org.phuchoang.ecp.identity.internal.application.port.PasswordEncoder;
 import org.phuchoang.ecp.identity.internal.application.port.TokenStore;
 import org.phuchoang.ecp.identity.internal.application.security.PermissionMatrixPermissionChecker;
 import org.phuchoang.ecp.identity.internal.domain.policy.AccessControlPolicy;
 import org.phuchoang.ecp.identity.internal.application.token.OpaqueTokens;
-import org.phuchoang.ecp.identity.internal.domain.event.SessionEnded;
+import org.phuchoang.ecp.identity.internal.application.event.SessionEnded;
 import org.phuchoang.ecp.identity.internal.domain.model.Account;
 import org.phuchoang.ecp.identity.internal.domain.model.AccountStatus;
 import org.phuchoang.ecp.identity.internal.domain.model.CredentialHash;
@@ -63,14 +64,14 @@ class AuthenticationUseCasesTest {
     @Mock
     private AccessTokenIssuer accessTokenIssuer;
     @Mock
-    private DomainEventPublisher events;
+    private IdentityWorkflowEventPublisher workflowEvents;
 
     private AuthenticationUseCases useCases;
 
     @BeforeEach
     void setUp() {
         useCases = new AuthenticationUseCases(accountRepository, new RefreshTokenSessionManager(tokenStore, clock),
-            passwordEncoder, accessTokenIssuer, new PermissionMatrixPermissionChecker(new AccessControlPolicy()), events, clock,
+            passwordEncoder, accessTokenIssuer, new PermissionMatrixPermissionChecker(new AccessControlPolicy()), workflowEvents, clock,
             Mappers.getMapper(AccountSummaryMapper.class));
     }
 
@@ -149,7 +150,7 @@ class AuthenticationUseCasesTest {
 
         assertThat(failure.errorCode().code()).isEqualTo("ECP-GEN-4011");
         verify(tokenStore).invalidateChain(consumed.chainId(), Instant.now(clock));
-        verify(events).publish(new SessionEnded(consumed.accountId(), true, Instant.now(clock)));
+        verify(workflowEvents).publish(new SessionEnded(consumed.accountId(), true, Instant.now(clock)));
         verify(accountRepository, never()).findById(any());
     }
 
@@ -195,7 +196,7 @@ class AuthenticationUseCasesTest {
             presented.accountId(), Set.of(RoleCode.CUSTOMER)), rawToken);
 
         verify(tokenStore).invalidateChain(presented.chainId(), Instant.now(clock));
-        verify(events).publish(new SessionEnded(presented.accountId(), false, Instant.now(clock)));
+        verify(workflowEvents).publish(new SessionEnded(presented.accountId(), false, Instant.now(clock)));
     }
 
     @Test
@@ -207,7 +208,7 @@ class AuthenticationUseCasesTest {
             accountId, Set.of(RoleCode.CUSTOMER)), "stale");
 
         verify(tokenStore, never()).invalidateChain(any(), any());
-        verify(events).publish(new SessionEnded(accountId, false, Instant.now(clock)));
+        verify(workflowEvents).publish(new SessionEnded(accountId, false, Instant.now(clock)));
     }
 
     private ApplicationException catchLoginFailure(String email, String password) {

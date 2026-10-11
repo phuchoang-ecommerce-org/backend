@@ -1,6 +1,7 @@
 package org.phuchoang.ecp.identity.internal.domain.model;
 
 import org.phuchoang.ecp.identity.internal.domain.event.AccountProfileUpdated;
+import org.phuchoang.ecp.identity.internal.domain.event.AccountRegistered;
 import org.phuchoang.ecp.identity.internal.domain.event.AccountVerified;
 import org.phuchoang.ecp.identity.internal.domain.event.EmailChangeRequested;
 import org.phuchoang.ecp.identity.internal.domain.event.PasswordChanged;
@@ -27,12 +28,14 @@ class AccountTest {
         assertThat(account.verificationStatus()).isEqualTo(VerificationStatus.UNVERIFIED);
         assertThat(account.isVerified()).isFalse();
         assertThat(account.roles()).containsExactly(RoleCode.CUSTOMER);
+        assertThat(account.pullDomainEvents()).singleElement().isInstanceOf(AccountRegistered.class);
     }
 
     @Test
     void verifyMarksTheAccountVerifiedAndRaisesAccountVerified_BR_CUS_02() {
         Account account = Account.register(UUID.randomUUID(), new EmailAddress("guest@example.com"),
             new CredentialHash("hashed"), "Guest", clock);
+        account.pullDomainEvents();
 
         account.verify(clock);
 
@@ -45,6 +48,7 @@ class AccountTest {
     void verifyIsIdempotentForAnAlreadyVerifiedAccount_UC_CUS_02_A1() {
         Account account = Account.register(UUID.randomUUID(), new EmailAddress("guest@example.com"),
             new CredentialHash("hashed"), "Guest", clock);
+        account.pullDomainEvents();
         account.verify(clock);
         account.pullDomainEvents(); // drain the first verification's event
 
@@ -80,6 +84,7 @@ class AccountTest {
     void changePasswordReplacesTheHashAndRaisesPasswordChanged_UC_CUS_06() {
         Account account = Account.register(UUID.randomUUID(), new EmailAddress("guest@example.com"),
             new CredentialHash("old-hash"), "Guest", clock);
+        account.pullDomainEvents();
 
         account.changePassword(new CredentialHash("new-hash"), clock);
 
@@ -91,6 +96,7 @@ class AccountTest {
     void requestEmailChangeHoldsTheNewAddressPendingWithoutTouchingEmail_UC_CUS_08_A1() {
         Account account = Account.register(UUID.randomUUID(), new EmailAddress("guest@example.com"),
             new CredentialHash("hashed"), "Guest", clock);
+        account.pullDomainEvents();
 
         account.requestEmailChange(new EmailAddress("new@example.com"), clock);
 
@@ -105,6 +111,7 @@ class AccountTest {
     void confirmPendingEmailPromotesThePendingAddressAndClearsIt_UC_CUS_08_A1() {
         Account account = Account.register(UUID.randomUUID(), new EmailAddress("guest@example.com"),
             new CredentialHash("hashed"), "Guest", clock);
+        account.pullDomainEvents();
         account.requestEmailChange(new EmailAddress("new@example.com"), clock);
         account.pullDomainEvents();
 
@@ -119,6 +126,7 @@ class AccountTest {
     void confirmPendingEmailIsANoOpWhenNothingIsPending() {
         Account account = Account.register(UUID.randomUUID(), new EmailAddress("guest@example.com"),
             new CredentialHash("hashed"), "Guest", clock);
+        account.pullDomainEvents();
 
         account.confirmPendingEmail(clock);
 

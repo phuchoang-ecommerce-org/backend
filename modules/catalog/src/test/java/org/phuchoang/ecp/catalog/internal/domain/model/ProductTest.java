@@ -46,13 +46,12 @@ class ProductTest {
         assertThat(draft.publicationStatus()).isEqualTo(PublicationStatus.DRAFT);
         assertThat(draft.publishedAt()).isNull();
 
-        Product published = draft.transitionTo(PublicationStatus.PUBLISHED, first);
-        Product unpublished = published.transitionTo(PublicationStatus.UNPUBLISHED, first.plusSeconds(60));
-        Product republished = unpublished.transitionTo(PublicationStatus.PUBLISHED, first.plusSeconds(120));
-
-        assertThat(published.publishedAt()).isEqualTo(first);
-        assertThat(unpublished.publicationStatus()).isEqualTo(PublicationStatus.UNPUBLISHED);
-        assertThat(republished.publishedAt()).isEqualTo(first);
+        draft.transitionTo(PublicationStatus.PUBLISHED, first);
+        assertThat(draft.publishedAt()).isEqualTo(first);
+        draft.transitionTo(PublicationStatus.UNPUBLISHED, first.plusSeconds(60));
+        assertThat(draft.publicationStatus()).isEqualTo(PublicationStatus.UNPUBLISHED);
+        draft.transitionTo(PublicationStatus.PUBLISHED, first.plusSeconds(120));
+        assertThat(draft.publishedAt()).isEqualTo(first);
     }
 
     @Test

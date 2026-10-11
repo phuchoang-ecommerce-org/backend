@@ -9,9 +9,6 @@ import org.phuchoang.ecp.identity.internal.domain.model.Account;
  */
 public interface DomainEventPublisher {
 
-    /** Publishes an application-raised event (one not buffered by an aggregate). */
-    void publish(Object event);
-
     /** Drains and publishes every event {@code account} buffered since it was loaded. */
     void publishFrom(Account account);
 }

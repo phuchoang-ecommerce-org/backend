@@ -39,6 +39,6 @@ public class RemoveProductImageService {
         Product product = CatalogLookups.requireProduct(products.find(productId));
         Product after = products.removeImage(product, imageId);
 
-        events.publish(new ProductUpdated(after), context);
+        events.publishFrom(after, context);
     }
 }

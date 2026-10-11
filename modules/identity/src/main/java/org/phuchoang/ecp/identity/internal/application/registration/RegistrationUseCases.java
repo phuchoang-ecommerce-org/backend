@@ -1,14 +1,14 @@
 package org.phuchoang.ecp.identity.internal.application.registration;
 
 import org.phuchoang.ecp.identity.internal.application.IdentityErrors;
+import org.phuchoang.ecp.identity.internal.application.event.DuplicateRegistrationAttempted;
+import org.phuchoang.ecp.identity.internal.application.event.VerificationEmailRequested;
 import org.phuchoang.ecp.identity.internal.application.port.DomainEventPublisher;
+import org.phuchoang.ecp.identity.internal.application.port.IdentityWorkflowEventPublisher;
 import org.phuchoang.ecp.identity.internal.application.port.PasswordEncoder;
 import org.phuchoang.ecp.identity.internal.application.security.CallerContext;
 import org.phuchoang.ecp.identity.internal.application.security.PermissionChecker;
 import org.phuchoang.ecp.identity.internal.application.security.PermissionMatrix;
-import org.phuchoang.ecp.identity.internal.domain.event.AccountRegistered;
-import org.phuchoang.ecp.identity.internal.domain.event.DuplicateRegistrationAttempted;
-import org.phuchoang.ecp.identity.internal.domain.event.EmailVerificationResent;
 import org.phuchoang.ecp.identity.internal.domain.model.Account;
 import org.phuchoang.ecp.identity.internal.domain.model.CredentialHash;
 import org.phuchoang.ecp.identity.internal.domain.model.EmailAddress;
@@ -36,6 +36,7 @@ public class RegistrationUseCases {
     private final PasswordEncoder passwordEncoder;
     private final PermissionChecker permissions;
     private final DomainEventPublisher events;
+    private final IdentityWorkflowEventPublisher workflowEvents;
     private final Clock clock;
 
     /**
@@ -62,12 +63,14 @@ public class RegistrationUseCases {
         } catch (AccountRepository.DuplicateEmailException e) {
             // E1 — BR-CUS-04: no account-existence disclosure. Same successful outcome as the
             // main scenario; only the event dispatched differs.
-            events.publish(new DuplicateRegistrationAttempted(email.value(), Instant.now(clock)));
+            workflowEvents.publish(new DuplicateRegistrationAttempted(email.value(), Instant.now(clock)));
             return;
         }
 
         String verificationToken = verificationTokens.issue(saved.id());
-        events.publish(new AccountRegistered(saved.id(), email.value(), verificationToken, Instant.now(clock)));
+        events.publishFrom(account);
+        workflowEvents.publish(new VerificationEmailRequested(saved.id(), email.value(), verificationToken,
+            Instant.now(clock)));
     }
 
     /**
@@ -107,7 +110,7 @@ public class RegistrationUseCases {
             .filter(account -> !account.isVerified())
             .ifPresent(account -> {
                 String rawToken = verificationTokens.issue(account.id());
-                events.publish(new EmailVerificationResent(account.id(), account.email().value(), rawToken,
+                workflowEvents.publish(new VerificationEmailRequested(account.id(), account.email().value(), rawToken,
                     Instant.now(clock)));
             });
     }

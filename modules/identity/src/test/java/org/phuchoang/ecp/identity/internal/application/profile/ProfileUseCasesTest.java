@@ -6,11 +6,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.phuchoang.ecp.identity.internal.application.port.DomainEventPublisher;
+import org.phuchoang.ecp.identity.internal.application.port.IdentityWorkflowEventPublisher;
 import org.phuchoang.ecp.identity.internal.application.port.TokenStore;
 import org.phuchoang.ecp.identity.internal.application.registration.VerificationTokenManager;
 import org.phuchoang.ecp.identity.internal.application.security.CallerContext;
 import org.phuchoang.ecp.identity.internal.application.security.PermissionChecker;
-import org.phuchoang.ecp.identity.internal.domain.event.EmailVerificationResent;
+import org.phuchoang.ecp.identity.internal.application.event.VerificationEmailRequested;
 import org.phuchoang.ecp.identity.internal.domain.model.Account;
 import org.phuchoang.ecp.identity.internal.domain.model.AccountStatus;
 import org.phuchoang.ecp.identity.internal.domain.model.CredentialHash;
@@ -51,10 +52,12 @@ class ProfileUseCasesTest {
     private PermissionChecker permissions;
     @Mock
     private DomainEventPublisher events;
+    @Mock
+    private IdentityWorkflowEventPublisher workflowEvents;
 
     private ProfileUseCases useCases() {
         return new ProfileUseCases(accountRepository, new VerificationTokenManager(tokenStore, clock), permissions,
-            events, clock, mock(AuditTrail.class), Mappers.getMapper(AccountSummaryMapper.class));
+            events, workflowEvents, clock, mock(AuditTrail.class), Mappers.getMapper(AccountSummaryMapper.class));
     }
 
     private CallerContext caller() {
@@ -83,7 +86,7 @@ class ProfileUseCasesTest {
         useCases().updateOwnProfile(caller(), new UpdateProfileCommand("New Name", null));
 
         verify(tokenStore, never()).save(any());
-        verify(events, never()).publish(any());
+        verify(workflowEvents, never()).publish(any());
         verify(events).publishFrom(any(Account.class));
     }
 
@@ -97,7 +100,7 @@ class ProfileUseCasesTest {
         assertThat(summary.email()).isEqualTo("customer@example.com");
         assertThat(summary.pendingEmail()).isEqualTo("new@example.com");
         verify(tokenStore).save(any());
-        verify(events).publish(any(EmailVerificationResent.class));
+        verify(workflowEvents).publish(any(VerificationEmailRequested.class));
     }
 
     @Test

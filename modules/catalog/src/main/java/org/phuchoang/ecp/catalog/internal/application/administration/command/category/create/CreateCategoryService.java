@@ -42,7 +42,7 @@ public class CreateCategoryService {
         Category category = categories.create(UUID.randomUUID(), command.parentId(), command.name(),
             Slugs.normalize(command.name()), command.imageUrl(), command.sortOrder(), command.featured(), parent);
 
-        events.publish(CategoryChanged.of(category), context);
+        events.publishFrom(category, context);
         return snapshots.categorySnapshot(category);
     }
 }

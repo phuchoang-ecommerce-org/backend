@@ -10,6 +10,7 @@ import org.phuchoang.ecp.catalog.internal.domain.event.ProductPriceChanged;
 import org.phuchoang.ecp.catalog.internal.domain.event.ProductPublished;
 import org.phuchoang.ecp.catalog.internal.domain.event.ProductUpdated;
 import org.phuchoang.ecp.catalog.internal.domain.event.VariantAdded;
+import org.phuchoang.ecp.catalog.internal.domain.model.CatalogEventSource;
 import org.phuchoang.ecp.catalog.internal.domain.repository.CategoryRepository;
 import org.phuchoang.ecp.catalog.internal.application.event.EventMetadata;
 import org.phuchoang.ecp.catalog.internal.application.event.OutboxEvent;
@@ -52,7 +53,11 @@ public class CatalogOutboxEventPublisher implements CatalogEventPublisher {
     }
 
     @Override
-    public void publish(CatalogDomainEvent event, CatalogCommandContext context) {
+    public void publishFrom(CatalogEventSource aggregate, CatalogCommandContext context) {
+        aggregate.pullDomainEvents().forEach(event -> publish(event, context));
+    }
+
+    private void publish(CatalogDomainEvent event, CatalogCommandContext context) {
         Object payload = payloads.payload(event, affectedCategories(event));
         EventMetadata metadata = new EventMetadata(UUID.randomUUID(), event.eventType(), EVENT_VERSION,
             clock.instant(), event.aggregateType(), event.aggregateId(), context.correlationId(), context.actor());

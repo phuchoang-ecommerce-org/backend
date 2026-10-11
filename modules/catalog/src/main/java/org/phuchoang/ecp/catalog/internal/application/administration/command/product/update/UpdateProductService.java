@@ -40,7 +40,7 @@ public class UpdateProductService {
         Product after = products.change(before, change.categoryId(), change.name(), change.description(), change.brand(),
             change.attributes());
 
-        events.publish(new ProductUpdated(after), context);
+        events.publishFrom(after, context);
         return snapshots.productSnapshot(after);
     }
 }

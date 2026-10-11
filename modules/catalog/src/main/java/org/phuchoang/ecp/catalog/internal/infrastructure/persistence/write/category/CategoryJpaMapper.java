@@ -11,5 +11,6 @@ interface CategoryJpaMapper {
 
     CatalogCategoryEntity toEntity(Category category);
 
+    @Mapping(target = "domainEvents", ignore = true)
     Category toDomain(CatalogCategoryEntity entity);
 }

@@ -10,6 +10,7 @@ import org.phuchoang.ecp.catalog.internal.application.event.CatalogEventPublishe
 import org.phuchoang.ecp.catalog.internal.domain.event.CatalogDomainEvent;
 import org.phuchoang.ecp.catalog.internal.domain.event.VariantAdded;
 import org.phuchoang.ecp.catalog.internal.domain.model.Product;
+import org.phuchoang.ecp.catalog.internal.domain.model.CatalogEventSource;
 import org.phuchoang.ecp.catalog.internal.domain.error.DuplicateSkuException;
 import org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository;
 import org.phuchoang.ecp.catalog.internal.domain.service.ProductCommandService;
@@ -53,9 +54,9 @@ class AddVariantServiceTest {
 
         assertThat(snapshot.id()).isNotNull();
         assertThat(snapshot.sku()).isEqualTo("MUG-001");
-        ArgumentCaptor<CatalogDomainEvent> emitted = ArgumentCaptor.forClass(CatalogDomainEvent.class);
-        verify(events).publish(emitted.capture(), eq(context));
-        VariantAdded added = (VariantAdded) emitted.getValue();
+        ArgumentCaptor<CatalogEventSource> emitted = ArgumentCaptor.forClass(CatalogEventSource.class);
+        verify(events).publishFrom(emitted.capture(), eq(context));
+        VariantAdded added = (VariantAdded) emitted.getValue().pullDomainEvents().getLast();
         assertThat(added.categoryId()).isEqualTo(product.categoryId());
         assertThat(added.variant().id()).isEqualTo(snapshot.id());
     }
@@ -70,6 +71,6 @@ class AddVariantServiceTest {
             .isInstanceOf(ApplicationException.class)
             .hasMessage("SKU 'MUG-001' is already in use or retired.")
             .satisfies(e -> assertThat(((ApplicationException) e).errorCode().code()).isEqualTo("ECP-GEN-4000"));
-        verify(events, never()).publish(any(), any());
+        verify(events, never()).publishFrom(any(), any());
     }
 }

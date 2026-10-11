@@ -98,8 +98,8 @@ class CatalogEventPayloadMapperTest {
         Category category = new Category(UUID.randomUUID(), null, "Shirts", "shirts", "/x/", 0, null, 3, false);
         AffectedCategories affected = AffectedCategories.of(List.of(new SubtreeCategory(category.id(), "shirts")));
 
-        CategoryChangedPayload changed = (CategoryChangedPayload) mapper.payload(CategoryChanged.of(category), affected);
-        CategoryRemovedPayload removed = (CategoryRemovedPayload) mapper.payload(CategoryChanged.removed(category),
+        CategoryChangedPayload changed = (CategoryChangedPayload) mapper.payload(new CategoryChanged(category, false), affected);
+        CategoryRemovedPayload removed = (CategoryRemovedPayload) mapper.payload(new CategoryChanged(category, true),
             AffectedCategories.NONE);
 
         assertThat(changed.slug()).isEqualTo("shirts");

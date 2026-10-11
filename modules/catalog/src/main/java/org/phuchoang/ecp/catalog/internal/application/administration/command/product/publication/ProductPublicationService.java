@@ -6,10 +6,6 @@ import org.phuchoang.ecp.catalog.internal.application.administration.command.Cat
 import org.phuchoang.ecp.catalog.internal.application.administration.command.product.ProductSnapshot;
 import org.phuchoang.ecp.catalog.internal.application.administration.command.product.ProductSnapshotMapper;
 import org.phuchoang.ecp.catalog.internal.application.event.CatalogEventPublisher;
-import org.phuchoang.ecp.catalog.internal.domain.event.CatalogDomainEvent;
-import org.phuchoang.ecp.catalog.internal.domain.event.ProductDiscontinued;
-import org.phuchoang.ecp.catalog.internal.domain.event.ProductPublished;
-import org.phuchoang.ecp.catalog.internal.domain.event.ProductUpdated;
 import org.phuchoang.ecp.catalog.internal.domain.model.Product;
 import org.phuchoang.ecp.catalog.internal.domain.model.PublicationStatus;
 import org.phuchoang.ecp.catalog.internal.domain.service.ProductCommandService;
@@ -51,7 +47,7 @@ public class ProductPublicationService {
         Product before = CatalogLookups.requireProduct(products.find(productId));
         Product after = products.transitionTo(before, status, clock.instant());
 
-        events.publish(eventFor(status, after), context);
+        events.publishFrom(after, context);
         return snapshots.productSnapshot(after);
     }
 
@@ -63,11 +59,4 @@ public class ProductPublicationService {
         }
     }
 
-    private static CatalogDomainEvent eventFor(PublicationStatus status, Product product) {
-        return switch (status) {
-            case PUBLISHED -> new ProductPublished(product);
-            case DISCONTINUED -> new ProductDiscontinued(product.id(), product.variantIds(), product.variantSkus());
-            case DRAFT, UNPUBLISHED -> new ProductUpdated(product);
-        };
-    }
 }
