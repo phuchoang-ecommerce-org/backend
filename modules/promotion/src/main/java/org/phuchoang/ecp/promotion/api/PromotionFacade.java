@@ -12,6 +12,7 @@ public interface PromotionFacade {
     List<PromotionView> listPromotions(IdentityActor caller, String status, int limit);
     List<Voucher> generatePromotionVouchers(IdentityActor caller, UUID correlationId, UUID promotionId,
             int count, boolean singleUse, String prefix);
+    PromotionView setPromotionStatus(IdentityActor caller, UUID correlationId, UUID promotionId, PromotionStatusWrite write);
     VoucherValidationResult validateVoucher(UUID customerId, String code, BigDecimal discountableAmount);
     PromotionRedemption redeem(UUID promotionId, UUID orderId, UUID customerId, BigDecimal discountableAmount);
 }

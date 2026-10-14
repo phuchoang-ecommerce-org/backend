@@ -12,15 +12,15 @@ import java.util.List;
 @Service
 public final class PromotionVoucherDomainService {
 
-    private final PromotionRepository promotions;
-    private final SecureRandom random;
+  private final PromotionRepository promotions;
+  private final SecureRandom random;
 
-    public PromotionVoucherDomainService(PromotionRepository promotions, SecureRandom random) {
-        this.promotions = promotions;
-        this.random = random;
-    }
+  public PromotionVoucherDomainService(PromotionRepository promotions, SecureRandom random) {
+    this.promotions = promotions;
+    this.random = random;
+  }
 
-    public List<PromotionVoucher> generate(Promotion.GenerateVouchers request) {
-        return Promotion.generateVouchers(request, random, promotions);
-    }
+  public List<PromotionVoucher> generate(Promotion.GenerateVouchers request) {
+    return Promotion.generateVouchers(request, random, promotions);
+  }
 }

@@ -36,6 +36,8 @@ public record Promotion(
         int priority,
         boolean stackable,
         PromotionStatus status,
+        PromotionStatus scheduledStatus,
+        Instant scheduledAt,
         long version) {
 
     public Promotion {
@@ -64,6 +66,9 @@ public record Promotion(
             throw new IllegalArgumentException("Maximum discount amount must be positive.");
         }
         Objects.requireNonNull(status, "status");
+        if ((scheduledStatus == null) != (scheduledAt == null)) {
+            throw new IllegalArgumentException("A scheduled promotion status requires both a target and time.");
+        }
     }
 
     public static Promotion draft(UUID id, String name, DiscountType type, BigDecimal value, String currency,
@@ -79,7 +84,7 @@ public record Promotion(
             boolean stackable) {
         return new Promotion(id, code, name, description, type, value, currency, maxDiscountAmount, minOrderAmount,
             validFrom, validUntil, usageLimit == null ? 0 : usageLimit, 0,
-            perCustomerLimit == null ? 0 : perCustomerLimit, priority, stackable, PromotionStatus.DRAFT, 0);
+            perCustomerLimit == null ? 0 : perCustomerLimit, priority, stackable, PromotionStatus.DRAFT, null, null, 0);
     }
 
     /** Creates and persists a new root through the aggregate's domain repository. */
@@ -96,8 +101,76 @@ public record Promotion(
     }
 
     public Promotion activate(Instant now) {
-        if (now.isAfter(validUntil)) throw new IllegalArgumentException("An elapsed promotion cannot be activated.");
-        return copy(status == PromotionStatus.EXPIRED ? PromotionStatus.EXPIRED : PromotionStatus.ACTIVE, usageCount);
+        Objects.requireNonNull(now, "now");
+        if (!now.isBefore(validUntil)) throw new IllegalArgumentException("An elapsed promotion cannot be activated.");
+        if (usageCount >= usageLimit) throw new PromotionUsageExhaustedException();
+        return copy(PromotionStatus.ACTIVE, usageCount);
+    }
+
+    /** Stops further application immediately; placed orders retain their recorded totals. */
+    public Promotion expire() {
+        return copy(PromotionStatus.EXPIRED, usageCount);
+    }
+
+    /** Pauses a campaign without changing its configured validity window. */
+    public Promotion pause() {
+        return copy(PromotionStatus.PAUSED, usageCount);
+    }
+
+    /** Applies one of the operator-visible lifecycle transitions. */
+    public Promotion changeStatus(PromotionStatus target, Instant now) {
+        Objects.requireNonNull(target, "target");
+        Promotion changed = switch (target) {
+            case ACTIVE -> activate(now);
+            case PAUSED -> pause();
+            case EXPIRED -> expire();
+            case DRAFT -> throw new IllegalArgumentException("A promotion cannot be returned to draft.");
+        };
+        return changed.withoutScheduledStatus();
+    }
+
+    /** Loads, transitions, and persists this aggregate as one lifecycle command. */
+    public static Promotion changeStatus(ChangeStatus request, PromotionRepository repository) {
+        Promotion changed = required(request.promotionId(), repository).changeStatus(request.status(), request.now());
+        repository.save(changed);
+        return changed;
+    }
+
+    /** Retains an administrator's requested lifecycle transition until its effective time. */
+    public Promotion scheduleStatus(PromotionStatus target, Instant effectiveAt, Instant now) {
+        Objects.requireNonNull(target, "target");
+        Objects.requireNonNull(effectiveAt, "effectiveAt");
+        Objects.requireNonNull(now, "now");
+        if (!effectiveAt.isAfter(now)) {
+            throw new IllegalArgumentException("A scheduled promotion status must be in the future.");
+        }
+        if (target == PromotionStatus.DRAFT) {
+            throw new IllegalArgumentException("A promotion cannot be scheduled back to draft.");
+        }
+        return copy(status, usageCount, target, effectiveAt);
+    }
+
+    /** Loads, schedules, and persists this aggregate as one lifecycle command. */
+    public static Promotion scheduleStatus(ScheduleStatus request, PromotionRepository repository) {
+        Promotion changed = required(request.promotionId(), repository)
+            .scheduleStatus(request.status(), request.effectiveAt(), request.now());
+        repository.save(changed);
+        return changed;
+    }
+
+    /** Applies a due, previously requested lifecycle transition exactly once. */
+    public Promotion applyScheduledStatusAt(Instant now) {
+        if (scheduledStatus == null || scheduledAt == null || now.isBefore(scheduledAt)) {
+            return this;
+        }
+        return changeStatus(scheduledStatus, now);
+    }
+
+    /** Loads and persists a due scheduled transition through the aggregate root. */
+    public static Promotion applyScheduledStatus(ApplyScheduledStatus request, PromotionRepository repository) {
+        Promotion changed = required(request.promotionId(), repository).applyScheduledStatusAt(request.now());
+        repository.save(changed);
+        return changed;
     }
 
     public Evaluation evaluate(UUID customerId, BigDecimal discountableAmount, Instant now) {
@@ -114,7 +187,8 @@ public record Promotion(
         Objects.requireNonNull(orderId, "orderId");
         Objects.requireNonNull(customerId, "customerId");
         if (!evaluate(customerId, discountableAmount, now).eligible()) throw new PromotionUsageExhaustedException();
-        return copy(status, usageCount + 1);
+        int nextUsageCount = usageCount + 1;
+        return copy(nextUsageCount == usageLimit ? PromotionStatus.EXPIRED : status, nextUsageCount);
     }
 
     /** Creates voucher children under this promotion aggregate. */
@@ -172,9 +246,18 @@ public record Promotion(
     }
 
     private Promotion copy(PromotionStatus nextStatus, int nextUsageCount) {
+        return copy(nextStatus, nextUsageCount, scheduledStatus, scheduledAt);
+    }
+
+    private Promotion withoutScheduledStatus() {
+        return copy(status, usageCount, null, null);
+    }
+
+    private Promotion copy(PromotionStatus nextStatus, int nextUsageCount, PromotionStatus nextScheduledStatus,
+            Instant nextScheduledAt) {
         return new Promotion(id, code, name, description, discountType, discountValue, currency, maxDiscountAmount,
             minOrderAmount, validFrom, validUntil, usageLimit, nextUsageCount, perCustomerLimit, priority,
-            stackable, nextStatus, version);
+            stackable, nextStatus, nextScheduledStatus, nextScheduledAt, version);
     }
 
     public record Evaluation(boolean eligible, BigDecimal discountAmount) {
@@ -196,6 +279,30 @@ public record Promotion(
             boolean stackable, Instant now) {
     }
 
+    public record ChangeStatus(UUID promotionId, PromotionStatus status, Instant now) {
+        public ChangeStatus {
+            Objects.requireNonNull(promotionId, "promotionId");
+            Objects.requireNonNull(status, "status");
+            Objects.requireNonNull(now, "now");
+        }
+    }
+
+    public record ScheduleStatus(UUID promotionId, PromotionStatus status, Instant effectiveAt, Instant now) {
+        public ScheduleStatus {
+            Objects.requireNonNull(promotionId, "promotionId");
+            Objects.requireNonNull(status, "status");
+            Objects.requireNonNull(effectiveAt, "effectiveAt");
+            Objects.requireNonNull(now, "now");
+        }
+    }
+
+    public record ApplyScheduledStatus(UUID promotionId, Instant now) {
+        public ApplyScheduledStatus {
+            Objects.requireNonNull(promotionId, "promotionId");
+            Objects.requireNonNull(now, "now");
+        }
+    }
+
     public record GenerateVouchers(UUID promotionId, int count, boolean singleUse, String prefix) {
     }
 
@@ -212,6 +319,12 @@ public record Promotion(
 
     private static String normalizedPrefix(String prefix) {
         return prefix == null ? "" : prefix.trim().toUpperCase() + "-";
+    }
+
+    private static Promotion required(UUID promotionId, PromotionRepository repository) {
+        Objects.requireNonNull(repository, "repository");
+        return repository.findById(promotionId)
+            .orElseThrow(() -> new IllegalArgumentException("Promotion was not found."));
     }
 
     private static String randomCode(SecureRandom random) {

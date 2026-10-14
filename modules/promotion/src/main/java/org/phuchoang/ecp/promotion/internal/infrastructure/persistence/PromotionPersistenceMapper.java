@@ -13,6 +13,7 @@ import org.phuchoang.ecp.promotion.internal.domain.model.PromotionVoucher;
 interface PromotionPersistenceMapper {
 
     @Mapping(target = "activate", ignore = true)
+    @Mapping(target = "applyScheduledStatusAt", ignore = true)
     Promotion toDomain(PromotionEntity entity);
 
     @Mapping(target = "version", ignore = true)

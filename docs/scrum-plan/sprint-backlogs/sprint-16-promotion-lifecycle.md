@@ -27,19 +27,19 @@ Sprint 15 made a voucher valid; this sprint makes it *stop* being valid — on a
 ## Backend Lane
 
 ### `US-PRM-04` Launch Flash Sale (5 pts) — `setPromotionStatus`
-- [ ] Scheduled activation at the window's start; scheduled deactivation at its end. Lease-guarded so two instances do not double-fire, same pattern as the Sprint 08 relay and the Sprint 14 cart expiry
-- [ ] **`E1` — concurrent demand exceeding stock is the expected condition, not a fault.** Reservations are admitted up to available stock and no further; the Sprint 11 race already guarantees this, and nothing in the flash-sale path may weaken it (`BR-INV-01`, `NFR-REL-03`, `NFR-SCAL-06`)
-- [ ] `E2` — under peak load, browsing and search may degrade **before** the purchase path does (`NFR-AVAIL-02`, `P9`). Confirm no flash-sale code path adds synchronous work to checkout
-- [ ] `E3` — a sale that fails to activate at its start time is **escalated immediately**, not retried quietly. An advertised campaign that does not start is a customer-facing failure with a fixed deadline
-- [ ] **`E4` — a sale that fails to deactivate keeps discounting.** Escalate immediately and permit manual deactivation. Exposure is bounded because `BR-PRM-01` is re-evaluated at placement, which rejects an expired promotion even when deactivation has not completed — assert that bound by test, because it is the only thing standing between a scheduler bug and unbudgeted spend
-- [ ] `E5` — a usage limit reached before the window closes stops the sale applying **and says so**; it is never silently extended
+- [x] Scheduled activation at the window's start; scheduled deactivation at its end. Lease-guarded so two instances do not double-fire, same pattern as the Sprint 08 relay and the Sprint 14 cart expiry
+- [x] **`E1` — concurrent demand exceeding stock is the expected condition, not a fault.** Reservations are admitted up to available stock and no further; the Sprint 11 race already guarantees this, and nothing in the flash-sale path may weaken it (`BR-INV-01`, `NFR-REL-03`, `NFR-SCAL-06`)
+- [x] `E2` — under peak load, browsing and search may degrade **before** the purchase path does (`NFR-AVAIL-02`, `P9`). Confirm no flash-sale code path adds synchronous work to checkout
+- [x] `E3` — a sale that fails to activate at its start time is **escalated immediately**, not retried quietly. An advertised campaign that does not start is a customer-facing failure with a fixed deadline
+- [x] **`E4` — a sale that fails to deactivate keeps discounting.** Escalate immediately and permit manual deactivation. Exposure is bounded because `BR-PRM-01` is re-evaluated at placement, which rejects an expired promotion even when deactivation has not completed — assert that bound by test, because it is the only thing standing between a scheduler bug and unbudgeted spend
+- [x] `E5` — a usage limit reached before the window closes stops the sale applying **and says so**; it is never silently extended
 
 ### `US-PRM-05` Deactivate or Expire Promotion (3 pts) — `updatePromotion`, `setPromotionStatus`
-- [ ] `E1` — orders in checkout carrying the promotion have it removed at placement re-validation, with the revised total re-confirmed. **`ordering` does not exist until Sprint 17–18** — implement the promotion-side removal; the re-confirmation belongs to `US-ORD-05` and is carried forward with that named sprint
-- [ ] **`E2` — orders already placed are unaffected.** Their totals were fixed at placement (`BR-ORD-06`) and are not revisited when a promotion ends
-- [ ] `E3` — a failed deactivation leaves the promotion active, escalates immediately, and retries (`NFR-REL-04`)
-- [ ] `E4` — authority declined **and recorded** (`P16`)
-- [ ] **`E5` — audit write failure lets the deactivation stand**, and the missing entry is escalated as a compliance exception. This is the **first `UC-AUD-01` `E2` case in the plan** — leaving a promotion running to preserve an audit entry costs money every minute. Select the `E2` branch the Sprint 12 `US-AUD-01` work built; do not add a second one
+- [x] `E1` — orders in checkout carrying the promotion have it removed at placement re-validation, with the revised total re-confirmed. **`ordering` does not exist until Sprint 17–18** — implement the promotion-side removal; the re-confirmation belongs to `US-ORD-05` and is carried forward with that named sprint
+- [x] **`E2` — orders already placed are unaffected.** Their totals were fixed at placement (`BR-ORD-06`) and are not revisited when a promotion ends
+- [x] `E3` — a failed deactivation leaves the promotion active, escalates immediately, and retries (`NFR-REL-04`)
+- [x] `E4` — authority declined **and recorded** (`P16`)
+- [x] **`E5` — audit write failure lets the deactivation stand**, and the missing entry is escalated as a compliance exception. This is the **first `UC-AUD-01` `E2` case in the plan** — leaving a promotion running to preserve an audit entry costs money every minute. Select the `E2` branch the Sprint 12 `US-AUD-01` work built; do not add a second one
 - [ ] Permission-matrix cell asserted on both operations
 
 ### `EN-CONTRACT-1` Contract test spec→code across delivered operations (13 pts)

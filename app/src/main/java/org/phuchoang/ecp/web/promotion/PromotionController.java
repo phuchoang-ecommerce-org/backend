@@ -3,6 +3,7 @@ package org.phuchoang.ecp.web.promotion;
 import org.phuchoang.ecp.promotion.api.PromotionFacade;
 import org.phuchoang.ecp.promotion.api.PromotionView;
 import org.phuchoang.ecp.promotion.api.PromotionWrite;
+import org.phuchoang.ecp.promotion.api.PromotionStatusWrite;
 import org.phuchoang.ecp.promotion.api.Voucher;
 import org.phuchoang.ecp.promotion.api.VoucherValidationResult;
 import org.phuchoang.ecp.web.common.pagination.Page;
@@ -15,6 +16,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -52,6 +54,13 @@ class PromotionController {
         List<Voucher> vouchers = promotions.generatePromotionVouchers(context.caller(), context.correlationId(), promotionId,
             write.count(), write.singleUse(), write.prefix());
         return ResponseEntity.created(URI.create("/api/v1/promotions/" + promotionId + "/vouchers")).body(vouchers);
+    }
+
+    @PutMapping("/api/v1/promotions/{promotionId}/status")
+    PromotionView setStatus(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID promotionId,
+            @RequestBody PromotionStatusWrite write) {
+        RequestContext context = requestContext.resolve(jwt);
+        return promotions.setPromotionStatus(context.caller(), context.correlationId(), promotionId, write);
     }
 
     @PostMapping("/api/v1/voucher-validations")

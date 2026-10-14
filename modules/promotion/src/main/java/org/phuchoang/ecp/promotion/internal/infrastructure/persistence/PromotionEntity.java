@@ -36,6 +36,8 @@ class PromotionEntity {
     private int priority;
     private boolean stackable;
     private String status;
+    @Column(name = "scheduled_status") private String scheduledStatus;
+    @Column(name = "scheduled_at") private Instant scheduledAt;
     @Version private long version;
     @Column(name = "created_at") private Instant createdAt;
     @Column(name = "updated_at") private Instant updatedAt;

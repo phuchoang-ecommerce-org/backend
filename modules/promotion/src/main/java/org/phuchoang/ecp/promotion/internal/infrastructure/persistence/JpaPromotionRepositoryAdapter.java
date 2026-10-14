@@ -23,6 +23,18 @@ class JpaPromotionRepositoryAdapter implements PromotionRepository {
 
     @Override public Optional<Promotion> findById(UUID id) { return promotions.findById(id).map(mapper::toDomain); }
     @Override public Optional<Promotion> findForRedemption(UUID id) { return promotions.findLockedById(id).map(mapper::toDomain); }
+    @Override public java.util.List<Promotion> findDueScheduledStatusChanges(Instant now, int limit) {
+        return promotions.findTop100ByScheduledAtLessThanEqualOrderByScheduledAtAsc(now).stream()
+            .limit(limit).map(mapper::toDomain).toList();
+    }
+    @Override public java.util.List<Promotion> findDueActivations(Instant now, int limit) {
+        return promotions.findTop100ByStatusAndValidFromLessThanEqualAndValidUntilGreaterThanOrderByValidFromAsc(
+            "DRAFT", now, now).stream().limit(limit).map(mapper::toDomain).toList();
+    }
+    @Override public java.util.List<Promotion> findDueExpirations(Instant now, int limit) {
+        return promotions.findTop100ByStatusAndValidUntilLessThanEqualOrderByValidUntilAsc("ACTIVE", now).stream()
+            .limit(limit).map(mapper::toDomain).toList();
+    }
     @Override public long redemptionCountForCustomer(UUID promotionId, UUID customerId) {
         return redemptions.countByPromotionIdAndCustomerId(promotionId, customerId);
     }
