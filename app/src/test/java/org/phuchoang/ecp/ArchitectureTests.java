@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static com.tngtech.archunit.base.DescribedPredicate.describe;
 
 /**
  * The ArchUnit half of ADR-0018's governance gate — the layer and forbidden-edge rules of
@@ -97,6 +98,27 @@ class ArchitectureTests {
     }
 
     @Test
+    void promotionApplicationDelegatesAggregatePersistenceToTheDomainModel() {
+        ArchRule rule = noClasses()
+            .that().resideInAPackage("org.phuchoang.ecp.promotion.internal.application..")
+            .should().dependOnClassesThat().resideInAPackage(
+                "org.phuchoang.ecp.promotion.internal.domain.repository..")
+            .because("Promotion application use cases must invoke a constraint-bearing domain service rather than "
+                + "access the aggregate repository directly");
+        rule.check(mainClasses);
+    }
+
+    @Test
+    void promotionDomainServicesDelegateRepositoryOperationsToTheAggregateRoot() {
+        ArchRule rule = noClasses()
+            .that().resideInAPackage("org.phuchoang.ecp.promotion.internal.domain.service..")
+            .should().callMethodWhere(describe("a PromotionRepository method", call -> call.getTargetOwner().getFullName()
+                .equals("org.phuchoang.ecp.promotion.internal.domain.repository.PromotionRepository")))
+            .because("Promotion domain services invoke aggregate-root operations; the aggregate owns repository interaction");
+        rule.check(mainClasses);
+    }
+
+    @Test
     void infrastructureDoesNotDependOnItsOwnApi() {
         for (String module : MODULES) {
             if (module.equals("identity")) {
@@ -146,12 +168,14 @@ class ArchitectureTests {
             "org.phuchoang.ecp.identity.internal.domain.model.Account",
             "org.phuchoang.ecp.catalog.internal.domain.model.Product",
             "org.phuchoang.ecp.catalog.internal.domain.model.Category",
-            "org.phuchoang.ecp.inventory.internal.domain.model.StockItem");
+            "org.phuchoang.ecp.inventory.internal.domain.model.StockItem",
+            "org.phuchoang.ecp.promotion.internal.domain.model.Promotion");
         org.assertj.core.api.Assertions.assertThat(repositories).containsExactlyInAnyOrder(
             "org.phuchoang.ecp.identity.internal.domain.repository.AccountRepository",
             "org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository",
             "org.phuchoang.ecp.catalog.internal.domain.repository.CategoryRepository",
-            "org.phuchoang.ecp.inventory.internal.domain.repository.StockItemRepository");
+            "org.phuchoang.ecp.inventory.internal.domain.repository.StockItemRepository",
+            "org.phuchoang.ecp.promotion.internal.domain.repository.PromotionRepository");
 
         ArchRule locationRule = com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes()
             .that().areAnnotatedWith(Repository.class)
