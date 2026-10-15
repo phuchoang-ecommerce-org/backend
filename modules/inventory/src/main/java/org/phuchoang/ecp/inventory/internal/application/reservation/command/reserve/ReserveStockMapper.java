@@ -17,6 +17,7 @@ interface ReserveStockMapper {
 
     @Mapping(target = "reservationId", source = "reservation.id")
     @Mapping(target = "stockItemId", source = "stockItem.id")
+    @Mapping(target = "warehouseId", source = "stockItem.warehouseId")
     @Mapping(target = "orderId", source = "reservation.orderId")
     @Mapping(target = "orderLineId", source = "reservation.orderLineId")
     @Mapping(target = "quantity", source = "reservation.quantity")

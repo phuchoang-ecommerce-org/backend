@@ -71,6 +71,20 @@ public class GlobalExceptionHandler {
             exception.getMessage(), request, List.of());
     }
 
+    /** E1/E2 of order placement: a normal contention outcome retains the concrete shortfalls for the customer. */
+    @ExceptionHandler(org.phuchoang.ecp.inventory.api.reservation.InsufficientStockException.class)
+    public ResponseEntity<Problem> handleInsufficientReservationStock(
+            org.phuchoang.ecp.inventory.api.reservation.InsufficientStockException exception,
+            HttpServletRequest request) {
+        var code = exception.errorCode();
+        List<FieldError> errors = exception.shortfalls().stream()
+            .map(shortfall -> new FieldError("lines[" + shortfall.orderLineId() + "]", "INSUFFICIENT_STOCK",
+                shortfall.sku() + ": requested " + shortfall.requestedQuantity() + ", available "
+                    + shortfall.availableQuantity()))
+            .toList();
+        return problemResponse(code.code(), code.title(), code.httpStatus(), exception.getMessage(), request, errors);
+    }
+
     @ExceptionHandler(org.phuchoang.ecp.cart.api.CartQuantityExceededException.class)
     public ResponseEntity<Problem> handleCartQuantity(org.phuchoang.ecp.cart.api.CartQuantityExceededException exception,
             HttpServletRequest request) {

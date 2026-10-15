@@ -33,8 +33,10 @@ interface InventoryReservationApiMapper {
     @Mapping(target = "reservationId", source = "reservation.reservationId")
     CommitStockReservationRequest commitRequest(IdentityActor caller, ReservationReference reservation);
 
+    @Mapping(target = "warehouseId", ignore = true)
     ReservationView reservationView(ReleaseStockReservationResult result);
 
+    @Mapping(target = "warehouseId", ignore = true)
     ReservationView reservationView(CommitStockReservationResult result);
 
     default ReservationActionResult actionResult(ReleaseStockReservationResult result) {

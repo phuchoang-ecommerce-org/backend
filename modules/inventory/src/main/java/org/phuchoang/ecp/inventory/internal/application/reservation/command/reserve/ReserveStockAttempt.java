@@ -3,7 +3,6 @@ package org.phuchoang.ecp.inventory.internal.application.reservation.command.res
 import org.phuchoang.ecp.inventory.internal.domain.service.ReserveStockDomainService;
 import org.phuchoang.ecp.inventory.internal.domain.model.StockItem;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
@@ -22,7 +21,8 @@ public class ReserveStockAttempt {
         this.mapper = mapper;
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    /** Joins Ordering's placement transaction when invoked through the Partnership adapter. */
+    @Transactional
     public ReserveStockResult reserve(ReserveStockRequest command) {
         try {
             return reservationSet(command.orderId(), reservations.reserve(mapper.domainRequest(command)));

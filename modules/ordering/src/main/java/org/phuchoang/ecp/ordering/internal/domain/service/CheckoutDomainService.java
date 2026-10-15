@@ -67,6 +67,11 @@ public class CheckoutDomainService {
         return requireOwned(checkoutId, customerId).refresh(lines, confirmationToken, checkouts);
     }
 
+    /** Returns the aggregate snapshot that the placement domain transition will freeze. */
+    public Checkout requireForPlacement(UUID checkoutId, UUID customerId) {
+        return requireOwned(checkoutId, customerId);
+    }
+
     private Checkout requireOwned(UUID checkoutId, UUID customerId) {
         Checkout checkout = checkouts.findById(checkoutId).orElseThrow(CheckoutNotFound::new);
         if (!checkout.customerId().equals(customerId)) throw new CheckoutNotFound();

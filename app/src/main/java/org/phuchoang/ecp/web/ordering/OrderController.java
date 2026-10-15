@@ -3,6 +3,8 @@ package org.phuchoang.ecp.web.ordering;
 import jakarta.servlet.http.HttpServletRequest;
 import org.phuchoang.ecp.ordering.api.OrderFacade;
 import org.phuchoang.ecp.ordering.api.OrderPageView;
+import org.phuchoang.ecp.ordering.api.OrderPlacementView;
+import org.phuchoang.ecp.ordering.api.PlaceOrderRequest;
 import org.phuchoang.ecp.web.common.pagination.Page;
 import org.phuchoang.ecp.web.common.pagination.PageEnvelope;
 import org.phuchoang.ecp.web.common.pagination.Pagination;
@@ -11,11 +13,16 @@ import org.phuchoang.ecp.web.common.security.RequestContextResolver;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Set;
 import java.util.UUID;
+import java.net.URI;
+import org.springframework.http.ResponseEntity;
 
 /**
  * `listOrders` (`UC-CUS-10`) — see {@code ordering.application.ListOrdersService}'s Javadoc: this
@@ -41,5 +48,14 @@ class OrderController {
         OrderPageView page = orderFacade.listOrders(requestContext.resolve(jwt).caller(), cursor, pageSize, customerId);
 
         return new PageEnvelope<>(page.items(), new Page(page.items().size(), page.nextCursor(), null));
+    }
+
+    @PostMapping("/api/v1/orders")
+    ResponseEntity<OrderPlacementView> place(@AuthenticationPrincipal Jwt jwt, @RequestBody PlaceOrderRequest body,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
+        var context = requestContext.resolve(jwt);
+        OrderPlacementView placed = orderFacade.placeOrder(context.caller(), body, idempotencyKey, context.correlationId());
+        if (placed.duplicate()) return ResponseEntity.ok(placed);
+        return ResponseEntity.created(URI.create("/api/v1/orders/" + placed.orderId())).body(placed);
     }
 }

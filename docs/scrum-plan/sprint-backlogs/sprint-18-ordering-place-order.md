@@ -30,14 +30,14 @@ One 13-point story. `UC-ORD-05` carries ten exception flows, and **`E4`, `E5` an
 ### `US-ORD-05` Place Order (13 pts) — `placeOrder`
 
 **The partnership**
-- [ ] `StockReservationPort` and `PromotionRedemptionPort` defined in `ordering.application`, adapters in `ordering.infrastructure`. **`ordering.domain` never sees either module**
-- [ ] Both called inside **one local transaction** with the order insert and the outbox write. Because it is one transaction today, a mid-placement failure needs no compensating action — rollback releases every held reservation for free ([`Module Dependency Diagram.md`](../../../SA-docs/02-backend/Module%20Dependency%20Diagram.md) §8)
-- [ ] The adapters are shaped so a future extraction turns them into saga/compensating-action adapters **without changing `ordering.domain`**. That is the property being bought; a direct service call in the domain forfeits it
+- [x] `StockReservationPort` and `PromotionRedemptionPort` defined in `ordering.application`, adapters in `ordering.infrastructure`. **`ordering.domain` never sees either module**
+- [x] Both called inside **one local transaction** with the order insert and the outbox write. Because it is one transaction today, a mid-placement failure needs no compensating action — rollback releases every held reservation for free ([`Module Dependency Diagram.md`](../../../SA-docs/02-backend/Module%20Dependency%20Diagram.md) §8)
+- [x] The adapters are shaped so a future extraction turns them into saga/compensating-action adapters **without changing `ordering.domain`**. That is the property being bought; a direct service call in the domain forfeits it
 - [ ] `@ApplicationModule(allowedDependencies=...)` and ArchUnit both permit exactly these two edges and no more
 
 **Idempotency**
-- [ ] **`E4` — a duplicate submission returns the existing order and creates no second one** (`BR-ORD-03`, `NFR-REL-02`). Two orders and two charges from one intention is the failure `P7` names
-- [ ] `ECP-ORD-4001` when `Idempotency-Key` is absent; **`ECP-ORD-4090` when the key is reused with a different body** — a client defect, reported rather than masked
+- [x] **`E4` — a duplicate submission returns the existing order and creates no second one** (`BR-ORD-03`, `NFR-REL-02`). Two orders and two charges from one intention is the failure `P7` names
+- [x] `ECP-ORD-4001` when `Idempotency-Key` is absent; **`ECP-ORD-4090` when the key is reused with a different body** — a client defect, reported rather than masked
 - [ ] Concurrent submission of one key yields one order. L5 concurrency test on the Sprint 14 `EN-DATA-4` rig — this is IH-2 row 1 and it is proved here first
 
 **The failure modes**
@@ -47,14 +47,14 @@ One 13-point story. `UC-ORD-05` carries ten exception flows, and **`E4`, `E5` an
 - [ ] **`E5` — a failure between reservation and order creation leaves neither.** `BR-ORD-02`, `NFR-REL-01`. The atomic boundary is what prevents it, and **fault injection at each step is the deliverable** — after reservation, after redemption, after the order insert, after the outbox write. Fully applied or fully absent, never partial
 - [ ] `E6` — a declined authorisation moves the order to **Payment Failed with the reservation held** for the retry window (**[A-07]**). `payment` arrives Sprint 21 — build the state and the hold; carry the authorisation call to that named sprint
 - [ ] **`E7` — a provider timeout is not a decline.** The order stays in **Pending Payment** with its reservation held, resolved when the provider's result arrives. Treating a timeout as a decline risks cancelling an order that was in fact charged
-- [ ] **`E8` — a failure to raise `OrderCreated` leaves the order standing.** The event is retried until delivered, never dropped (`BR-NTF-01`, `NFR-REL-06`, `P6`) — which the Sprint 08 outbox already guarantees, so assert it rather than reimplement it
+- [x] **`E8` — a failure to raise `OrderCreated` leaves the order standing.** The event is retried until delivered, never dropped (`BR-NTF-01`, `NFR-REL-06`, `P6`) — which the Sprint 08 outbox already guarantees, so assert it rather than reimplement it
 - [ ] `E9` — a failed confirmation notification leaves the order standing; `E10` — a cart that cannot be emptied leaves the order standing. A stale cart is cosmetic; an unplaced order is not
-- [ ] `US-ORD-04`'s re-confirmation token is checked: a placement whose summary was never re-confirmed is refused
+- [x] `US-ORD-04`'s re-confirmation token is checked: a placement whose summary was never re-confirmed is refused
 
 ### `EN-EVENT-5` Order lifecycle events on the outbox; ordering topic partitioning (5 pts)
 - [ ] Every order lifecycle event published through the Sprint 08 outbox, registered in its topic catalogue
-- [ ] **Partitioned by order id**, so per-order event ordering holds — the property `notification` (Sprint 23), `reporting` (Sprints 26–27) and the payment read model all depend on
-- [ ] Correlation id carried from the originating request through the envelope (`NFR-OBS-03`)
+- [x] **Partitioned by order id**, so per-order event ordering holds — the property `notification` (Sprint 23), `reporting` (Sprints 26–27) and the payment read model all depend on
+- [x] Correlation id carried from the originating request through the envelope (`NFR-OBS-03`)
 - [ ] Consumer idempotency and ordering guards reuse `EN-EVENT-2`'s, not a third implementation
 
 ---
