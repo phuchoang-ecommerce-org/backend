@@ -42,7 +42,7 @@ class ArchitectureTests {
     }
 
     @Test
-    void domainDependsOnNothingButTheSharedKernel() {
+    void domainDependsOnNoFrameworkOrTransportTechnology() {
         ArchRule rule = noClasses()
             .that().resideInAPackage("..domain..")
             .should().dependOnClassesThat().resideInAnyPackage(
@@ -51,7 +51,7 @@ class ArchitectureTests {
                 "jakarta.validation..",
                 "com.fasterxml.jackson..",
                 "org.hibernate..")
-            .because("domain depends on the shared kernel only — no Spring, JPA, Jackson, or a provider SDK "
+            .because("domain owns its local model — no Spring, JPA, Jackson, or a provider SDK "
                 + "(Module Dependency Diagram.md §6)")
             .allowEmptyShould(true);
         rule.check(mainClasses);
@@ -94,6 +94,16 @@ class ArchitectureTests {
                 "org.phuchoang.ecp.catalog.internal.domain.repository..")
             .because("Catalog command use cases must invoke constraint-bearing domain behavior rather than access "
                 + "aggregate repositories directly");
+        rule.check(mainClasses);
+    }
+
+    @Test
+    void orderingCheckoutCommandsDelegateAggregatePersistenceToTheDomainService() {
+        ArchRule rule = noClasses()
+            .that().resideInAPackage("org.phuchoang.ecp.ordering.internal.application.checkout..command..")
+            .should().dependOnClassesThat().resideInAPackage(
+                "org.phuchoang.ecp.ordering.internal.domain.repository..")
+            .because("Checkout command use cases reach aggregate persistence only through CheckoutDomainService");
         rule.check(mainClasses);
     }
 
@@ -169,13 +179,15 @@ class ArchitectureTests {
             "org.phuchoang.ecp.catalog.internal.domain.model.Product",
             "org.phuchoang.ecp.catalog.internal.domain.model.Category",
             "org.phuchoang.ecp.inventory.internal.domain.model.StockItem",
-            "org.phuchoang.ecp.promotion.internal.domain.model.Promotion");
+            "org.phuchoang.ecp.promotion.internal.domain.model.Promotion",
+            "org.phuchoang.ecp.ordering.internal.domain.model.Checkout");
         org.assertj.core.api.Assertions.assertThat(repositories).containsExactlyInAnyOrder(
             "org.phuchoang.ecp.identity.internal.domain.repository.AccountRepository",
             "org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository",
             "org.phuchoang.ecp.catalog.internal.domain.repository.CategoryRepository",
             "org.phuchoang.ecp.inventory.internal.domain.repository.StockItemRepository",
-            "org.phuchoang.ecp.promotion.internal.domain.repository.PromotionRepository");
+            "org.phuchoang.ecp.promotion.internal.domain.repository.PromotionRepository",
+            "org.phuchoang.ecp.ordering.internal.domain.repository.CheckoutRepository");
 
         ArchRule locationRule = com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes()
             .that().areAnnotatedWith(Repository.class)
@@ -211,9 +223,6 @@ class ArchitectureTests {
     @Test
     void domainDoesNotNameAnotherModule() {
         for (String module : MODULES) {
-            if (module.equals("sharedkernel")) {
-                continue;
-            }
             String base = ROOT_PACKAGE + "." + module;
             String[] otherModules = otherModulePackages(module);
             ArchRule rule = noClasses()
@@ -251,7 +260,7 @@ class ArchitectureTests {
         // any other module from being named from domain, and this rule gives identity specifically
         // its own dedicated, US-AUD-03-traceable check.
         for (String module : MODULES) {
-            if (module.equals("identity") || module.equals("sharedkernel")) {
+            if (module.equals("identity")) {
                 continue;
             }
             String base = ROOT_PACKAGE + "." + module;
@@ -420,7 +429,7 @@ class ArchitectureTests {
 
     private static String[] otherModulePackages(String module) {
         return Arrays.stream(MODULES)
-            .filter(m -> !m.equals(module) && !m.equals("sharedkernel"))
+            .filter(m -> !m.equals(module))
             .map(m -> ROOT_PACKAGE + "." + m + "..")
             .toArray(String[]::new);
     }

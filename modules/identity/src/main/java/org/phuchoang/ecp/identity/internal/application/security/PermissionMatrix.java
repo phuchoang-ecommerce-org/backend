@@ -59,6 +59,15 @@ public final class PermissionMatrix {
      * real (Sprint 18).
      */
     public static final String LIST_ORDERS = "listOrders";
+    public static final String INITIATE_CHECKOUT = "initiateCheckout";
+    public static final String GET_CURRENT_CHECKOUT = "getCurrentCheckout";
+    public static final String SET_CHECKOUT_SHIPPING_ADDRESS = "setCheckoutShippingAddress";
+    public static final String SET_CHECKOUT_BILLING_INFORMATION = "setCheckoutBillingInformation";
+    public static final String SELECT_CHECKOUT_SHIPPING_OPTION = "selectCheckoutShippingOption";
+    public static final String APPLY_CHECKOUT_VOUCHER = "applyCheckoutVoucher";
+    public static final String REMOVE_CHECKOUT_VOUCHER = "removeCheckoutVoucher";
+    public static final String GET_ORDER_SUMMARY = "getOrderSummary";
+    public static final String GET_SHIPPING_QUOTES = "getShippingQuotes";
     public static final String MANAGE_PRODUCTS = "manageProducts";
     public static final String MANAGE_CATEGORIES = "manageCategories";
     public static final String COMMIT_STOCK_RESERVATION = "commitStockReservation";
@@ -92,6 +101,15 @@ public final class PermissionMatrix {
         Map.entry(LOG_OUT, ANY_AUTHENTICATED),
         Map.entry(GET_PRODUCT, ANY_AUTHENTICATED_PLUS_GUEST),
         Map.entry(LIST_ORDERS, ANY_AUTHENTICATED),
+        Map.entry(INITIATE_CHECKOUT, EnumSet.of(CUSTOMER)),
+        Map.entry(GET_CURRENT_CHECKOUT, EnumSet.of(CUSTOMER)),
+        Map.entry(SET_CHECKOUT_SHIPPING_ADDRESS, EnumSet.of(CUSTOMER)),
+        Map.entry(SET_CHECKOUT_BILLING_INFORMATION, EnumSet.of(CUSTOMER)),
+        Map.entry(SELECT_CHECKOUT_SHIPPING_OPTION, EnumSet.of(CUSTOMER)),
+        Map.entry(APPLY_CHECKOUT_VOUCHER, EnumSet.of(CUSTOMER)),
+        Map.entry(REMOVE_CHECKOUT_VOUCHER, EnumSet.of(CUSTOMER)),
+        Map.entry(GET_ORDER_SUMMARY, EnumSet.of(CUSTOMER)),
+        Map.entry(GET_SHIPPING_QUOTES, EnumSet.of(CUSTOMER)),
         Map.entry(MANAGE_PRODUCTS, EnumSet.of(STAFF, ADMINISTRATOR)),
         Map.entry(MANAGE_CATEGORIES, EnumSet.of(STAFF, ADMINISTRATOR)),
         Map.entry(COMMIT_STOCK_RESERVATION, EnumSet.of(WAREHOUSE_OPERATOR, ADMINISTRATOR)),

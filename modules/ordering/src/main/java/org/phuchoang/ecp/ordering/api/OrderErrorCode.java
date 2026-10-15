@@ -10,7 +10,9 @@ public enum OrderErrorCode implements ErrorCode {
     IDEMPOTENCY_KEY_MISSING("ECP-ORD-4001", 400, "Idempotency-Key required"),
     IDEMPOTENCY_KEY_REUSED("ECP-ORD-4090", 409, "Idempotency-Key reused with a different request body"),
     TRANSITION_NOT_PERMITTED("ECP-ORD-4091", 409, "Order state transition not permitted"),
-    CART_NOT_PURCHASABLE("ECP-ORD-4220", 422, "Cart contains no purchasable line");
+    CART_NOT_PURCHASABLE("ECP-ORD-4220", 422, "Cart contains no purchasable line"),
+    VOUCHER_NOT_APPLICABLE("ECP-PRM-4220", 422, "Voucher not applicable"),
+    DISCOUNT_EXCEEDS_ORDER("ECP-PRM-4221", 422, "Discount exceeds discountable order value");
 
     private final String code;
     private final int httpStatus;

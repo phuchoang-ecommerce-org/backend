@@ -2,7 +2,6 @@ package org.phuchoang.ecp.identity.internal.domain.model;
 
 import org.jmolecules.ddd.annotation.Entity;
 import org.jmolecules.ddd.annotation.Identity;
-import org.phuchoang.ecp.identity.internal.domain.model.Address;
 
 import java.util.Objects;
 import java.util.UUID;
