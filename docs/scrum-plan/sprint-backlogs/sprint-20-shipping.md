@@ -40,16 +40,16 @@ The theme running through every story is that **the platform never advances on a
 - [ ] `US-SHP-02` (delivery-date estimate) is **Sprint 31** — the quote carries the shape, not the computation
 
 ### `US-SHP-03` Create Shipment (5 pts) — `createShipment`, `listShipments`
-- [ ] **`E1` — an order not in Packed is declined.** Dispatching an order whose stock is not committed would ship goods the platform still counts as reserved (`BR-ORD-01`, `P7`)
-- [ ] **`E2`/`E3` — a carrier rejection or an unreachable carrier records no shipment and leaves the order in Packed.** The rejection reason is surfaced so the Operator can correct and retry; an alternative carrier is offered where one serves the destination (`NFR-AVAIL-03`). **The order is never advanced on an unconfirmed dispatch**
+- [x] **`E1` — an order not in Packed is declined.** Dispatching an order whose stock is not committed would ship goods the platform still counts as reserved (`BR-ORD-01`, `P7`)
+- [x] **`E2`/`E3` — a carrier rejection or an unreachable carrier records no shipment and leaves the order in Packed.** The rejection reason is surfaced so the Operator can correct and retry; an alternative carrier is offered where one serves the destination (`NFR-AVAIL-03`). **The order is never advanced on an unconfirmed dispatch**
 - [ ] `E4` — a missing tracking reference records the shipment as dispatched, flagged for follow-up, and **notifies the customer of dispatch anyway**. A missing reference does not justify withholding the fact of dispatch
 - [ ] **`E5` — a shipment created but a failed order transition retries the transition, never cancels the shipment** — the goods are with the carrier and cannot be recalled (`NFR-REL-04`). Persistent failure is escalated: an order in Packed with goods in transit misstates both fulfilment and revenue (`P7`)
 - [ ] Advances the order through `ordering`'s state machine (`US-ORD-10`), never by writing order state directly. ArchUnit asserts it
 
 ### `US-SHP-04` Record Carrier Tracking Update (5 pts) — `receiveCarrierEvent`
-- [ ] **`E4` — an update failing authenticity verification is rejected and recorded as a security event.** An unverified update could mark an undelivered order delivered, which for Cash On Delivery **moves money** (`UC-PAY-04`). Verify before anything else
-- [ ] **`E1` — duplicate delivery is recorded once.** Carriers retry until acknowledged, so duplicates are routine (`NFR-REL-04`)
-- [ ] **`E2` — an out-of-order update is retained in the history for completeness but does not move the shipment backwards** (`BR-SHP-02`). An "in transit" arriving after "delivered" must not un-deliver a parcel
+- [x] **`E4` — an update failing authenticity verification is rejected and recorded as a security event.** An unverified update could mark an undelivered order delivered, which for Cash On Delivery **moves money** (`UC-PAY-04`). Verify before anything else
+- [x] **`E1` — duplicate delivery is recorded once.** Carriers retry until acknowledged, so duplicates are routine (`NFR-REL-04`)
+- [x] **`E2` — an out-of-order update is retained in the history for completeness but does not move the shipment backwards** (`BR-SHP-02`). An "in transit" arriving after "delivered" must not un-deliver a parcel
 - [ ] `E3` — a reference matching no shipment is recorded as **unmatched and escalated**; it may indicate `UC-SHP-03` `E5`
 - [ ] **`E5` — a failed recording acknowledges nothing.** The update is retained and retried; it is never acknowledged as processed when it was not (`P6`)
 - [ ] System actor — no `CUSTOMER` or `STAFF` path reaches this operation; permission-matrix cell asserted

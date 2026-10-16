@@ -4,7 +4,10 @@ plugins {
 
 dependencies {
     implementation(project(":identity"))
+    implementation(project(":ordering"))
+    implementation(project(":audit"))
     implementation("org.springframework.modulith:spring-modulith-starter-core")
+    implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
     implementation(libs.jmolecules.ddd)
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
