@@ -7,6 +7,7 @@ dependencies {
     implementation(project(":cart"))
     implementation(project(":inventory"))
     implementation(project(":promotion"))
+    implementation(project(":audit"))
     implementation("org.springframework.modulith:spring-modulith-starter-core")
     implementation(libs.jmolecules.ddd)
     implementation(libs.mapstruct)

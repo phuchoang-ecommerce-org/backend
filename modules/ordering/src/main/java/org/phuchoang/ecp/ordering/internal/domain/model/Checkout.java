@@ -41,9 +41,33 @@ public record Checkout(@Identity UUID id, UUID customerId, String orderNumber, L
             Money.zero(lines.isEmpty() ? "USD" : lines.getFirst().unitPrice().currency()), null, 0);
     }
 
-    /** Persists this complete aggregate; children never have a standalone write operation. */
-    public Checkout create(CheckoutRepository repository) {
+    /** Persists the complete Checkout aggregate; child lines never have a standalone write operation. */
+    public Checkout save(CheckoutRepository repository) {
         return repository.save(this);
+    }
+
+    public Checkout setShippingAddress(CheckoutAddress address, List<ShippingOption> options, CheckoutRepository repository) {
+        return setShippingAddress(address, options).save(repository);
+    }
+
+    public Checkout setBillingAddress(CheckoutAddress address, CheckoutRepository repository) {
+        return setBillingAddress(address).save(repository);
+    }
+
+    public Checkout selectShippingOption(ShippingOption option, CheckoutRepository repository) {
+        return selectShippingOption(option).save(repository);
+    }
+
+    public Checkout applyVoucher(UUID newPromotionId, String code, BigDecimal amount, CheckoutRepository repository) {
+        return applyVoucher(newPromotionId, code, amount).save(repository);
+    }
+
+    public Checkout removeVoucher(CheckoutRepository repository) {
+        return removeVoucher().save(repository);
+    }
+
+    public Checkout refresh(List<CheckoutLine> currentLines, String newConfirmationToken, CheckoutRepository repository) {
+        return refresh(currentLines, newConfirmationToken).save(repository);
     }
 
     public Money subtotal() {
@@ -65,26 +89,14 @@ public record Checkout(@Identity UUID id, UUID customerId, String orderNumber, L
             null, promotionId, promotionCode, discount, null, version);
     }
 
-    public Checkout setShippingAddress(CheckoutAddress address, List<ShippingOption> options, CheckoutRepository repository) {
-        return setShippingAddress(address, options).create(repository);
-    }
-
     public Checkout setBillingAddress(CheckoutAddress address) {
         return new Checkout(id, customerId, orderNumber, lines, shippingAddress, Objects.requireNonNull(address),
             shippingOption, promotionId, promotionCode, discount, null, version);
     }
 
-    public Checkout setBillingAddress(CheckoutAddress address, CheckoutRepository repository) {
-        return setBillingAddress(address).create(repository);
-    }
-
     public Checkout selectShippingOption(ShippingOption option) {
         return new Checkout(id, customerId, orderNumber, lines, shippingAddress, billingAddress,
             Objects.requireNonNull(option), promotionId, promotionCode, discount, null, version);
-    }
-
-    public Checkout selectShippingOption(ShippingOption option, CheckoutRepository repository) {
-        return selectShippingOption(option).create(repository);
     }
 
     public Checkout applyVoucher(UUID newPromotionId, String code, BigDecimal amount) {
@@ -94,26 +106,14 @@ public record Checkout(@Identity UUID id, UUID customerId, String orderNumber, L
             null, version);
     }
 
-    public Checkout applyVoucher(UUID newPromotionId, String code, BigDecimal amount, CheckoutRepository repository) {
-        return applyVoucher(newPromotionId, code, amount).create(repository);
-    }
-
     public Checkout removeVoucher() {
         return new Checkout(id, customerId, orderNumber, lines, shippingAddress, billingAddress, shippingOption,
             null, null, Money.zero(subtotal().currency()), null, version);
     }
 
-    public Checkout removeVoucher(CheckoutRepository repository) {
-        return removeVoucher().create(repository);
-    }
-
     public Checkout refresh(List<CheckoutLine> currentLines, String newConfirmationToken) {
         return new Checkout(id, customerId, orderNumber, currentLines, shippingAddress, billingAddress, shippingOption,
             promotionId, promotionCode, discount, Objects.requireNonNull(newConfirmationToken), version);
-    }
-
-    public Checkout refresh(List<CheckoutLine> currentLines, String newConfirmationToken, CheckoutRepository repository) {
-        return refresh(currentLines, newConfirmationToken).create(repository);
     }
 
     public boolean ready() {

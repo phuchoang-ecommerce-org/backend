@@ -1,7 +1,6 @@
 package org.phuchoang.ecp.ordering.internal.domain.model;
 
 import org.junit.jupiter.api.Test;
-import org.phuchoang.ecp.ordering.internal.domain.repository.OrderRepository;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -9,9 +8,6 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 class OrderTest {
 
@@ -36,14 +32,38 @@ class OrderTest {
     }
 
     @Test
-    void savesItsCompleteAggregateThroughItsDomainRepository() {
-        OrderRepository orders = mock(OrderRepository.class);
+    void lifecycleTransitionsAreCentralizedAndRejectIllegalEdges() {
         Order order = Order.place(readyCheckout(), List.of(new OrderReservation(UUID.randomUUID(), UUID.randomUUID(),
             UUID.randomUUID(), UUID.randomUUID(), 1)), Money.zero("USD"));
-        when(orders.save(order)).thenReturn(order);
 
-        assertThat(order.save(orders)).isSameAs(order);
-        verify(orders).save(order);
+        assertThat(order.transitionTo(OrderStatus.PAID).status()).isEqualTo(OrderStatus.PAID);
+        assertThatThrownBy(() -> order.transitionTo(OrderStatus.PACKED))
+            .isInstanceOf(Order.IllegalStatusTransition.class)
+            .satisfies(error -> {
+                Order.IllegalStatusTransition transition = (Order.IllegalStatusTransition) error;
+                assertThat(transition.current()).isEqualTo(OrderStatus.PENDING_PAYMENT);
+                assertThat(transition.available()).containsExactly(OrderStatus.PAID, OrderStatus.PAYMENT_FAILED,
+                    OrderStatus.CANCELLED);
+            });
+    }
+
+    @Test
+    void lifecycleGraphContainsEveryDocumentedEdgeAndNoShortcut() {
+        assertThat(OrderStateMachine.availableFrom(OrderStatus.DRAFT))
+            .containsExactly(OrderStatus.PENDING_PAYMENT, OrderStatus.CANCELLED);
+        assertThat(OrderStateMachine.availableFrom(OrderStatus.PAID))
+            .containsExactly(OrderStatus.PROCESSING, OrderStatus.CANCELLED);
+        assertThat(OrderStateMachine.availableFrom(OrderStatus.PROCESSING))
+            .containsExactly(OrderStatus.PACKED, OrderStatus.CANCELLED);
+        assertThat(OrderStateMachine.availableFrom(OrderStatus.PACKED)).containsExactly(OrderStatus.SHIPPING);
+        assertThat(OrderStateMachine.availableFrom(OrderStatus.SHIPPING)).containsExactly(OrderStatus.DELIVERED);
+        assertThat(OrderStateMachine.availableFrom(OrderStatus.DELIVERED))
+            .containsExactly(OrderStatus.COMPLETED, OrderStatus.RETURNED);
+        assertThat(OrderStateMachine.availableFrom(OrderStatus.CANCELLED)).containsExactly(OrderStatus.REFUNDED);
+        assertThat(OrderStateMachine.availableFrom(OrderStatus.RETURNED)).containsExactly(OrderStatus.REFUNDED);
+        assertThat(OrderStateMachine.availableFrom(OrderStatus.COMPLETED)).isEmpty();
+        assertThat(OrderStateMachine.availableFrom(OrderStatus.REFUNDED)).isEmpty();
+        assertThat(OrderStateMachine.permits(OrderStatus.PENDING_PAYMENT, OrderStatus.PACKED)).isFalse();
     }
 
     private static Checkout readyCheckout() {

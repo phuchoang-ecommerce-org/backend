@@ -11,4 +11,5 @@ import java.util.UUID;
 public interface OrderRepository {
     Optional<Order> findById(UUID id);
     Order save(Order order);
+    Order saveTransition(Order order);
 }

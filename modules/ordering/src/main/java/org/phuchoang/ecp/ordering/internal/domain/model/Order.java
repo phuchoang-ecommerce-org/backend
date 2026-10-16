@@ -56,12 +56,41 @@ public record Order(@Identity UUID id, UUID customerId, String orderNumber, List
             checkout.version());
     }
 
-    /** Persists this complete aggregate through its domain-owned repository port. */
+    /** Persists the complete aggregate only after an invariant-bearing operation has produced it. */
     public Order save(OrderRepository repository) {
         return repository.save(this);
     }
 
+    /** Persists the complete aggregate lifecycle transition through its aggregate repository. */
+    public Order saveTransition(OrderRepository repository) {
+        return repository.saveTransition(this);
+    }
+
+    /** Applies one legal lifecycle edge. Authorization is a use-case policy; edge validity is not. */
+    public Order transitionTo(OrderStatus target) {
+        Objects.requireNonNull(target, "target");
+        if (!OrderStateMachine.permits(status, target)) {
+            throw new IllegalStatusTransition(status, target, OrderStateMachine.availableFrom(status));
+        }
+        return new Order(id, customerId, orderNumber, lines, shippingAddress, billingAddress, shippingOption,
+            promotionId, promotionCode, subtotal, discount, total, reservations, target, version);
+    }
+
     public static final class NotReadyForPlacement extends RuntimeException {
         public NotReadyForPlacement() { super("Checkout must be complete and re-confirmed before placement."); }
+    }
+
+    public static final class IllegalStatusTransition extends RuntimeException {
+        private final OrderStatus current;
+        private final List<OrderStatus> available;
+
+        public IllegalStatusTransition(OrderStatus current, OrderStatus target, List<OrderStatus> available) {
+            super("Order is " + current + "; allowed transitions: " + available);
+            this.current = current;
+            this.available = List.copyOf(available);
+        }
+
+        public OrderStatus current() { return current; }
+        public List<OrderStatus> available() { return available; }
     }
 }

@@ -23,7 +23,7 @@ public class CheckoutDomainService {
         return checkouts.findDraftByCustomerId(customerId)
             .map(checkout -> new StartedCheckout(checkout, true))
             .orElseGet(() -> new StartedCheckout(Checkout.start(UUID.randomUUID(), customerId,
-                "DRAFT-" + UUID.randomUUID(), lines).create(checkouts), false));
+                "DRAFT-" + UUID.randomUUID(), lines).save(checkouts), false));
     }
 
     public Checkout setShippingAddress(UUID checkoutId, UUID customerId, CheckoutAddress address, List<ShippingOption> options) {

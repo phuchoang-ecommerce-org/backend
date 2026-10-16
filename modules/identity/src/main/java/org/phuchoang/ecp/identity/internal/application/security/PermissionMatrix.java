@@ -73,6 +73,13 @@ public final class PermissionMatrix {
     public static final String COMMIT_STOCK_RESERVATION = "commitStockReservation";
     public static final String ADJUST_STOCK = "adjustStock";
     public static final String VIEW_INVENTORY = "viewInventory";
+    public static final String GET_ORDER = "getOrder";
+    public static final String LIST_ORDER_LINES = "listOrderLines";
+    public static final String TRACK_ORDER = "trackOrder";
+    public static final String CANCEL_ORDER = "cancelOrder";
+    public static final String ADVANCE_ORDER_STATUS = "advanceOrderStatus";
+    public static final String ADVANCE_ORDER_STATUSES_IN_BULK = "advanceOrderStatusesInBulk";
+    public static final String SET_ORDER_INVESTIGATION_FLAG = "setOrderInvestigationFlag";
 
     private static final Set<RoleCode> ANY_AUTHENTICATED =
         EnumSet.of(CUSTOMER, STAFF, WAREHOUSE_OPERATOR, CUSTOMER_SUPPORT, ADMINISTRATOR);
@@ -114,7 +121,14 @@ public final class PermissionMatrix {
         Map.entry(MANAGE_CATEGORIES, EnumSet.of(STAFF, ADMINISTRATOR)),
         Map.entry(COMMIT_STOCK_RESERVATION, EnumSet.of(WAREHOUSE_OPERATOR, ADMINISTRATOR)),
         Map.entry(ADJUST_STOCK, EnumSet.of(WAREHOUSE_OPERATOR, ADMINISTRATOR)),
-        Map.entry(VIEW_INVENTORY, EnumSet.of(STAFF, WAREHOUSE_OPERATOR, CUSTOMER_SUPPORT, ADMINISTRATOR)));
+        Map.entry(VIEW_INVENTORY, EnumSet.of(STAFF, WAREHOUSE_OPERATOR, CUSTOMER_SUPPORT, ADMINISTRATOR)),
+        Map.entry(GET_ORDER, ANY_AUTHENTICATED),
+        Map.entry(LIST_ORDER_LINES, ANY_AUTHENTICATED),
+        Map.entry(TRACK_ORDER, ANY_AUTHENTICATED),
+        Map.entry(CANCEL_ORDER, EnumSet.of(CUSTOMER, CUSTOMER_SUPPORT, ADMINISTRATOR)),
+        Map.entry(ADVANCE_ORDER_STATUS, EnumSet.of(STAFF, WAREHOUSE_OPERATOR, ADMINISTRATOR)),
+        Map.entry(ADVANCE_ORDER_STATUSES_IN_BULK, EnumSet.of(STAFF, WAREHOUSE_OPERATOR, ADMINISTRATOR)),
+        Map.entry(SET_ORDER_INVESTIGATION_FLAG, EnumSet.of(STAFF, CUSTOMER_SUPPORT, ADMINISTRATOR)));
 
     private PermissionMatrix() {
     }

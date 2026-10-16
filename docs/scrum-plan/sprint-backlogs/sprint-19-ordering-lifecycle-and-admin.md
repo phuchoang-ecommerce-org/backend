@@ -28,7 +28,7 @@ Two exception flows encode the whole discipline and pull in opposite directions:
 ## Backend Lane
 
 ### `US-ORD-10` Advance Order Status (8 pts) — `advanceOrderStatus`, `advanceOrderStatusesInBulk`, `setOrderInvestigationFlag`
-- [ ] The state machine as a first-class domain object, not a set of `if` statements per endpoint. The legal transitions are enumerated once and every caller goes through them
+- [x] The state machine as a first-class domain object, not a set of `if` statements per endpoint. The legal transitions are enumerated once and every caller goes through them
 - [ ] **`E1` — an illegal transition is declined whatever the actor's role and whatever entry point the request arrived through**, stating the current state and the transitions available. `ECP-ORD-4091` (`BR-ORD-01`, `P5`)
 - [ ] `E2` — authority is checked **per transition**, not per endpoint. Approving a refund and packing a box are different authorities (`P16`); permission-matrix cell asserted for each
 - [ ] **`E3` — a failed side effect means the transition does not occur** (`NFR-REL-01`). The worked case: Processing → Packed commits the reservation through `inventory`; if the commit fails the order stays in Processing

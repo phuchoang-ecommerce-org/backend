@@ -89,7 +89,7 @@ interface CheckoutJpaMapper {
     @Mapping(target = "billingAddress", expression = "java(address(entity.getBillingRecipientName(), entity.getBillingLine1(), entity.getBillingLine2(), entity.getBillingCity(), entity.getBillingRegion(), entity.getBillingPostalCode(), entity.getBillingCountryCode()))")
     @Mapping(target = "shippingOption", expression = "java(shippingOption(entity))")
     @Mapping(target = "discount", expression = "java(new Money(entity.getDiscountAmount(), entity.getCurrency()))")
-    @Mapping(target = "create", ignore = true)
+    @Mapping(target = "save", ignore = true)
     @Mapping(target = "selectShippingOption", ignore = true)
     @Mapping(target = "removeVoucher", ignore = true)
     Checkout toDomain(CheckoutEntity entity);
