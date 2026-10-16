@@ -28,6 +28,16 @@ class OrderFulfilmentFacadeAdapter implements OrderFulfilmentFacade {
     return view(transitions.advance(orderId, OrderStatus.DELIVERED));
   }
 
+  @Override
+  public OrderFulfilmentView recordPaymentSucceeded(UUID orderId, UUID correlationId) {
+    return view(transitions.advance(orderId, OrderStatus.PAID));
+  }
+
+  @Override
+  public OrderFulfilmentView recordPaymentFailed(UUID orderId, UUID correlationId) {
+    return view(transitions.advance(orderId, OrderStatus.PAYMENT_FAILED));
+  }
+
   private static OrderFulfilmentView view(Order order) {
     return new OrderFulfilmentView(order.id(), order.customerId(), order.status().name());
   }

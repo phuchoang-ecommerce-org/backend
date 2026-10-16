@@ -182,7 +182,8 @@ class ArchitectureTests {
             "org.phuchoang.ecp.cart.internal.domain.model.Cart",
             "org.phuchoang.ecp.promotion.internal.domain.model.Promotion",
             "org.phuchoang.ecp.ordering.internal.domain.model.Checkout",
-            "org.phuchoang.ecp.ordering.internal.domain.model.Order");
+            "org.phuchoang.ecp.ordering.internal.domain.model.Order",
+            "org.phuchoang.ecp.payment.internal.domain.model.Payment");
         org.assertj.core.api.Assertions.assertThat(repositories).containsExactlyInAnyOrder(
             "org.phuchoang.ecp.identity.internal.domain.repository.AccountRepository",
             "org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository",
@@ -191,7 +192,8 @@ class ArchitectureTests {
             "org.phuchoang.ecp.cart.internal.domain.repository.CartRepository",
             "org.phuchoang.ecp.promotion.internal.domain.repository.PromotionRepository",
             "org.phuchoang.ecp.ordering.internal.domain.repository.CheckoutRepository",
-            "org.phuchoang.ecp.ordering.internal.domain.repository.OrderRepository");
+            "org.phuchoang.ecp.ordering.internal.domain.repository.OrderRepository",
+            "org.phuchoang.ecp.payment.internal.domain.repository.PaymentRepository");
 
         ArchRule locationRule = com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes()
             .that().areAnnotatedWith(Repository.class)

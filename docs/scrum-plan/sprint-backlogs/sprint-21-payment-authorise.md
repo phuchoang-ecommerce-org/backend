@@ -29,31 +29,31 @@ The lane balance inverts this sprint — 23 frontend points against 19 backend, 
 ## Backend Lane
 
 ### `US-PAY-01` Select Payment Method (3 pts) — `listEligiblePaymentMethods`, `selectCheckoutPaymentMethod`
-- [ ] Replaces the mock the frontend has used since Sprint 20. **Confirm the contract shape did not move**; a change is a drift entry and an `openapi.yaml` amendment
-- [ ] **`E1` — Cash On Delivery outside its configured conditions is not offered**, and the reason is stated if asked (`BR-PAY-03`). Offering it and declining later wastes the customer's time at the worst moment
-- [ ] `E2` — where no method is eligible, the platform says so and directs to Support. **It never places an unpayable order**
-- [ ] `E3` — a method unavailable by the time of the summary requires a new selection (`UC-ORD-04`)
+- [x] Replaces the mock the frontend has used since Sprint 20. **Confirm the contract shape did not move**; a change is a drift entry and an `openapi.yaml` amendment
+- [x] **`E1` — Cash On Delivery outside its configured conditions is not offered**, and the reason is stated if asked (`BR-PAY-03`). Offering it and declining later wastes the customer's time at the worst moment
+- [x] `E2` — where no method is eligible, the platform says so and directs to Support. **It never places an unpayable order**
+- [x] `E3` — a method unavailable by the time of the summary requires a new selection (`UC-ORD-04`)
 
 ### `US-PAY-02` Authorise Online Payment (8 pts) — `initiatePayment`, `getOrderPayment`
-- [ ] Provider **anti-corruption layer**: the provider's vocabulary stops at the adapter and `payment.domain` never sees it
-- [ ] **Card details are never logged** (`NFR-SEC-07`) — assert it, including in error paths and in the correlation-id trace
-- [ ] `E1` — a decline moves the order to **Payment Failed with the reservation held** for the retry window (**[A-07]**), the reason surfaced only as far as the provider permits, and a retry offered
-- [ ] **`E2` — no answer, or an answer after the timeout, is not a failure.** The order stays in **Pending Payment** with its reservation held and the attempt marked **unresolved**, settled when the provider's result arrives or on reconciliation. Treating a timeout as a decline is how a customer is charged for an order the platform then cancels — the partial failure `P7` names
-- [ ] `E3` — an unreachable provider makes no attempt; the order stays Pending Payment. **Platform state is not corrupted by a provider outage** (`NFR-AVAIL-03`)
-- [ ] **`E4` — a provider success for an attempt the platform has no record of is recorded as an unmatched payment and escalated. Never discarded** — an unrecorded capture is money taken from a customer that the business cannot see (`P7`)
-- [ ] `E5` — a duplicate authorisation for one attempt applies the result once (`BR-PAY-01`). **The customer is charged once.** `ECP-PAY-4090` when an attempt is already in flight
-- [ ] `E6` — an amount differing from the order total records the discrepancy and **does not transition to Paid**; escalated rather than accepted
-- [ ] `Idempotency-Key` required on `initiatePayment` — `ECP-ORD-4001`/`4090` apply here as they do to `placeOrder`
+- [x] Provider **anti-corruption layer**: the provider's vocabulary stops at the adapter and `payment.domain` never sees it
+- [x] **Card details are never logged** (`NFR-SEC-07`) — assert it, including in error paths and in the correlation-id trace
+- [x] `E1` — a decline moves the order to **Payment Failed with the reservation held** for the retry window (**[A-07]**), the reason surfaced only as far as the provider permits, and a retry offered
+- [x] **`E2` — no answer, or an answer after the timeout, is not a failure.** The order stays in **Pending Payment** with its reservation held and the attempt marked **unresolved**, settled when the provider's result arrives or on reconciliation. Treating a timeout as a decline is how a customer is charged for an order the platform then cancels — the partial failure `P7` names
+- [x] `E3` — an unreachable provider makes no attempt; the order stays Pending Payment. **Platform state is not corrupted by a provider outage** (`NFR-AVAIL-03`)
+- [x] **`E4` — a provider success for an attempt the platform has no record of is recorded as an unmatched payment and escalated. Never discarded** — an unrecorded capture is money taken from a customer that the business cannot see (`P7`)
+- [x] `E5` — a duplicate authorisation for one attempt applies the result once (`BR-PAY-01`). **The customer is charged once.** `ECP-PAY-4090` when an attempt is already in flight
+- [x] `E6` — an amount differing from the order total records the discrepancy and **does not transition to Paid**; escalated rather than accepted
+- [x] `Idempotency-Key` required on `initiatePayment` — `ECP-ORD-4001`/`4090` apply here as they do to `placeOrder`
 
 ### `US-PAY-03` Handle Payment Gateway Result (8 pts) — `receivePaymentProviderNotification`
-- [ ] **`E3` — verify authenticity first, before anything else.** An unverified result is an instruction to move money from an unknown party; rejected and recorded as a security event
-- [ ] The endpoint **terminates at `nginx` and never passes through `ecp-web`** — confirm the routing, and that no browser-reachable path exposes it
-- [ ] **`E1` — duplicate delivery is applied once and the duplicates acknowledged.** Providers retry until acknowledged, so duplicates are routine; applying a success twice would move an order twice or refund twice (`BR-PAY-01`, `NFR-REL-04`)
-- [ ] `E2` — an unattributable result is recorded as **unmatched and escalated**, never discarded (`UC-PAY-02` `E4`)
-- [ ] **`E4` — a result contradicting one already applied is not overwritten.** The conflict is recorded and escalated
-- [ ] `E5` — a result for an order that was cancelled in flight is **recorded and escalated**: a capture against a cancelled order is money to be refunded (`UC-PAY-06`, Sprint 22), not a result to drop
-- [ ] **`E6` — a failed application acknowledges nothing.** Retained and retried; never acknowledged as processed when it was not (`P6`)
-- [ ] Payment events onto the Sprint 08 outbox, partitioned per the `EN-EVENT-5` scheme — this is the read model IH-3 will replay
+- [x] **`E3` — verify authenticity first, before anything else.** An unverified result is an instruction to move money from an unknown party; rejected and recorded as a security event
+- [x] The endpoint **terminates at `nginx` and never passes through `ecp-web`** — confirm the routing, and that no browser-reachable path exposes it
+- [x] **`E1` — duplicate delivery is applied once and the duplicates acknowledged.** Providers retry until acknowledged, so duplicates are routine; applying a success twice would move an order twice or refund twice (`BR-PAY-01`, `NFR-REL-04`)
+- [x] `E2` — an unattributable result is recorded as **unmatched and escalated**, never discarded (`UC-PAY-02` `E4`)
+- [x] **`E4` — a result contradicting one already applied is not overwritten.** The conflict is recorded and escalated
+- [x] `E5` — a result for an order that was cancelled in flight is **recorded and escalated**: a capture against a cancelled order is money to be refunded (`UC-PAY-06`, Sprint 22), not a result to drop
+- [x] **`E6` — a failed application acknowledges nothing.** Retained and retried; never acknowledged as processed when it was not (`P6`)
+- [x] Payment events onto the Sprint 08 outbox, partitioned per the `EN-EVENT-5` scheme — this is the read model IH-3 will replay
 
 ---
 

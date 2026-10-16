@@ -18,7 +18,9 @@ final class ApiRoutes {
         "/api/v1/sessions",
         "/api/v1/session-renewals",
         "/api/v1/password-reset-requests",
-        "/api/v1/password-resets"
+        "/api/v1/password-resets",
+        // This server-to-server route is authenticated by the provider signature at the Payment boundary.
+        "/api/v1/payment-provider-notifications"
     };
 
     /** Guest-readable catalog surfaces (`BR-CAT-02`: only published products are ever returned). */

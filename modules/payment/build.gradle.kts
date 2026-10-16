@@ -6,9 +6,14 @@ dependencies {
     implementation(project(":identity"))
     implementation("org.springframework.modulith:spring-modulith-starter-core")
     implementation(libs.jmolecules.ddd)
+    implementation(libs.mapstruct)
+    implementation("org.springframework.boot:spring-boot-starter-jdbc")
+    annotationProcessor(libs.mapstruct.processor)
+    annotationProcessor(libs.lombok.mapstruct.binding)
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.modulith:spring-modulith-starter-test")
+    testImplementation(libs.archunit.junit5)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

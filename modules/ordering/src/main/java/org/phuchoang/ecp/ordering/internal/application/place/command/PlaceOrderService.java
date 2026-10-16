@@ -86,7 +86,9 @@ public class PlaceOrderService {
     private void appendOrderCreated(org.phuchoang.ecp.ordering.internal.domain.model.Order order,
             PlaceOrderCommand command) {
         outbox.appendOrderCreated(order.id(), command.correlationId(), command.caller(), clock.instant(),
-            "{\"orderId\":\"" + order.id() + "\",\"status\":\"PENDING_PAYMENT\"}");
+            "{\"orderId\":\"" + order.id() + "\",\"customerId\":\"" + order.customerId()
+                + "\",\"totalAmount\":" + order.total().amount() + ",\"currency\":\"" + order.total().currency()
+                + "\",\"status\":\"PENDING_PAYMENT\"}");
     }
 
     private static PlaceOrderResult existing(OrderIdempotencyStore.Entry entry, PlaceOrderCommand command, String hash) {
