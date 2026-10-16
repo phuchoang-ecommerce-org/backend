@@ -6,6 +6,7 @@ import org.phuchoang.ecp.audit.api.AuditTrail;
 import org.phuchoang.ecp.shipping.internal.domain.model.ShipmentStatus;
 import org.phuchoang.ecp.shipping.internal.domain.model.TrackingEvent;
 import org.phuchoang.ecp.shipping.internal.domain.service.ShipmentDomainService;
+import org.phuchoang.ecp.shipping.internal.application.tracking.query.ShipmentTrackingMapper;
 import org.phuchoang.ecp.shipping.internal.application.tracking.query.ShipmentTrackingView;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ import java.util.UUID;
 public class ReceiveCarrierEventService {
   private final CarrierEventAuthenticator authenticator;
   private final ShipmentDomainService shipments;
+  private final ShipmentTrackingMapper trackingMapper;
   private final AuditTrail audit;
   private final Clock clock;
 
@@ -34,7 +36,7 @@ public class ReceiveCarrierEventService {
               correlationId, clock.instant(), "carrier-webhook", true));
       throw new SecurityException("Carrier event authenticity verification failed.");
     }
-    return ShipmentTrackingView.from(shipments.record(shipments.require(event.carrier(), event.trackingReference()).id(),
+    return trackingMapper.trackingView(shipments.record(shipments.require(event.carrier(), event.trackingReference()).id(),
         new TrackingEvent(UUID.randomUUID(),
             event.carrierEventId(), ShipmentStatus.valueOf(event.status()), event.description(), event.location(),
             event.occurredAt())));

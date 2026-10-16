@@ -5,6 +5,7 @@ import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
 import org.phuchoang.ecp.ordering.api.OrderFulfilmentFacade;
 import org.phuchoang.ecp.shipping.internal.application.carrier.CarrierGateway;
+import org.phuchoang.ecp.shipping.internal.application.tracking.query.ShipmentTrackingMapper;
 import org.phuchoang.ecp.shipping.internal.application.tracking.query.ShipmentTrackingView;
 import org.phuchoang.ecp.shipping.internal.domain.model.Shipment;
 import org.phuchoang.ecp.shipping.internal.domain.service.ShipmentDomainService;
@@ -24,6 +25,7 @@ public class CreateShipmentService {
   private final OrderFulfilmentFacade orders;
   private final CarrierGateway carrier;
   private final ShipmentDomainService shipments;
+  private final ShipmentTrackingMapper trackingMapper;
   private final Clock clock;
 
   public ShipmentTrackingView create(IdentityActor caller, UUID orderId, String carrierName, String postalCode, String countryCode,
@@ -37,7 +39,7 @@ public class CreateShipmentService {
     Shipment shipment = shipments.create(orderId, carrierName, booking.trackingReference(), postalCode, countryCode,
         clock.instant());
     orders.markDispatched(orderId, correlationId);
-    return ShipmentTrackingView.from(shipment);
+    return trackingMapper.trackingView(shipment);
   }
 
   public static final class CarrierDeclined extends RuntimeException {

@@ -12,15 +12,16 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ShipmentTrackingQueryService {
   private final ShipmentRepository shipments;
+  private final ShipmentTrackingMapper mapper;
 
   @Transactional(readOnly = true)
   public ShipmentTrackingView get(UUID id) {
-    return ShipmentTrackingView.from(shipments.findById(id)
+    return mapper.trackingView(shipments.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("Shipment not found.")));
   }
 
   @Transactional(readOnly = true)
   public List<ShipmentTrackingView> list(UUID orderId) {
-    return shipments.findByOrderId(orderId).stream().map(ShipmentTrackingView::from).toList();
+    return shipments.findByOrderId(orderId).stream().map(mapper::trackingView).toList();
   }
 }

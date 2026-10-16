@@ -2,7 +2,6 @@ package org.phuchoang.ecp.shipping.internal.infrastructure.persistence;
 
 import lombok.RequiredArgsConstructor;
 import org.phuchoang.ecp.shipping.internal.domain.model.Shipment;
-import org.phuchoang.ecp.shipping.internal.domain.model.ShipmentStatus;
 import org.phuchoang.ecp.shipping.internal.domain.model.TrackingEvent;
 import org.phuchoang.ecp.shipping.internal.domain.repository.ShipmentRepository;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -21,9 +20,11 @@ import java.util.UUID;
 @RequiredArgsConstructor
 class JdbcShipmentRepository implements ShipmentRepository {
   private final JdbcClient jdbc;
+  private final ShipmentPersistenceMapper mapper;
 
   @Override
   public Shipment save(Shipment shipment) {
+    ShipmentEntity entity = mapper.entity(shipment);
     int changed = jdbc.sql("""
         INSERT INTO shipping_shipment (id, order_id, carrier, tracking_reference, status, status_rank,
           destination_postal_code, destination_country_code, dispatched_at, delivered_at, version)
@@ -31,28 +32,29 @@ class JdbcShipmentRepository implements ShipmentRepository {
         ON CONFLICT (id) DO UPDATE SET status=:status,status_rank=:rank,delivered_at=:delivered,
           updated_at=now(),version=shipping_shipment.version+1
         WHERE shipping_shipment.version=:version
-        """).param("id", shipment.id()).param("orderId", shipment.orderId()).param("carrier", shipment.carrier())
-        .param("tracking", shipment.trackingReference()).param("status", shipment.status().name())
-        .param("rank", shipment.status().rank()).param("postal", shipment.destinationPostalCode())
-        .param("country", shipment.destinationCountryCode()).param("dispatched", shipment.dispatchedAt())
-        .param("delivered", shipment.deliveredAt()).param("version", shipment.version()).update();
+        """).param("id", entity.id()).param("orderId", entity.orderId()).param("carrier", entity.carrier())
+        .param("tracking", entity.trackingReference()).param("status", entity.status())
+        .param("rank", entity.statusRank()).param("postal", entity.destinationPostalCode())
+        .param("country", entity.destinationCountryCode()).param("dispatched", entity.dispatchedAt())
+        .param("delivered", entity.deliveredAt()).param("version", entity.version()).update();
     if (changed != 1)
       throw new IllegalStateException("Shipment changed concurrently; retry the carrier event.");
-    for (TrackingEvent event : shipment.trackingEvents())
+    for (TrackingEvent event : shipment.trackingEvents()) {
+      TrackingEventEntity trackingEvent = mapper.entity(event);
       jdbc.sql(
           """
               INSERT INTO shipping_tracking_event (id,shipment_id,carrier_event_id,status,status_rank,description,location,
                 carrier_occurred_at,applied) VALUES (:id,:shipment,:carrierEvent,:status,:rank,:description,:location,:occurred,:applied)
               ON CONFLICT (shipment_id,carrier_event_id) WHERE carrier_event_id IS NOT NULL DO NOTHING
               """)
-          .param("id", event.id()).param("shipment", shipment.id()).param("carrierEvent", event.carrierEventId())
-          .param("status", event.status().name()).param("rank", event.status().rank())
-          .param("description", event.description())
-          .param("location", event.location()).param("occurred", event.carrierOccurredAt())
-          .param("applied", event.applied()).update();
-    return new Shipment(shipment.id(), shipment.orderId(), shipment.carrier(), shipment.trackingReference(),
-        shipment.destinationPostalCode(), shipment.destinationCountryCode(), shipment.status(), shipment.dispatchedAt(),
-        shipment.deliveredAt(), shipment.version() + 1, shipment.trackingEvents());
+          .param("id", trackingEvent.id()).param("shipment", shipment.id())
+          .param("carrierEvent", trackingEvent.carrierEventId())
+          .param("status", trackingEvent.status()).param("rank", trackingEvent.statusRank())
+          .param("description", trackingEvent.description())
+          .param("location", trackingEvent.location()).param("occurred", trackingEvent.carrierOccurredAt())
+          .param("applied", trackingEvent.applied()).update();
+    }
+    return mapper.domain(entity.withVersion(shipment.version() + 1), shipment.trackingEvents());
   }
 
   @Override
@@ -79,21 +81,24 @@ class JdbcShipmentRepository implements ShipmentRepository {
   }
 
   private Shipment shipment(UUID id, java.sql.ResultSet rs) throws java.sql.SQLException {
-    return new Shipment(id, rs.getObject("order_id", UUID.class), rs.getString("carrier"),
-        rs.getString("tracking_reference"),
-        rs.getString("destination_postal_code"), rs.getString("destination_country_code"),
-        ShipmentStatus.valueOf(rs.getString("status")),
-        instant(rs.getTimestamp("dispatched_at")), instant(rs.getTimestamp("delivered_at")), rs.getLong("version"),
-        events(id));
+    return mapper.domain(shipmentEntity(id, rs), events(id));
   }
 
   private List<TrackingEvent> events(UUID shipmentId) {
     return jdbc.sql("SELECT * FROM shipping_tracking_event WHERE shipment_id=:id ORDER BY carrier_occurred_at, id")
         .param("id", shipmentId)
-        .query((rs, row) -> new TrackingEvent(rs.getObject("id", UUID.class), rs.getString("carrier_event_id"),
-            ShipmentStatus.valueOf(rs.getString("status")), rs.getString("description"), rs.getString("location"),
-            rs.getTimestamp("carrier_occurred_at").toInstant(), rs.getBoolean("applied")))
+        .query((rs, row) -> mapper.domain(new TrackingEventEntity(rs.getObject("id", UUID.class), shipmentId,
+            rs.getString("carrier_event_id"), rs.getString("status"), rs.getInt("status_rank"),
+            rs.getString("description"), rs.getString("location"), rs.getTimestamp("carrier_occurred_at").toInstant(),
+            rs.getBoolean("applied"))))
         .list();
+  }
+
+  private static ShipmentEntity shipmentEntity(UUID id, java.sql.ResultSet rs) throws java.sql.SQLException {
+    return new ShipmentEntity(id, rs.getObject("order_id", UUID.class), rs.getString("carrier"),
+        rs.getString("tracking_reference"), rs.getString("destination_postal_code"),
+        rs.getString("destination_country_code"), rs.getString("status"), rs.getInt("status_rank"),
+        instant(rs.getTimestamp("dispatched_at")), instant(rs.getTimestamp("delivered_at")), rs.getLong("version"));
   }
 
   private static java.time.Instant instant(Timestamp timestamp) {
