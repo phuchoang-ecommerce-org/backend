@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.time.Instant;
 import java.util.UUID;
+import java.util.List;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 
 /**
@@ -17,6 +18,8 @@ public interface PaymentFacade {
       URI returnUrl, UUID correlationId);
 
   PaymentDetails getOrderPayment(UUID orderId);
+
+  UnmatchedPaymentPage listUnmatchedPayments(IdentityActor caller, Boolean resolved, String cursor, int size);
 
   CallbackResult receivePaymentProviderNotification(String providerReference, PaymentOutcome outcome, BigDecimal amount,
       String currency, String providerEventId, Instant occurredAt, java.util.Map<String, Object> payload,
@@ -34,6 +37,13 @@ public interface PaymentFacade {
   }
 
   record PaymentAttemptDetails(UUID id, int attemptNumber, PaymentOutcome outcome, String providerReference) {
+  }
+
+  record UnmatchedPayment(UUID id, String providerReference, BigDecimal amount, String currency, String outcome,
+      Instant receivedAt, Instant resolvedAt) { }
+
+  record UnmatchedPaymentPage(List<UnmatchedPayment> items, String nextCursor) {
+    public UnmatchedPaymentPage { items = List.copyOf(items); }
   }
 
   enum CallbackResult {

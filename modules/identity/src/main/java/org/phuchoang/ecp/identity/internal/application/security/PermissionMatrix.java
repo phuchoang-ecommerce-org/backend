@@ -81,6 +81,7 @@ public final class PermissionMatrix {
     public static final String ADVANCE_ORDER_STATUSES_IN_BULK = "advanceOrderStatusesInBulk";
     public static final String SET_ORDER_INVESTIGATION_FLAG = "setOrderInvestigationFlag";
     public static final String CREATE_SHIPMENT = "createShipment";
+    public static final String LIST_UNMATCHED_PAYMENTS = "listUnmatchedPayments";
 
     private static final Set<RoleCode> ANY_AUTHENTICATED =
         EnumSet.of(CUSTOMER, STAFF, WAREHOUSE_OPERATOR, CUSTOMER_SUPPORT, ADMINISTRATOR);
@@ -130,7 +131,8 @@ public final class PermissionMatrix {
         Map.entry(ADVANCE_ORDER_STATUS, EnumSet.of(STAFF, WAREHOUSE_OPERATOR, ADMINISTRATOR)),
         Map.entry(ADVANCE_ORDER_STATUSES_IN_BULK, EnumSet.of(STAFF, WAREHOUSE_OPERATOR, ADMINISTRATOR)),
         Map.entry(SET_ORDER_INVESTIGATION_FLAG, EnumSet.of(STAFF, CUSTOMER_SUPPORT, ADMINISTRATOR)),
-        Map.entry(CREATE_SHIPMENT, EnumSet.of(STAFF, WAREHOUSE_OPERATOR, ADMINISTRATOR)));
+        Map.entry(CREATE_SHIPMENT, EnumSet.of(STAFF, WAREHOUSE_OPERATOR, ADMINISTRATOR)),
+        Map.entry(LIST_UNMATCHED_PAYMENTS, EnumSet.of(CUSTOMER_SUPPORT, ADMINISTRATOR)));
 
     private PermissionMatrix() {
     }

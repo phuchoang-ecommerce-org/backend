@@ -13,6 +13,7 @@ import org.phuchoang.ecp.payment.internal.application.callback.command.ProviderN
 import org.phuchoang.ecp.payment.internal.application.callback.command.ReceivePaymentProviderNotificationService;
 import org.phuchoang.ecp.payment.internal.application.get.query.GetOrderPaymentService;
 import org.phuchoang.ecp.payment.internal.application.order.command.RecordOrderCreatedService;
+import org.phuchoang.ecp.payment.internal.application.reconciliation.query.ListUnmatchedPaymentsService;
 import org.phuchoang.ecp.payment.internal.application.selection.command.SelectCheckoutPaymentMethodService;
 import org.springframework.stereotype.Component;
 
@@ -25,6 +26,7 @@ class PaymentFacadeAdapter implements PaymentFacade {
   private final GetOrderPaymentService payments;
   private final ReceivePaymentProviderNotificationService callbacks;
   private final RecordOrderCreatedService orders;
+  private final ListUnmatchedPaymentsService reconciliation;
 
   @Override
   public void selectCheckoutPaymentMethod(IdentityActor caller, UUID id, PaymentMethod method) {
@@ -41,6 +43,14 @@ class PaymentFacadeAdapter implements PaymentFacade {
   @Override
   public PaymentDetails getOrderPayment(UUID orderId) {
     return mapper.toPaymentDetails(payments.get(orderId));
+  }
+
+  @Override
+  public UnmatchedPaymentPage listUnmatchedPayments(IdentityActor caller, Boolean resolved, String cursor, int size) {
+    var page = reconciliation.list(caller, resolved, cursor, size);
+    return new UnmatchedPaymentPage(page.items().stream().map(item -> new UnmatchedPayment(item.id(),
+        item.providerReference(), item.amount(), item.currency(), item.outcome(), item.receivedAt(),
+        item.resolvedAt())).toList(), page.nextCursor());
   }
 
   @Override

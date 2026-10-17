@@ -30,6 +30,6 @@ class JdbcProviderNotificationStore implements ProviderNotificationStore {
         .param("id", UUID.randomUUID()).param("event", n.providerEventId()).param("reference", n.providerReference())
         .param("outcome", n.outcome())
         .param("amount", n.amount()).param("currency", n.currency())
-        .param("received", n.occurredAt() == null ? Instant.now() : n.occurredAt()).update();
+        .param("received", java.sql.Timestamp.from(n.occurredAt() == null ? Instant.now() : n.occurredAt())).update();
   }
 }

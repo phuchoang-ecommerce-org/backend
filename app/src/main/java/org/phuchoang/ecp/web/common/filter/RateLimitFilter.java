@@ -51,8 +51,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
         // fail-closed credential-guessing bucket required by UC-PRM-02 E8.
         "/api/v1/voucher-validations");
 
-    /** Empty until a `payment` module controller exists (Sprint 04 scope note, `US-AUD-04`). */
-    private static final Set<String> PAYMENT_RETRY_PATHS = Set.of();
+    private static final java.util.regex.Pattern PAYMENT_RETRY_PATH =
+        java.util.regex.Pattern.compile("^/api/v1/payments/[^/]+/attempts$");
 
     private static final Set<String> FAIL_CLOSED_BUCKETS = Set.of("auth-strict", "payment-retry");
 
@@ -99,7 +99,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
         if ("POST".equalsIgnoreCase(request.getMethod()) && AUTH_STRICT_PATHS.contains(request.getRequestURI())) {
             return "auth-strict";
         }
-        if (PAYMENT_RETRY_PATHS.contains(request.getRequestURI())) {
+        if (HttpMethod.POST.matches(request.getMethod())
+                && PAYMENT_RETRY_PATH.matcher(request.getRequestURI()).matches()) {
             return "payment-retry";
         }
         if (HttpMethod.GET.matches(request.getMethod())) {

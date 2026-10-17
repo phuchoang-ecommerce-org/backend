@@ -23,6 +23,8 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.never;
 
 /**
  * L2 — `US-AUD-04`: bucket classification (auth-strict paths, `GET` -> `read`, else `write`) and
@@ -71,6 +73,27 @@ class RateLimitFilterTest {
         filter.doFilter(request, new MockHttpServletResponse(), filterChain);
 
         verify(rateLimiter).tryConsume(eq("write"), anyString());
+    }
+
+    @Test
+    void paymentRetryUsesTheFraudProtectionBucketAndFailsClosed() throws Exception {
+        when(rateLimiter.tryConsume("payment-retry", "203.0.113.1"))
+            .thenThrow(new RateLimiter.RateLimiterUnavailableException("unavailable", null));
+        HttpServletRequest request = request("POST", "/api/v1/payments/123e4567-e89b-12d3-a456-426614174000/attempts", null);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, filterChain);
+
+        verify(rateLimiter).tryConsume("payment-retry", "203.0.113.1");
+        assertThat(response.getStatus()).isEqualTo(503);
+        verify(filterChain, never()).doFilter(any(), any());
+    }
+
+    @Test
+    void listingAttemptsDoesNotUseThePaymentRetryBucket() throws Exception {
+        filter.doFilter(request("GET", "/api/v1/payments/123e4567-e89b-12d3-a456-426614174000/attempts", null),
+            new MockHttpServletResponse(), filterChain);
+        verify(rateLimiter).tryConsume("read", "203.0.113.1");
     }
 
     @Test

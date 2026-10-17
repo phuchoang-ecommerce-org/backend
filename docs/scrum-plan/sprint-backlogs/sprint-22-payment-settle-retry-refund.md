@@ -38,7 +38,7 @@ This sprint closes the states earlier sprints created but could not resolve: Spr
 - [ ] `E6` — no reason supplied is declined (`BR-AUD-01`, `P17`)
 - [ ] **`E7` — a failed audit write lets the refund stand**, and the missing entry is escalated as a compliance exception. The `UC-AUD-01` `E2` branch from Sprint 12, selected — **this is deliberately the opposite of `UC-INV-04` `E4`**, and the difference is that money has already moved
 - [ ] Resolves Sprint 19's `US-ORD-08` `E4`: an order awaiting refund can now reach Refunded
-- [ ] `listUnmatchedPayments` is the reconciliation queue fed by Sprint 21's `E2`/`E4` paths
+- [x] `listUnmatchedPayments` is the reconciliation queue fed by Sprint 21's `E2`/`E4` paths
 
 ### `US-PAY-04` Settle Cash On Delivery Payment (5 pts) — `settleCashOnDelivery`
 - [ ] `E1` — a refused delivery collects nothing: the goods return, the order is cancelled, its reservation released and the goods restocked. **The refusal reason is recorded — repeated refusals are a fraud signal**

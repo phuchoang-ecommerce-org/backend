@@ -61,6 +61,17 @@ class PermissionMatrixPermissionCheckerTest {
         assertDenied(customer(), PermissionMatrix.MANAGE_PRODUCTS);
     }
 
+    @Test
+    void unmatchedPaymentsAreRestrictedToSupportAndAdministrators() {
+        permissions.require(new CallerContext(UUID.randomUUID(), EnumSet.of(RoleCode.CUSTOMER_SUPPORT)),
+            PermissionMatrix.LIST_UNMATCHED_PAYMENTS);
+        permissions.require(new CallerContext(UUID.randomUUID(), EnumSet.of(RoleCode.ADMINISTRATOR)),
+            PermissionMatrix.LIST_UNMATCHED_PAYMENTS);
+        assertDenied(customer(), PermissionMatrix.LIST_UNMATCHED_PAYMENTS);
+        assertDenied(new CallerContext(UUID.randomUUID(), EnumSet.of(RoleCode.WAREHOUSE_OPERATOR)),
+            PermissionMatrix.LIST_UNMATCHED_PAYMENTS);
+    }
+
     private void assertDenied(CallerContext caller, String operationId) {
         assertThatThrownBy(() -> permissions.require(caller, operationId))
             .isInstanceOf(ApplicationException.class)

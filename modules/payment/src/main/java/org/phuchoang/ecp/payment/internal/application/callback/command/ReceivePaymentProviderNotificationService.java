@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class ReceivePaymentProviderNotificationService {
+  private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ReceivePaymentProviderNotificationService.class);
   private final ProviderNotificationAuthenticator authenticator;
   private final ProviderNotificationStore notifications;
   private final PaymentDomainService payments;
@@ -45,9 +46,18 @@ public class ReceivePaymentProviderNotificationService {
       appendOutcome(payment, notification, correlationId);
       return Result.APPLIED;
     } catch (Payment.PaymentNotFound missing) {
-      notifications.recordUnmatched(notification);
-      return Result.UNMATCHED;
+      return unmatched(notification, "unknown reference");
+    } catch (Payment.ContradictoryResult conflict) {
+      return unmatched(notification, "contradictory outcome");
+    } catch (Payment.AmountMismatch mismatch) {
+      return unmatched(notification, "amount mismatch");
     }
+  }
+
+  private Result unmatched(ProviderNotification notification, String reason) {
+    notifications.recordUnmatched(notification);
+    log.error("Payment provider outcome requires reconciliation: {}", reason);
+    return Result.UNMATCHED;
   }
 
   private Instant resolvedAt(ProviderNotification notification) {
