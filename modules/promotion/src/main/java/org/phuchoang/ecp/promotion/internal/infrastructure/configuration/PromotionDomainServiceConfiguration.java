@@ -2,6 +2,7 @@ package org.phuchoang.ecp.promotion.internal.infrastructure.configuration;
 
 import org.phuchoang.ecp.promotion.internal.domain.repository.PromotionRepository;
 import org.phuchoang.ecp.promotion.internal.domain.service.PromotionCreationDomainService;
+import org.phuchoang.ecp.promotion.internal.domain.service.PromotionLifecycleDomainService;
 import org.phuchoang.ecp.promotion.internal.domain.service.PromotionRedemptionDomainService;
 import org.phuchoang.ecp.promotion.internal.domain.service.PromotionVoucherDomainService;
 import org.springframework.context.annotation.Bean;
@@ -26,5 +27,10 @@ public class PromotionDomainServiceConfiguration {
     @Bean
     PromotionRedemptionDomainService promotionRedemptionDomainService(PromotionRepository promotions) {
         return new PromotionRedemptionDomainService(promotions);
+    }
+
+    @Bean
+    PromotionLifecycleDomainService promotionLifecycleDomainService(PromotionRepository promotions) {
+        return new PromotionLifecycleDomainService(promotions);
     }
 }

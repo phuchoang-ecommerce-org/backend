@@ -5,10 +5,13 @@ import org.mapstruct.factory.Mappers;
 import org.phuchoang.ecp.identity.api.request.AddressWriteRequest;
 import org.phuchoang.ecp.identity.api.request.ChangePasswordRequest;
 import org.phuchoang.ecp.identity.api.view.AddressPageView;
+import org.phuchoang.ecp.identity.internal.application.authentication.LoginResult;
 import org.phuchoang.ecp.identity.internal.application.address.AddressPageResult;
 import org.phuchoang.ecp.identity.internal.application.address.AddressSummary;
+import org.phuchoang.ecp.identity.internal.application.profile.AccountSummary;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -17,6 +20,18 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class IdentityDtoMapperTest {
 
     private final IdentityDtoMapper mapper = Mappers.getMapper(IdentityDtoMapper.class);
+
+    @Test
+    void mapsNewSessionWithAnEmptyCartMergeNoticeList() {
+        AccountSummary account = new AccountSummary(UUID.randomUUID().toString(), "customer@example.com",
+            null, "ACTIVE", "UNVERIFIED", null, Set.of("CUSTOMER"), null, null, null);
+
+        var session = mapper.sessionResponse(new LoginResult("access", "refresh", 900, true, account));
+
+        assertThat(session.accessToken()).isEqualTo("access");
+        assertThat(session.refreshToken()).isEqualTo("refresh");
+        assertThat(session.cartMergeNotices()).isEmpty();
+    }
 
     @Test
     void mapsTransportDefaultsIntoTheApplicationCommands() {

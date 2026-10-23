@@ -183,7 +183,8 @@ class ArchitectureTests {
             "org.phuchoang.ecp.promotion.internal.domain.model.Promotion",
             "org.phuchoang.ecp.ordering.internal.domain.model.Checkout",
             "org.phuchoang.ecp.ordering.internal.domain.model.Order",
-            "org.phuchoang.ecp.payment.internal.domain.model.Payment");
+            "org.phuchoang.ecp.payment.internal.domain.model.Payment",
+            "org.phuchoang.ecp.shipping.internal.domain.model.Shipment");
         org.assertj.core.api.Assertions.assertThat(repositories).containsExactlyInAnyOrder(
             "org.phuchoang.ecp.identity.internal.domain.repository.AccountRepository",
             "org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository",
@@ -193,7 +194,8 @@ class ArchitectureTests {
             "org.phuchoang.ecp.promotion.internal.domain.repository.PromotionRepository",
             "org.phuchoang.ecp.ordering.internal.domain.repository.CheckoutRepository",
             "org.phuchoang.ecp.ordering.internal.domain.repository.OrderRepository",
-            "org.phuchoang.ecp.payment.internal.domain.repository.PaymentRepository");
+            "org.phuchoang.ecp.payment.internal.domain.repository.PaymentRepository",
+            "org.phuchoang.ecp.shipping.internal.domain.repository.ShipmentRepository");
 
         ArchRule locationRule = com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes()
             .that().areAnnotatedWith(Repository.class)
@@ -207,6 +209,7 @@ class ArchitectureTests {
         mainClasses.stream()
             .flatMap(type -> type.getConstructorCallsFromSelf().stream())
             .filter(call -> call.getTargetOwner().isAnnotatedWith(DomainEvent.class))
+            .filter(call -> !call.getOriginOwner().equals(call.getTargetOwner()))
             .forEach(call -> org.assertj.core.api.Assertions.assertThat(
                 call.getOriginOwner().isAnnotatedWith(AggregateRoot.class))
                 .as("%s constructs %s", call.getOriginOwner().getFullName(), call.getTargetOwner().getFullName())

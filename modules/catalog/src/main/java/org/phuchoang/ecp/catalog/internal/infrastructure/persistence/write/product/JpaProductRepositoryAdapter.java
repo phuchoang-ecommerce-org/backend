@@ -5,6 +5,7 @@ import org.phuchoang.ecp.catalog.internal.domain.error.DuplicateSkuException;
 import org.phuchoang.ecp.catalog.internal.domain.repository.ProductRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -28,11 +29,13 @@ class JpaProductRepositoryAdapter implements ProductRepository {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<Product> findById(UUID id) {
         return products.findAggregateById(id).map(mapper::toDomain);
     }
 
     @Override
+    @Transactional
     public Product save(Product product) {
         CatalogProductEntity existing = products.findAggregateById(product.id()).orElse(null);
         CatalogProductEntity entity;

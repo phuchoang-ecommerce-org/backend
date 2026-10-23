@@ -31,7 +31,6 @@ import static org.assertj.core.api.Assertions.assertThat;
     "spring.datasource.hikari.schema=payment_authorisation_l4",
     "spring.datasource.hikari.connection-init-sql=SET search_path TO payment_authorisation_l4",
     "spring.jpa.properties.hibernate.default_schema=payment_authorisation_l4",
-    "spring.jpa.hibernate.ddl-auto=none",
     "spring.task.scheduling.enabled=false",
     "spring.kafka.listener.auto-startup=false",
     "ecp.outbox.poll-delay-ms=600000"

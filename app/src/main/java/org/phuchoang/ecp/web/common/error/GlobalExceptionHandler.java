@@ -123,7 +123,7 @@ public class GlobalExceptionHandler {
         List<FieldError> errors = exception.getBindingResult().getFieldErrors().stream()
             .map(fieldError -> new FieldError(
                 fieldError.getField(),
-                isRequiredConstraint(fieldError.getCode())
+                fieldError.getRejectedValue() == null && isRequiredConstraint(fieldError.getCode())
                     ? FieldErrorCodes.REQUIRED
                     : FieldErrorCodes.CONSTRAINT_VIOLATED,
                 fieldError.getDefaultMessage()))

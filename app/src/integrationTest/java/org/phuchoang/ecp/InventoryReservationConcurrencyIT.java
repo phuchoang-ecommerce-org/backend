@@ -40,7 +40,6 @@ import static org.assertj.core.api.Assertions.assertThat;
     "spring.datasource.hikari.schema=inventory_l5",
     "spring.datasource.hikari.connection-init-sql=SET search_path TO inventory_l5",
     "spring.jpa.properties.hibernate.default_schema=inventory_l5",
-    "spring.jpa.hibernate.ddl-auto=none",
     // This isolated schema intentionally contains no other module's outbox table.
     "spring.task.scheduling.enabled=false",
     "spring.kafka.listener.auto-startup=false",

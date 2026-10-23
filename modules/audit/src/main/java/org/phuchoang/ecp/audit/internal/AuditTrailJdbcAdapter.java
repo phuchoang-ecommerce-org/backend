@@ -5,6 +5,7 @@ import org.phuchoang.ecp.audit.api.AuditTrail;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
+import java.sql.Timestamp;
 
 /** PostgreSQL append-only adapter; the database grants prohibit update and delete independently of this code. */
 @Component
@@ -30,7 +31,7 @@ class AuditTrailJdbcAdapter implements AuditTrail {
             .param("entityId", record.entityId()).param("module", record.module())
             .param("beforeValue", serialize(record.beforeValue())).param("afterValue", serialize(record.afterValue()))
             .param("reason", record.reason()).param("correlationId", record.correlationId())
-            .param("occurredAt", record.occurredAt()).update();
+            .param("occurredAt", Timestamp.from(record.occurredAt())).update();
     }
 
     private String serialize(Object value) {

@@ -2,8 +2,6 @@ package org.phuchoang.ecp.ordering.api;
 
 import lombok.RequiredArgsConstructor;
 import org.phuchoang.ecp.ordering.internal.application.lifecycle.command.FulfilmentOrderTransitionService;
-import org.phuchoang.ecp.ordering.internal.domain.model.Order;
-import org.phuchoang.ecp.ordering.internal.domain.model.OrderStatus;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -20,25 +18,25 @@ class OrderFulfilmentFacadeAdapter implements OrderFulfilmentFacade {
 
   @Override
   public OrderFulfilmentView markDispatched(UUID orderId, UUID correlationId) {
-    return view(transitions.advance(orderId, OrderStatus.SHIPPING));
+    return view(transitions.markDispatched(orderId));
   }
 
   @Override
   public OrderFulfilmentView markDelivered(UUID orderId, UUID correlationId) {
-    return view(transitions.advance(orderId, OrderStatus.DELIVERED));
+    return view(transitions.markDelivered(orderId));
   }
 
   @Override
   public OrderFulfilmentView recordPaymentSucceeded(UUID orderId, UUID correlationId) {
-    return view(transitions.advance(orderId, OrderStatus.PAID));
+    return view(transitions.recordPaymentSucceeded(orderId));
   }
 
   @Override
   public OrderFulfilmentView recordPaymentFailed(UUID orderId, UUID correlationId) {
-    return view(transitions.advance(orderId, OrderStatus.PAYMENT_FAILED));
+    return view(transitions.recordPaymentFailed(orderId));
   }
 
-  private static OrderFulfilmentView view(Order order) {
-    return new OrderFulfilmentView(order.id(), order.customerId(), order.status().name());
+  private static OrderFulfilmentView view(FulfilmentOrderTransitionService.State state) {
+    return new OrderFulfilmentView(state.orderId(), state.customerId(), state.status());
   }
 }

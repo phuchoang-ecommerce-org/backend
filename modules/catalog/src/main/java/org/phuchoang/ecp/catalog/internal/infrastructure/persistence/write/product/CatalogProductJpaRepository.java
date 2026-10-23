@@ -8,7 +8,7 @@ import java.util.UUID;
 
 /** Repository for the Product aggregate root only. */
 interface CatalogProductJpaRepository extends JpaRepository<CatalogProductEntity, UUID> {
-    @EntityGraph(attributePaths = { "variants", "images" })
+    @EntityGraph(attributePaths = "variants")
     Optional<CatalogProductEntity> findAggregateById(UUID id);
 
     long countByCategoryId(UUID categoryId);

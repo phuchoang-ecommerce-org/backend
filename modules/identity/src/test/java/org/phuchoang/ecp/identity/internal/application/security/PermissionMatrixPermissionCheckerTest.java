@@ -72,6 +72,16 @@ class PermissionMatrixPermissionCheckerTest {
             PermissionMatrix.LIST_UNMATCHED_PAYMENTS);
     }
 
+    @Test
+    void orderPlacementAndPaymentInitiationPermitOnlyCustomers() {
+        for (String operation : Set.of("placeOrder", "initiatePayment")) {
+            permissions.require(customer(), operation);
+            assertDenied(CallerContext.GUEST, operation);
+            assertDenied(new CallerContext(UUID.randomUUID(), EnumSet.of(RoleCode.STAFF)), operation);
+            assertDenied(new CallerContext(UUID.randomUUID(), EnumSet.of(RoleCode.ADMINISTRATOR)), operation);
+        }
+    }
+
     private void assertDenied(CallerContext caller, String operationId) {
         assertThatThrownBy(() -> permissions.require(caller, operationId))
             .isInstanceOf(ApplicationException.class)

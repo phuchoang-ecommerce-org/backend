@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,8 +36,8 @@ class JdbcShipmentRepository implements ShipmentRepository {
         """).param("id", entity.id()).param("orderId", entity.orderId()).param("carrier", entity.carrier())
         .param("tracking", entity.trackingReference()).param("status", entity.status())
         .param("rank", entity.statusRank()).param("postal", entity.destinationPostalCode())
-        .param("country", entity.destinationCountryCode()).param("dispatched", entity.dispatchedAt())
-        .param("delivered", entity.deliveredAt()).param("version", entity.version()).update();
+        .param("country", entity.destinationCountryCode()).param("dispatched", timestamp(entity.dispatchedAt()))
+        .param("delivered", timestamp(entity.deliveredAt())).param("version", entity.version()).update();
     if (changed != 1)
       throw new IllegalStateException("Shipment changed concurrently; retry the carrier event.");
     for (TrackingEvent event : shipment.trackingEvents()) {
@@ -51,7 +52,7 @@ class JdbcShipmentRepository implements ShipmentRepository {
           .param("carrierEvent", trackingEvent.carrierEventId())
           .param("status", trackingEvent.status()).param("rank", trackingEvent.statusRank())
           .param("description", trackingEvent.description())
-          .param("location", trackingEvent.location()).param("occurred", trackingEvent.carrierOccurredAt())
+          .param("location", trackingEvent.location()).param("occurred", timestamp(trackingEvent.carrierOccurredAt()))
           .param("applied", trackingEvent.applied()).update();
     }
     return mapper.domain(entity.withVersion(shipment.version() + 1), shipment.trackingEvents());
@@ -103,5 +104,9 @@ class JdbcShipmentRepository implements ShipmentRepository {
 
   private static java.time.Instant instant(Timestamp timestamp) {
     return timestamp == null ? null : timestamp.toInstant();
+  }
+
+  private static Timestamp timestamp(Instant instant) {
+    return instant == null ? null : Timestamp.from(instant);
   }
 }

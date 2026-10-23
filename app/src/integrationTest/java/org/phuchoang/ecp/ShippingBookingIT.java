@@ -29,7 +29,6 @@ import static org.mockito.Mockito.when;
     "spring.datasource.hikari.schema=shipping_booking_l4",
     "spring.datasource.hikari.connection-init-sql=SET search_path TO shipping_booking_l4",
     "spring.jpa.properties.hibernate.default_schema=shipping_booking_l4",
-    "spring.jpa.hibernate.ddl-auto=none",
     "spring.task.scheduling.enabled=false",
     "spring.kafka.listener.auto-startup=false",
     "ecp.outbox.poll-delay-ms=600000"

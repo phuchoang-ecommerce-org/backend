@@ -11,7 +11,9 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
-/** PostgreSQL adapter. Locked aggregate reads serialize redemption-slot claims. */
+/**
+ * PostgreSQL adapter. Locked aggregate reads serialize redemption-slot claims.
+ */
 @Repository
 @lombok.RequiredArgsConstructor
 class JpaPromotionRepositoryAdapter implements PromotionRepository {
@@ -21,39 +23,48 @@ class JpaPromotionRepositoryAdapter implements PromotionRepository {
     private final PromotionPersistenceMapper mapper;
     private final Clock clock;
 
-    @Override public Optional<Promotion> findById(UUID id) { return promotions.findById(id).map(mapper::toDomain); }
-    @Override public Optional<Promotion> findForRedemption(UUID id) { return promotions.findLockedById(id).map(mapper::toDomain); }
-    @Override public java.util.List<Promotion> findDueScheduledStatusChanges(Instant now, int limit) {
-        return promotions.findTop100ByScheduledAtLessThanEqualOrderByScheduledAtAsc(now).stream()
-            .limit(limit).map(mapper::toDomain).toList();
+    @Override
+    public Optional<Promotion> findById(UUID id) {
+        return promotions.findById(id).map(mapper::toDomain);
     }
-    @Override public java.util.List<Promotion> findDueActivations(Instant now, int limit) {
-        return promotions.findTop100ByStatusAndValidFromLessThanEqualAndValidUntilGreaterThanOrderByValidFromAsc(
-            "DRAFT", now, now).stream().limit(limit).map(mapper::toDomain).toList();
+
+    @Override
+    public Optional<Promotion> findForRedemption(UUID id) {
+        return promotions.findLockedById(id).map(mapper::toDomain);
     }
-    @Override public java.util.List<Promotion> findDueExpirations(Instant now, int limit) {
-        return promotions.findTop100ByStatusAndValidUntilLessThanEqualOrderByValidUntilAsc("ACTIVE", now).stream()
-            .limit(limit).map(mapper::toDomain).toList();
-    }
-    @Override public long redemptionCountForCustomer(UUID promotionId, UUID customerId) {
+
+    @Override
+    public long redemptionCountForCustomer(UUID promotionId, UUID customerId) {
         return redemptions.countByPromotionIdAndCustomerId(promotionId, customerId);
     }
-    @Override public void save(Promotion promotion) { promotions.save(toEntity(promotion)); }
-    @Override public void recordRedemption(Promotion promotion, PromotionRedemption redemption) {
+
+    @Override
+    public void save(Promotion promotion) {
+        promotions.save(toEntity(promotion));
+    }
+
+    @Override
+    public void recordRedemption(Promotion promotion, PromotionRedemption redemption) {
         promotions.save(toEntity(promotion));
         PromotionRedemptionEntity entity = mapper.toEntity(redemption);
         entity.setCreatedAt(clock.instant());
         redemptions.save(entity);
     }
-    @Override public void appendVouchers(Promotion promotion, java.util.List<PromotionVoucher> values) {
-        vouchers.saveAll(values.stream().map(mapper::toEntity).peek(entity -> entity.setCreatedAt(clock.instant())).toList());
+
+    @Override
+    public void appendVouchers(Promotion promotion, java.util.List<PromotionVoucher> values) {
+        vouchers.saveAll(
+                values.stream().map(mapper::toEntity).peek(entity -> entity.setCreatedAt(clock.instant())).toList());
     }
 
     private PromotionEntity toEntity(Promotion value) {
         PromotionEntity entity = promotions.findById(value.id()).orElseGet(PromotionEntity::new);
         boolean fresh = entity.getId() == null;
         mapper.updateEntity(value, entity);
-        Instant now = clock.instant(); if (fresh) entity.setCreatedAt(now); entity.setUpdatedAt(now);
+        Instant now = clock.instant();
+        if (fresh)
+            entity.setCreatedAt(now);
+        entity.setUpdatedAt(now);
         return entity;
     }
 }
