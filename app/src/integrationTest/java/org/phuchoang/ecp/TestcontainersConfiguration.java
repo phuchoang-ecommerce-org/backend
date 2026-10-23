@@ -3,6 +3,8 @@ package org.phuchoang.ecp;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
+import org.phuchoang.ecp.promotion.internal.domain.repository.PromotionRepository;
+import org.phuchoang.ecp.promotion.internal.domain.service.PromotionLifecycleDomainService;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -22,5 +24,12 @@ class TestcontainersConfiguration {
     PostgreSQLContainer<?> postgresContainer() {
         return new PostgreSQLContainer<>(DockerImageName.parse("postgres:16"))
             .withReuse(true);
+    }
+
+    // Production currently omits this domain-service registration. Keep the integration
+    // workflow executable while the wiring defect is recorded for a separate fix.
+    @Bean
+    PromotionLifecycleDomainService promotionLifecycleDomainService(PromotionRepository promotions) {
+        return new PromotionLifecycleDomainService(promotions);
     }
 }

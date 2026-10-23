@@ -4,8 +4,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.phuchoang.ecp.inventory.api.reservation.InsufficientStockException;
 import org.phuchoang.ecp.inventory.api.reservation.InventoryReservationFacade;
+import org.phuchoang.ecp.inventory.api.reservation.ReservationActionResult;
+import org.phuchoang.ecp.inventory.api.reservation.ReservationReference;
 import org.phuchoang.ecp.inventory.api.reservation.ReservationSet;
 import org.phuchoang.ecp.inventory.api.reservation.ReserveStockCommand;
+import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.inventory.internal.domain.model.StockItem;
 import org.phuchoang.ecp.inventory.internal.domain.repository.StockItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +20,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -33,10 +37,14 @@ import static org.assertj.core.api.Assertions.assertThat;
     "ecp.cursor.active-key=integration-test-cursor-secret-0001",
     "spring.flyway.default-schema=inventory_l5",
     "spring.flyway.schemas=inventory_l5",
+    "spring.datasource.hikari.schema=inventory_l5",
+    "spring.datasource.hikari.connection-init-sql=SET search_path TO inventory_l5",
     "spring.jpa.properties.hibernate.default_schema=inventory_l5",
+    "spring.jpa.hibernate.ddl-auto=none",
     // This isolated schema intentionally contains no other module's outbox table.
     "spring.task.scheduling.enabled=false",
-    "spring.kafka.listener.auto-startup=false"
+    "spring.kafka.listener.auto-startup=false",
+    "ecp.outbox.poll-delay-ms=600000"
 })
 @Import(TestcontainersConfiguration.class)
 class InventoryReservationConcurrencyIT {
@@ -100,6 +108,23 @@ class InventoryReservationConcurrencyIT {
         assertThat(outcomes).extracting(Attempt::reservationId).doesNotContainNull().hasSize(24)
             .containsOnly(outcomes.getFirst().reservationId());
         assertThat(reserved(itemId)).isEqualTo(1);
+    }
+
+    @Test
+    void committedReservationCannotLaterBeReleased() {
+        String sku = "RESOLVE-ONCE-" + UUID.randomUUID();
+        UUID itemId = seedStock(sku, 4);
+        var held = reserve(UUID.randomUUID(), itemId, sku, UUID.randomUUID())
+            .reservations().getFirst();
+        ReservationReference reference = new ReservationReference(itemId, held.reservationId());
+        IdentityActor warehouseStaff = new IdentityActor(UUID.randomUUID(), Set.of("WAREHOUSE_OPERATOR"));
+
+        assertThat(reservations.commitStockReservation(warehouseStaff, reference).outcome())
+            .isEqualTo(ReservationActionResult.Outcome.COMMITTED);
+        assertThat(reservations.release(reference, true).outcome())
+            .isEqualTo(ReservationActionResult.Outcome.DECLINED_ALREADY_COMMITTED);
+        assertThat(reserved(itemId)).isZero();
+        assertThat(onHand(itemId)).isEqualTo(3);
     }
 
     private ReservationSet reserve(UUID orderId, UUID stockItemId, String sku, UUID lineId) {
