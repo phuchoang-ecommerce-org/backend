@@ -41,3 +41,4 @@ out/
 # Gradle internal script cache (accidentally committed in the original monorepo)
 kls_database.db
 SUMMARY*.java
+persona/
