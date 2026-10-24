@@ -9,6 +9,7 @@ import com.nimbusds.jose.proc.SecurityContext;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
@@ -29,7 +30,13 @@ import java.util.UUID;
 public class JwtKeysConfig {
 
     @Bean
-    RSAKey rsaJwk(JwtProperties properties) {
+    RSAKey rsaJwk(JwtProperties properties, Environment environment) {
+        if (environment.matchesProfiles("prod & dev")) {
+            throw new IllegalStateException("Activate only one runtime profile: dev or prod");
+        }
+        if (environment.matchesProfiles("prod") && properties.generateDevKeys()) {
+            throw new IllegalStateException("Production cannot enable generated development JWT keys");
+        }
         KeyPair keyPair = keyProvider(properties).load();
         return new RSAKey.Builder((RSAPublicKey) keyPair.getPublic())
             .privateKey((RSAPrivateKey) keyPair.getPrivate())

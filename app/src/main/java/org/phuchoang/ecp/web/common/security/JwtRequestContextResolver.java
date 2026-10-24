@@ -2,7 +2,6 @@ package org.phuchoang.ecp.web.common.security;
 
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.web.common.filter.CorrelationIdFilter;
-import org.springframework.context.annotation.Profile;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 
@@ -17,7 +16,6 @@ import java.util.UUID;
  * value that is not a UUID is echoed by the filter but not propagated into commands as one.
  */
 @Component
-@Profile("!no-auth | prod")
 public class JwtRequestContextResolver implements RequestContextResolver {
 
     static final String ROLES_CLAIM = "roles";

@@ -12,7 +12,7 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
  */
 @ConfigurationProperties("ecp.jwt")
 public record JwtProperties(@DefaultValue("") String privateKeyPath, @DefaultValue("") String publicKeyPath,
-        @DefaultValue("true") boolean generateDevKeys) {
+        @DefaultValue("false") boolean generateDevKeys) {
 
     public boolean hasKeyFiles() {
         return !privateKeyPath.isBlank() && !publicKeyPath.isBlank();

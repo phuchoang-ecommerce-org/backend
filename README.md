@@ -24,28 +24,28 @@ Cross-module edges are limited to exactly what [`Module Dependency Diagram.md`](
 ./gradlew build          # compiles all 14 modules
 ./gradlew check          # runs test (L1-L3) + integrationTest (L4-L6) in every module
 docker compose up -d postgres kafka redis-cache redis-state
-./gradlew :app:bootRun   # starts the secured application on :8080
+./gradlew :app:bootRun --args='--spring.profiles.active=dev'   # seeded local API on :8080
 curl localhost:8080/healthz   # -> OK
 ```
 
-### Manual API testing
+### Runtime profiles
 
-The normal application start requires a bearer token for protected APIs:
+Use exactly one profile. Both profiles enforce bearer authentication and server-side role checks.
+
+- `dev`: generates a temporary JWT keypair if key files are absent and restores five verified
+  accounts (one per authenticated role), two categories, four products, and five variants at
+  startup. Fixture IDs are stable; existing rows are left as edited. Sign in through
+  `POST /api/v1/sessions` with the accounts in [`docs/local-demo.md`](docs/local-demo.md).
+- `prod`: requires configured JWT key files and PostgreSQL connection values. It runs schema and
+  reference-role migrations but creates no mock accounts or catalog fixtures. Flyway clean remains
+  disabled and Hibernate only validates the schema.
 
 ```sh
-./gradlew :app:bootRun
+./gradlew :app:bootRun --args='--spring.profiles.active=dev'
+SPRING_PROFILES_ACTIVE=prod SPRING_DATASOURCE_URL=... SPRING_DATASOURCE_USERNAME=... \
+  SPRING_DATASOURCE_PASSWORD=... ECP_JWT_PRIVATE_KEY_PATH=... ECP_JWT_PUBLIC_KEY_PATH=... \
+  ECP_CURSOR_ACTIVE_KEY=... ./gradlew :app:bootRun
 ```
-
-For local token-free manual API testing, activate the `demo` and `no-auth` profiles. This seeds
-the demo records and sends requests without a JWT through an all-access local actor. Never use
-this profile combination in shared or production environments.
-
-```sh
-./gradlew :app:bootRun --args='--spring.profiles.active=demo,no-auth'
-```
-
-Use `ECP_NO_AUTH_ACCOUNT_ID` to select an existing account for `/accounts/me` and other
-ownership-based APIs; it otherwise defaults to the seeded demo administrator.
 
 `bootRun` loads local configuration from `.env` when it exists, or from the development defaults
 in `.env.example` otherwise. Copy the template before changing values: `cp .env.example .env`.

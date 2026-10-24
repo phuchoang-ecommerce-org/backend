@@ -1,6 +1,6 @@
 # Local session and catalog demo
 
-This guide starts the real ECP API and Next.js application with a deliberately local-only demo dataset. The seed runner is active only with the `demo` Spring profile; ordinary boot runs and every production profile are unchanged.
+This guide starts the real ECP API and Next.js application with a local development dataset. The seed runner is active only with the `dev` Spring profile and is excluded whenever `prod` is active.
 
 ## Demo accounts
 
@@ -8,6 +8,12 @@ This guide starts the real ECP API and Next.js application with a deliberately l
 | --- | --- | --- |
 | Administrator | `admin@demo.local` | `DemoPass!2026` |
 | Customer | `customer@demo.local` | `DemoPass!2026` |
+| Staff | `staff@demo.local` | `DemoPass!2026` |
+| Warehouse operator | `warehouse@demo.local` | `DemoPass!2026` |
+| Customer support | `support@demo.local` | `DemoPass!2026` |
+
+`GUEST` is the unauthenticated actor, so it has no account. Every listed account signs in through
+the normal `POST /api/v1/sessions` endpoint and receives its own role in the JWT.
 
 Never reuse these credentials outside a local machine.
 
@@ -16,11 +22,11 @@ Never reuse these credentials outside a local machine.
 1. Start Docker Desktop, then the local dependencies:
 
    ```sh
-   cd backend-extract
+   cd backend
    docker compose up -d postgres kafka redis-cache redis-state
    ```
 
-2. Configure revalidation in `backend-extract/.env` (or export these values before booting):
+2. Configure revalidation in `backend/.env` (or export these values before booting):
 
    ```dotenv
    ECP_REVALIDATION_URL=http://localhost:3000/api/internal/revalidate
@@ -38,8 +44,8 @@ Never reuse these credentials outside a local machine.
 4. In separate terminals, run the backend with the demo profile and the frontend:
 
    ```sh
-   cd backend-extract
-   SPRING_PROFILES_ACTIVE=demo ./gradlew :app:bootRun
+   cd backend
+   SPRING_PROFILES_ACTIVE=dev ./gradlew :app:bootRun
    ```
 
    ```sh
@@ -49,15 +55,15 @@ Never reuse these credentials outside a local machine.
 
    Wait for `http://localhost:8080/healthz` and open `http://localhost:3000`.
 
-The first demo-profile startup seeds two accounts, two categories, three published products with local image assets, variants, availability states, and one admin-only draft product. Later starts are idempotent and preserve edits made in the UI.
+The first dev-profile startup seeds five accounts, two categories, three published products with local image assets, five variants, availability states, and one admin-only draft product. Later starts restore missing fixture rows and preserve edits to existing rows.
 
 ## Reset the demo records
 
 This restores only records with the demo's fixed IDs and `DEMO-` SKUs. It deliberately does not clear unrelated local data or immutable audit entries.
 
 ```sh
-cd backend-extract
-SPRING_PROFILES_ACTIVE=demo ./gradlew :app:bootRun --args='--ecp.demo.reset=true'
+cd backend
+SPRING_PROFILES_ACTIVE=dev ./gradlew :app:bootRun --args='--ecp.dev.reset=true'
 ```
 
 Stop the resulting backend process after it reports that the application has started, then use the regular demo command to continue. If unrelated data has introduced a database dependency on a demo record, the transaction fails rather than deleting that data.

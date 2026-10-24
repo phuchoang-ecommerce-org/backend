@@ -1,6 +1,7 @@
 package org.phuchoang.ecp.configuration.security;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.mock.env.MockEnvironment;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -32,5 +33,17 @@ class JwtKeysConfigTest {
     @Test
     void halfConfiguredKeyPathsAreNotTreatedAsKeyFiles() {
         assertThat(new JwtProperties("/keys/private.pem", "", true).hasKeyFiles()).isFalse();
+    }
+
+    @Test
+    void productionRejectsGeneratedKeysAndMixedProfiles() {
+        MockEnvironment production = new MockEnvironment();
+        production.setActiveProfiles("prod");
+        assertThatThrownBy(() -> new JwtKeysConfig().rsaJwk(new JwtProperties("", "", true), production))
+            .hasMessageContaining("Production cannot enable generated development JWT keys");
+
+        production.setActiveProfiles("prod", "dev");
+        assertThatThrownBy(() -> new JwtKeysConfig().rsaJwk(new JwtProperties("", "", false), production))
+            .hasMessageContaining("Activate only one runtime profile");
     }
 }

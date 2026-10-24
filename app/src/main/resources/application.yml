@@ -55,13 +55,12 @@ ecp:
       port: ${ECP_REDIS_STATE_PORT:6380}
   jwt:
     # [ASSUMPTION] Security.md §4.2 — RS256 fallback (not the EdDSA assumption) chosen for this
-    # sprint per Spring Security's NimbusJwtEncoder support. A dev keypair is generated in memory
-    # when no key path is configured (JwtKeysConfig) — never do this in a real environment.
+    # sprint per Spring Security's NimbusJwtEncoder support. The dev profile can generate an
+    # in-memory keypair when no key path is configured; production requires persistent key files.
     private-key-path: ${ECP_JWT_PRIVATE_KEY_PATH:}
     public-key-path: ${ECP_JWT_PUBLIC_KEY_PATH:}
-    # Explicit opt-in for the in-memory dev keypair; the `prod` profile below forces it off so a
-    # production-like deployment without key files fails at startup instead of minting throwaway keys.
-    generate-dev-keys: ${ECP_JWT_GENERATE_DEV_KEYS:true}
+    # Only the dev profile enables throwaway keys. All other starts need configured key files.
+    generate-dev-keys: false
     issuer: ${ECP_JWT_ISSUER:ecp-api}
     access-token-ttl-seconds: ${ECP_JWT_ACCESS_TTL_SECONDS:900}
   password:
@@ -121,12 +120,3 @@ logging:
   structured:
     format:
       console: logstash
-
----
-spring:
-  config:
-    activate:
-      on-profile: prod
-ecp:
-  jwt:
-    generate-dev-keys: false

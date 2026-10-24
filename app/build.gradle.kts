@@ -65,6 +65,10 @@ val integrationTest: SourceSet = sourceSets.create("integrationTest") {
 configurations["integrationTestImplementation"].extendsFrom(configurations.testImplementation.get())
 configurations["integrationTestRuntimeOnly"].extendsFrom(configurations.testRuntimeOnly.get())
 
+tasks.test {
+    environment("ECP_JWT_GENERATE_DEV_KEYS", "true")
+}
+
 dependencies {
     "integrationTestImplementation"(platform(libs.testcontainers.bom))
     "integrationTestImplementation"("org.testcontainers:junit-jupiter")
@@ -89,6 +93,7 @@ val integrationTestTask = tasks.register<Test>("integrationTest") {
     // Integration tests provide PostgreSQL through Testcontainers but do not provision Kafka.
     // Do not make the Spring context wait for KafkaAdmin topic creation.
     environment("SPRING_KAFKA_ADMIN_AUTO_CREATE", "false")
+    environment("ECP_JWT_GENERATE_DEV_KEYS", "true")
 
 }
 

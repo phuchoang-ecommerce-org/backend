@@ -13,19 +13,20 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 /**
- * Explicit local-demo data only. This runner is absent unless the {@code demo} Spring profile is
- * active, so production schema migrations and regular development starts never create accounts or
- * catalog records. IDs and SKUs are stable so {@code ECP_DEMO_RESET=true} can remove only this
- * runner's records after a hands-on demo.
+ * Stable local development fixtures. Production never runs this seeder. Repeated starts restore
+ * missing fixture rows without overwriting edits to existing rows.
  */
 @Component
-@Profile("demo")
+@Profile("dev & !prod")
 class DemoDataSeeder implements ApplicationRunner {
 
     private static final String DEMO_PASSWORD = "DemoPass!2026";
 
     private static final UUID ADMIN_ID = UUID.fromString("10000000-0000-0000-0000-000000000001");
     private static final UUID CUSTOMER_ID = UUID.fromString("10000000-0000-0000-0000-000000000002");
+    private static final UUID STAFF_ID = UUID.fromString("10000000-0000-0000-0000-000000000003");
+    private static final UUID WAREHOUSE_ID = UUID.fromString("10000000-0000-0000-0000-000000000004");
+    private static final UUID SUPPORT_ID = UUID.fromString("10000000-0000-0000-0000-000000000005");
     private static final UUID COFFEE_ID = UUID.fromString("20000000-0000-0000-0000-000000000001");
     private static final UUID BREWING_ID = UUID.fromString("20000000-0000-0000-0000-000000000002");
     private static final UUID KETTLE_ID = UUID.fromString("30000000-0000-4000-8000-000000000001");
@@ -44,7 +45,7 @@ class DemoDataSeeder implements ApplicationRunner {
     private final Argon2PasswordEncoder passwordEncoder;
 
     DemoDataSeeder(JdbcClient jdbc, TransactionTemplate transactions,
-            @Value("${ECP_DEMO_RESET:${ecp.demo.reset:false}}") boolean reset,
+            @Value("${ECP_DEV_RESET:${ecp.dev.reset:false}}") boolean reset,
             @Value("${ecp.password.argon2-salt-length:16}") int saltLength,
             @Value("${ecp.password.argon2-hash-length:32}") int hashLength,
             @Value("${ecp.password.argon2-parallelism:1}") int parallelism,
@@ -70,6 +71,9 @@ class DemoDataSeeder implements ApplicationRunner {
         String passwordHash = passwordEncoder.encode(DEMO_PASSWORD);
         account(ADMIN_ID, "admin@demo.local", "Demo Administrator", passwordHash, "ADMINISTRATOR");
         account(CUSTOMER_ID, "customer@demo.local", "Demo Customer", passwordHash, "CUSTOMER");
+        account(STAFF_ID, "staff@demo.local", "Demo Staff", passwordHash, "STAFF");
+        account(WAREHOUSE_ID, "warehouse@demo.local", "Demo Warehouse Operator", passwordHash, "WAREHOUSE_OPERATOR");
+        account(SUPPORT_ID, "support@demo.local", "Demo Customer Support", passwordHash, "CUSTOMER_SUPPORT");
 
         category(COFFEE_ID, null, "Demo Coffee", "demo-coffee", "/demo-coffee/", 0, true);
         category(BREWING_ID, COFFEE_ID, "Demo Brewing", "demo-brewing", "/demo-coffee/demo-brewing/", 0, false);
@@ -166,7 +170,8 @@ class DemoDataSeeder implements ApplicationRunner {
             KETTLE_ID, GRINDER_ID, MUG_ID, DRAFT_ID, legacyKettleId, legacyGrinderId, legacyMugId, legacyDraftId);
         update("DELETE FROM catalog_category WHERE id = ?", BREWING_ID);
         update("DELETE FROM catalog_category WHERE id = ?", COFFEE_ID);
-        update("DELETE FROM identity_account WHERE id IN (?, ?)", ADMIN_ID, CUSTOMER_ID);
+        update("DELETE FROM identity_account WHERE id IN (?, ?, ?, ?, ?)",
+            ADMIN_ID, CUSTOMER_ID, STAFF_ID, WAREHOUSE_ID, SUPPORT_ID);
     }
 
     private void update(String sql, Object... parameters) {
