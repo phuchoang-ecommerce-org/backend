@@ -76,4 +76,16 @@ class ProductListingSqlBuilderTest {
             .contains("LEFT JOIN LATERAL");
         assertThat(sql.pageParameters()).containsExactly("/c/", 21);
     }
+
+    @Test
+    void completeCatalogBrowseDoesNotRequireACategoryJoinOrPathParameter() {
+        ProductListingQuery query = new ProductListingQuery(null, 20, "default", List.of(), null, null, null);
+
+        ListingSql sql = ProductListingSqlBuilder.build(null, query, null);
+
+        assertThat(sql.countSql()).doesNotContain("catalog_category").doesNotContain("c.path LIKE");
+        assertThat(sql.pageSql()).doesNotContain("catalog_category").doesNotContain("c.path LIKE");
+        assertThat(sql.countParameters()).isEmpty();
+        assertThat(sql.pageParameters()).containsExactly(21);
+    }
 }

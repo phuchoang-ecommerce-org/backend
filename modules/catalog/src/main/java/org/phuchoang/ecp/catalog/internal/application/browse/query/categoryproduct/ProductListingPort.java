@@ -5,12 +5,12 @@ import org.phuchoang.ecp.catalog.internal.application.browse.query.categoryprodu
 
 import java.util.UUID;
 
-/** Read port for keyset-paginated category listings. */
+/** Read port for keyset-paginated product listings. A null category means the complete catalog. */
 public interface ProductListingPort {
 
-    /** Exact membership total for a category subtree and its filters (independent of cursor and sort). */
+    /** Exact membership total for the optional category subtree and its filters. */
     long count(UUID categoryId, ProductListingQuery query);
 
-    /** Published products in the category's subtree, filtered, sorted and paged per {@code query}. */
+    /** Published products in the optional category subtree, filtered, sorted and paged per {@code query}. */
     ProductPage products(UUID categoryId, ProductListingQuery query, long total);
 }

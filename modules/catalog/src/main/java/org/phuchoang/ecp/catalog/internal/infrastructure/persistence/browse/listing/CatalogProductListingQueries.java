@@ -31,14 +31,14 @@ class CatalogProductListingQueries extends JdbcQuerySupport implements ProductLi
 
     @Override
     public long count(UUID categoryId, ProductListingQuery query) {
-        String path = required("SELECT path FROM catalog_category WHERE id = ?", String.class, categoryId);
+        String path = categoryPath(categoryId);
         ListingSql sql = ProductListingSqlBuilder.build(path, query, null);
         return jdbc.sql(sql.countSql()).params(sql.countParameters()).query(Long.class).single();
     }
 
     @Override
     public ProductPage products(UUID categoryId, ProductListingQuery query, long total) {
-        String path = required("SELECT path FROM catalog_category WHERE id = ?", String.class, categoryId);
+        String path = categoryPath(categoryId);
         SeekPosition cursor = cursors.decode(categoryId, query);
         ListingSql sql = ProductListingSqlBuilder.build(path, query, cursor);
         List<ProductListingRow> page = jdbc.sql(sql.pageSql()).params(sql.pageParameters()).query(rows).list();
@@ -49,5 +49,10 @@ class CatalogProductListingQueries extends JdbcQuerySupport implements ProductLi
         }
         String next = hasMore ? cursors.encode(categoryId, query, page.getLast()) : null;
         return new ProductPage(page.stream().map(rows::toSummary).toList(), next, total);
+    }
+
+    private String categoryPath(UUID categoryId) {
+        return categoryId == null ? null
+            : required("SELECT path FROM catalog_category WHERE id = ?", String.class, categoryId);
     }
 }

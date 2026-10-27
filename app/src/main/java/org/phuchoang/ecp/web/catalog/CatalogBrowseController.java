@@ -36,6 +36,7 @@ class CatalogBrowseController {
   private static final Set<String> TREE_PARAMS = Set.of("rootId", "maxDepth");
   private static final Set<String> LISTING_PARAMS = Set.of("cursor", "size", "sort", "brand", "priceFrom", "priceTo",
       "inStock");
+  private static final Set<String> PRODUCT_LISTING_PARAMS = Set.of("cursor", "size", "sort", "brand", "categoryId");
   private static final Set<String> VARIANT_PARAMS = Set.of("options");
 
   private final CatalogBrowseFacade catalog;
@@ -69,10 +70,22 @@ class CatalogBrowseController {
         : toSort(SortSpec.parse(sort,
             Set.of("price", "createdAt", "popularity")));
     ProductPageView page = catalog.listCategoryProducts(categoryId,
-        new CatalogListingQuery(cursor, Pagination.clampSize(size), resolvedSort,
-            brands == null ? List.of() : List.copyOf(brands), priceFrom, priceTo, inStock));
-    return new PageEnvelope<>(new ArrayList<>(page.items()),
-        new Page(page.items().size(), page.nextCursor(), page.total()));
+        listingQuery(cursor, size, resolvedSort, brands, priceFrom, priceTo, inStock));
+    return pageEnvelope(page);
+  }
+
+  @GetMapping("/api/v1/products")
+  PageEnvelope<Object> listProducts(HttpServletRequest request,
+      @RequestParam(required = false) String cursor, @RequestParam(required = false) Integer size,
+      @RequestParam(required = false) String sort, @RequestParam(name = "brand", required = false) List<String> brands,
+      @RequestParam(required = false) UUID categoryId) {
+    QueryParams.rejectUnknown(request, PRODUCT_LISTING_PARAMS);
+    String resolvedSort = sort == null || sort.isBlank() ? "default"
+        : toSort(SortSpec.parse(sort, Set.of("price", "createdAt", "popularity")));
+    CatalogListingQuery query = listingQuery(cursor, size, resolvedSort, brands, null, null, null);
+    ProductPageView page = categoryId == null ? catalog.listProducts(query)
+        : catalog.listCategoryProducts(categoryId, query);
+    return pageEnvelope(page);
   }
 
   @GetMapping("/api/v1/products/{productId}/variants")
@@ -89,6 +102,17 @@ class CatalogBrowseController {
 
   private static String toSort(SortSpec sort) {
     return sort.field() + ":" + (sort.descending() ? "desc" : "asc");
+  }
+
+  private static CatalogListingQuery listingQuery(String cursor, Integer size, String sort, List<String> brands,
+      BigDecimal priceFrom, BigDecimal priceTo, Boolean inStock) {
+    return new CatalogListingQuery(cursor, Pagination.clampSize(size), sort,
+        brands == null ? List.of() : List.copyOf(brands), priceFrom, priceTo, inStock);
+  }
+
+  private static PageEnvelope<Object> pageEnvelope(ProductPageView page) {
+    return new PageEnvelope<>(new ArrayList<>(page.items()),
+        new Page(page.items().size(), page.nextCursor(), page.total()));
   }
 
   private static Map<String, String> options(List<String> rawOptions) {

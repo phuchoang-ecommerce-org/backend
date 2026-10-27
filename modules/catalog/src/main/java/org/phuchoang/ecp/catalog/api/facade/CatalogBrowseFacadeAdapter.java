@@ -52,6 +52,13 @@ public class CatalogBrowseFacadeAdapter implements CatalogBrowseFacade {
 
     @Override
     /** {@inheritDoc} */
+    public ProductPageView listProducts(CatalogListingQuery query) {
+        return CatalogApiErrors.translate(() ->
+            mapper.productPageView(categoryProducts.listProducts(mapper.listingQuery(query))));
+    }
+
+    @Override
+    /** {@inheritDoc} */
     public List<VariantView> listProductVariants(UUID productId, Map<String, String> options) {
         return CatalogApiErrors.translate(() ->
             variants.listProductVariants(productId, options).stream().map(mapper::variantView).toList());

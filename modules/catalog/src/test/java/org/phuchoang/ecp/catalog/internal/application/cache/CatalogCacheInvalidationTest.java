@@ -25,6 +25,8 @@ class CatalogCacheInvalidationTest {
         assertThat(CatalogCacheKeys.categoryTree()).isEqualTo("category-tree");
         assertThat(CatalogCacheKeys.categoryListing(id, "fp")).isEqualTo("category-listing:" + id + ":fp")
             .startsWith(CatalogCacheKeys.categoryListingPrefix(id));
+        assertThat(CatalogCacheKeys.productListing("fp")).isEqualTo("product-listing:fp")
+            .startsWith(CatalogCacheKeys.productListingPrefix());
     }
 
     @Test
@@ -32,6 +34,7 @@ class CatalogCacheInvalidationTest {
         UUID productId = UUID.randomUUID();
         invalidation.productChanged(productId);
         verify(cache).invalidate("cat:product:" + productId);
+        verify(cache).invalidateByPrefix("product-listing:");
         verifyNoMoreInteractions(cache);
     }
 

@@ -87,6 +87,19 @@ class ProductQueryServiceTest {
     }
 
     @Test
+    void completeCatalogListingsUseTheGlobalListingCachePrefix() {
+        ProductListingQuery query = new ProductListingQuery(null, 20, "default", List.of(), null, null, null);
+        ProductPage page = new ProductPage(List.of(), null, 0);
+        when(listings.count(null, query)).thenReturn(0L);
+        when(listings.products(null, query, 0L)).thenReturn(page);
+
+        assertThat(listingsQuery.listProducts(query)).isEqualTo(page);
+
+        assertThat(cache.key.get()).startsWith("product-listing:");
+        assertThat(cache.ttl.get()).isEqualTo(Duration.ofMinutes(5));
+    }
+
+    @Test
     void anUnknownCategoryIsNotFoundRatherThanAnEmptyListing() {
         UUID categoryId = UUID.randomUUID();
         when(categories.categoryExists(categoryId)).thenReturn(false);

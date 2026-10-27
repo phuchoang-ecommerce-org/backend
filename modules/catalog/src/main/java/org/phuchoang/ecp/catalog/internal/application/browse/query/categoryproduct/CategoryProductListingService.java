@@ -37,6 +37,15 @@ public class CategoryProductListingService {
             ProductPage.class);
     }
 
+    /** Lists published products without restricting them to one category subtree. */
+    public ProductPage listProducts(ProductListingQuery query) {
+        long total = cache.getOrLoad(CatalogCacheKeys.productListing("total:" + countFingerprint(query)),
+            CatalogCachePolicy.BROWSE_TTL, () -> listings.count(null, query), Long.class);
+        String key = CatalogCacheKeys.productListing(fingerprint(query));
+        return cache.getOrLoad(key, CatalogCachePolicy.BROWSE_TTL, () -> listings.products(null, query, total),
+            ProductPage.class);
+    }
+
     /** A stable cache-key suffix for every listing input that affects a result. */
     static String fingerprint(ProductListingQuery query) {
         String raw = String.join("|", String.valueOf(query.cursor()), String.valueOf(query.size()),

@@ -22,6 +22,7 @@ public class CatalogCacheInvalidation {
 
     public void productChanged(UUID productId) {
         cache.invalidate(CatalogCacheKeys.product(productId));
+        cache.invalidateByPrefix(CatalogCacheKeys.productListingPrefix());
     }
 
     public void variantsChanged(List<UUID> variantIds) {

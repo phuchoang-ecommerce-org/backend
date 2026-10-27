@@ -31,7 +31,8 @@ class CartApiMapperTest {
         CartView apiView = mapper.cartView(applicationView);
         AddCartLineCommand command = mapper.addCartLineCommand(new CartLineWrite(variantId, 2));
 
-        assertThat(apiView).extracting(CartView::id, CartView::subtotal).containsExactly(cartId, new MoneyView(new BigDecimal("25.00"), "USD"));
+        assertThat(apiView).extracting(CartView::id, CartView::subtotal)
+            .containsExactly(cartId, new MoneyView(new BigDecimal("25.00"), "USD"));
         assertThat(apiView.lines()).singleElement().extracting(CartLineView::id, CartLineView::variantId, CartLineView::quantity)
             .containsExactly(lineId, variantId, 2);
         assertThat(command).isEqualTo(new AddCartLineCommand(variantId, 2));

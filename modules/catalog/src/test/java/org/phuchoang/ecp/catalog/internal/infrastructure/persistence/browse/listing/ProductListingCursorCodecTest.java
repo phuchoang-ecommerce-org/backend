@@ -54,6 +54,18 @@ class ProductListingCursorCodecTest {
             new ProductListingQuery(" ", 2, "default", List.of(), null, null, null))).isNull();
     }
 
+    @Test
+    void completeCatalogCursorRoundTripsAndCannotBeReplayedForACategory() {
+        ProductListingQuery query = new ProductListingQuery(null, 2, "default", List.of(), null, null, null);
+        ProductListingRow last = row("Mug", new BigDecimal("42.00"));
+
+        String encoded = codec.encode(null, query, last);
+
+        assertThat(codec.decode(null, withCursor(query, encoded)).productId()).isEqualTo(last.id());
+        assertThatThrownBy(() -> codec.decode(UUID.randomUUID(), withCursor(query, encoded)))
+            .isInstanceOf(InvalidCursorException.class);
+    }
+
     private static ProductListingQuery withCursor(ProductListingQuery query, String cursor) {
         return new ProductListingQuery(cursor, query.size(), query.sort(), query.brands(), query.priceFrom(),
             query.priceTo(), query.inStock());

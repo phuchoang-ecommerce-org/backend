@@ -45,6 +45,14 @@ public interface CatalogBrowseFacade {
     ProductPageView listCategoryProducts(UUID categoryId, CatalogListingQuery query);
 
     /**
+     * Lists every published product across the catalog.
+     *
+     * @param query pagination, sort, and optional filter parameters
+     * @return the requested page of published products
+     */
+    ProductPageView listProducts(CatalogListingQuery query);
+
+    /**
      * Returns variants compatible with a complete or partial option selection.
      *
      * @param productId published product that owns the variants

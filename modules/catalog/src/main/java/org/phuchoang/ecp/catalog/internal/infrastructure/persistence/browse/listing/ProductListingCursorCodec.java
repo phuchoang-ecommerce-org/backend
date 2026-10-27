@@ -52,7 +52,7 @@ final class ProductListingCursorCodec {
         String brands = query.brands().stream().distinct().sorted()
             .map(brand -> Base64.getUrlEncoder().withoutPadding().encodeToString(brand.getBytes(StandardCharsets.UTF_8)))
             .collect(Collectors.joining(","));
-        return new CursorContext(SCOPE, categoryId.toString(), query.sort(), Map.of(
+        return new CursorContext(SCOPE, categoryId == null ? "all" : categoryId.toString(), query.sort(), Map.of(
             "brands", brands,
             "priceFrom", normalizedDecimal(query.priceFrom()),
             "priceTo", normalizedDecimal(query.priceTo()),

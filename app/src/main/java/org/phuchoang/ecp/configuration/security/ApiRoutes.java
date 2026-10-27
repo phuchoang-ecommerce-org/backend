@@ -28,6 +28,7 @@ final class ApiRoutes {
         "/api/v1/categories",
         "/api/v1/categories/*",
         "/api/v1/categories/*/products",
+        "/api/v1/products",
         "/api/v1/products/*",
         "/api/v1/products/*/rating-summary",
         "/api/v1/products/*/variants",
