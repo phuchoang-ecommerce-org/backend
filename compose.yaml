@@ -1,28 +1,91 @@
+x-gradle-service: &gradle-service
+  build:
+    context: .
+    dockerfile: docker/gradle/Dockerfile
+    args:
+      LOCAL_UID: '${LOCAL_UID:-1000}'
+      LOCAL_GID: '${LOCAL_GID:-1000}'
+  working_dir: /workspace
+  user: '${LOCAL_UID:-1000}:${LOCAL_GID:-1000}'
+  group_add:
+    - '${DOCKER_GID:-0}'
+  environment:
+    GRADLE_USER_HOME: /home/gradle/.gradle
+    DOCKER_HOST: unix:///var/run/docker.sock
+    TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE: /var/run/docker.sock
+    TESTCONTAINERS_HOST_OVERRIDE: host.docker.internal
+  extra_hosts:
+    - 'host.docker.internal:host-gateway'
+  volumes:
+    - .:/workspace
+    - gradle-cache:/home/gradle/.gradle
+    - /var/run/docker.sock:/var/run/docker.sock
+
 services:
+  gradle:
+    <<: *gradle-service
+    profiles: [tools]
+
+  app:
+    <<: *gradle-service
+    profiles: [app]
+    command: [':app:bootRun', "--args=--spring.profiles.active=${APP_PROFILE:-dev}"]
+    env_file:
+      - '${APP_ENV_FILE:-docker/app/dev.env}'
+    ports:
+      - '8080:8080'
+      - '9001:9001'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis-cache:
+        condition: service_healthy
+      redis-state:
+        condition: service_healthy
+
   postgres:
     image: 'postgres:16'
     environment:
-      - 'POSTGRES_DB=ecp'
-      - 'POSTGRES_PASSWORD=secret'
+      POSTGRES_DB: '${POSTGRES_DB:-ecp}'
+      POSTGRES_USER: '${POSTGRES_USER:-postgres}'
+      POSTGRES_PASSWORD: '${POSTGRES_PASSWORD:-secret}'
     ports:
       - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 5s
+      retries: 12
   kafka:
     image: 'confluentinc/cp-kafka:7.7.1'
     environment:
       - 'CLUSTER_ID=JrIAvK6zTLazVsN9pjMvhA'
       - 'KAFKA_NODE_ID=1'
       - 'KAFKA_PROCESS_ROLES=broker,controller'
-      - 'KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093'
-      - 'KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092'
+      - 'KAFKA_LISTENERS=INTERNAL://0.0.0.0:29092,EXTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093'
+      - 'KAFKA_ADVERTISED_LISTENERS=INTERNAL://kafka:29092,EXTERNAL://localhost:9092'
       - 'KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER'
       - 'KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka:9093'
-      - 'KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'
+      - 'KAFKA_INTER_BROKER_LISTENER_NAME=INTERNAL'
+      - 'KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT'
       - 'KAFKA_AUTO_CREATE_TOPICS_ENABLE=false'
       - 'KAFKA_DEFAULT_REPLICATION_FACTOR=1'
       - 'KAFKA_MIN_INSYNC_REPLICAS=1'
       - 'KAFKA_NUM_PARTITIONS=3'
+      - 'KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1'
+      - 'KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1'
+      - 'KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1'
     ports:
       - '9092:9092'
+    healthcheck:
+      test: ['CMD-SHELL', 'kafka-topics --bootstrap-server localhost:9092 --list >/dev/null 2>&1']
+      interval: 10s
+      timeout: 10s
+      retries: 12
   elasticsearch:
     image: 'docker.elastic.co/elasticsearch/elasticsearch:9.3.3'
     environment:
@@ -56,6 +119,11 @@ services:
       --tcp-keepalive 60
     ports:
       - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 12
   redis-state:
     image: 'redis:7'
     command: >-
@@ -69,3 +137,15 @@ services:
       --tcp-keepalive 60
     ports:
       - '6380:6379'
+    volumes:
+      - redis-state-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+volumes:
+  gradle-cache:
+  postgres-data:
+  redis-state-data:

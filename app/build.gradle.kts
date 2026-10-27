@@ -91,8 +91,9 @@ val integrationTestTask = tasks.register<Test>("integrationTest") {
     useJUnitPlatform()
     shouldRunAfter(tasks.test)
     // Integration tests provide PostgreSQL through Testcontainers but do not provision Kafka.
-    // Do not make the Spring context wait for KafkaAdmin topic creation.
+    // Do not make full Spring contexts start listeners or wait for KafkaAdmin topic creation.
     environment("SPRING_KAFKA_ADMIN_AUTO_CREATE", "false")
+    environment("SPRING_KAFKA_LISTENER_AUTO_STARTUP", "false")
     environment("ECP_JWT_GENERATE_DEV_KEYS", "true")
 
 }

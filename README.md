@@ -20,13 +20,35 @@ Cross-module edges are limited to exactly what [`Module Dependency Diagram.md`](
 
 ## Running
 
+Only Docker with Compose is required on the host. Use the containerized Gradle
+wrapper for builds and tests; the JDK, Gradle runtime, dependency cache, and
+Testcontainers Docker access are provided by the `gradle` Compose service.
+
 ```sh
-./gradlew build          # compiles all 14 modules
-./gradlew check          # runs test (L1-L3) + integrationTest (L4-L6) in every module
-docker compose up -d postgres kafka redis-cache redis-state
-./gradlew :app:bootRun --args='--spring.profiles.active=dev'   # seeded local API on :8080
-curl localhost:8080/healthz   # -> OK
+./gradlew-docker build          # compiles and tests all 14 modules
+./gradlew-docker check          # runs test (L1-L3) + integrationTest (L4-L6)
+./gradlew-docker :identity:test # runs one module's tests
 ```
+
+The named `gradle-cache` volume keeps wrapper distributions and dependencies
+between runs. Source and build outputs stay in the working tree and retain the
+host user's ownership. Any Gradle arguments can be passed after
+`./gradlew-docker`.
+
+Compose also keeps PostgreSQL and correctness-bearing Redis state in the named
+`postgres-data` and `redis-state-data` volumes, so container recreation does
+not erase them. `docker compose down -v` intentionally removes those volumes.
+
+The `app` Compose profile runs the API without a local JDK. Kafka keeps
+separate internal (`kafka:29092`) and host (`localhost:9092`) listeners.
+Running Compose without a profile still starts only the data services:
+
+```sh
+docker compose up -d postgres kafka redis-cache redis-state
+```
+
+Direct `./gradlew` commands remain available for environments that already
+provide JDK 21, but they are not required for local development.
 
 ### Runtime profiles
 
@@ -40,20 +62,66 @@ Use exactly one profile. Both profiles enforce bearer authentication and server-
   reference-role migrations but creates no mock accounts or catalog fixtures. Flyway clean remains
   disabled and Hibernate only validates the schema.
 
+#### Start the dev profile
+
+The default app command selects Spring's `dev` profile and loads
+[`docker/app/dev.env`](docker/app/dev.env), whose connection values use Compose
+service names:
+
 ```sh
-./gradlew :app:bootRun --args='--spring.profiles.active=dev'
-SPRING_PROFILES_ACTIVE=prod SPRING_DATASOURCE_URL=... SPRING_DATASOURCE_USERNAME=... \
-  SPRING_DATASOURCE_PASSWORD=... ECP_JWT_PRIVATE_KEY_PATH=... ECP_JWT_PUBLIC_KEY_PATH=... \
-  ECP_CURSOR_ACTIVE_KEY=... ./gradlew :app:bootRun
+./compose-docker --profile app up --build app
+curl localhost:8080/healthz   # -> OK
 ```
 
-`bootRun` loads local configuration from `.env` when it exists, or from the development defaults
-in `.env.example` otherwise. Copy the template before changing values: `cp .env.example .env`.
+Stop it with `./compose-docker --profile app down`.
+
+Or start the dev profile with  
+
+```sh
+./gradlew :app:bootRun --args='--spring.profiles.active=dev'
+```
+
+#### Start the prod profile locally
+
+Copy the production template and replace its database password, cursor signing
+key, JWT key paths, and any integration secrets. `.env.prod` and `.secrets/`
+are ignored by Git. The JWT files must be an RSA PKCS#8 private key and matching
+X.509 public key at paths visible inside the container.
+
+```sh
+cp .env.prod.example .env.prod
+mkdir -p .secrets
+# Add .secrets/jwt-private.pem and .secrets/jwt-public.pem, then edit .env.prod.
+
+APP_PROFILE=prod APP_ENV_FILE=.env.prod \
+  ./compose-docker --env-file .env.prod --profile app up --build app
+curl localhost:8080/actuator/health/readiness
+```
+
+or start the prod profile with:
+
+```sh
+./gradlew :app:bootRun --args='--spring.profiles.active=prod'
+```
+
+This command uses Spring's `prod` profile against the local Compose data tier,
+but does not seed demo accounts or catalog data. For external infrastructure,
+replace the PostgreSQL, Kafka, and Redis endpoints in `.env.prod`. Keep the
+`APP_PROFILE`, `APP_ENV_FILE`, and `--env-file .env.prod` settings on every
+Compose command, including `down`, so Compose resolves the same app
+configuration.
+
+When `bootRun` is invoked directly rather than through the `app` Compose
+service, it still loads `.env` when present and falls back to `.env.example`.
 
 For a real local frontend/backend walkthrough with seeded session and catalog records, see
 [`docs/local-demo.md`](docs/local-demo.md).
 
-`./gradlew check` needs Docker Desktop running for the `integrationTest` (L4-L6) source set — `docker compose up` brings up the local data tier (PostgreSQL, Kafka, Elasticsearch, MongoDB, Redis) from `compose.yaml`, and Testcontainers starts its own PostgreSQL container for `app`'s `PostgresConnectivityIT` independently of Compose.
+`./gradlew-docker check` passes the Docker socket into the build container for the `integrationTest` (L4-L6) source set. Testcontainers starts its own PostgreSQL container for `app`'s `PostgresConnectivityIT` independently of Compose; the local data tier does not need to be running first. The build container maps `host.docker.internal` to Docker's host gateway so the Testcontainers cleanup process can call back into the test JVM.
+
+On Linux, `gradlew-docker` detects the Docker socket's group automatically. If
+the daemon uses a nonstandard socket or remote transport, set `DOCKER_GID` and
+adapt the socket volume in `compose.yaml` for that daemon.
 
 Testcontainers reuse is a per-developer opt-in, not a repo setting — add `testcontainers.reuse.enable=true` to `~/.testcontainers.properties` to keep a container warm across local `integrationTest` runs. Leave it unset in CI.
 

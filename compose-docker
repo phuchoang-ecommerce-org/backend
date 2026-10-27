@@ -1,0 +1,17 @@
+#!/bin/sh
+set -eu
+
+# Keep container-written source/build files owned by the current host user and
+# grant the build user access to the Docker socket when Testcontainers is used.
+LOCAL_UID="${LOCAL_UID:-$(id -u)}"
+LOCAL_GID="${LOCAL_GID:-$(id -g)}"
+DOCKER_GID="${DOCKER_GID:-0}"
+
+if [ -S /var/run/docker.sock ]; then
+    DOCKER_GID="$(stat -c '%g' /var/run/docker.sock 2>/dev/null \
+        || stat -f '%g' /var/run/docker.sock)"
+fi
+
+export LOCAL_UID LOCAL_GID DOCKER_GID
+
+exec docker compose "$@"

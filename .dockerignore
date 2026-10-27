@@ -1,0 +1,13 @@
+.git
+.github
+.gradle
+.idea
+.zed
+.env
+.env.prod
+.secrets
+**/build
+**/out
+docs
+HELP.md
+*.iml

@@ -1,5 +1,7 @@
 HELP.md
 .env
+.env.prod
+.secrets/
 .DS_Store
 .gradle
 build/

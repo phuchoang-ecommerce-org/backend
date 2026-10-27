@@ -2,7 +2,7 @@
     "lsp": {
     "jdtls": {
       "settings": {
-        "java_home": "/Library/Java/JavaVirtualMachines/jdk-21-macports.jdk/Contents/Home",
+        "java_home": "/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home",
         "lombok_support": true,
 
         "data_directory": "~/.cache/zed/jdtls",
@@ -38,7 +38,7 @@
 
     "gradle-language-server": {
       "settings": {
-        "java_home": "/Library/Java/JavaVirtualMachines/jdk-21-macports.jdk/Contents/Home",
+        "java_home": "/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home",
         "gradleWrapperEnabled": true
       }
     }
