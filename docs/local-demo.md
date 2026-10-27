@@ -55,7 +55,7 @@ Never reuse these credentials outside a local machine.
 
    Wait for `http://localhost:8080/healthz` and open `http://localhost:3000`.
 
-The first dev-profile startup seeds five accounts, two categories, three published products with local image assets, five variants, availability states, and one admin-only draft product. Later starts restore missing fixture rows and preserve edits to existing rows.
+The first dev-profile startup seeds five accounts, eight categories, 33 published products, 35 variants, availability states, and one admin-only draft product. Thirty catalog items are distributed across six collections so the storefront's 24-item cursor page has a stable second page. Later starts restore missing fixture rows and preserve edits to existing rows.
 
 ## Reset the demo records
 

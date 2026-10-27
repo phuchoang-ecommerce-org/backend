@@ -77,6 +77,11 @@ class DemoDataSeeder implements ApplicationRunner {
 
         category(COFFEE_ID, null, "Demo Coffee", "demo-coffee", "/demo-coffee/", 0, true);
         category(BREWING_ID, COFFEE_ID, "Demo Brewing", "demo-brewing", "/demo-coffee/demo-brewing/", 0, false);
+        for (int index = 1; index <= 6; index++) {
+            UUID categoryId = UUID.fromString("21000000-0000-0000-0000-%012d".formatted(index));
+            category(categoryId, null, "Demo Collection %02d".formatted(index),
+                "demo-collection-%02d".formatted(index), "/demo-collection-%02d/".formatted(index), index, false);
+        }
 
         product(KETTLE_ID, BREWING_ID, "Demo Pour-Over Kettle", "demo-pour-over-kettle",
             "A precise gooseneck kettle for a hands-on storefront detail demo.", "ECP Demo", "PUBLISHED");
@@ -86,6 +91,17 @@ class DemoDataSeeder implements ApplicationRunner {
             "An insulated mug seeded with an out-of-stock advisory state.", "ECP Demo", "PUBLISHED");
         product(DRAFT_ID, BREWING_ID, "Demo Draft Scale", "demo-draft-scale",
             "An admin-only draft record for publication workflow testing.", "ECP Demo", "DRAFT");
+        for (int index = 1; index <= 30; index++) {
+            UUID categoryId = UUID.fromString("21000000-0000-0000-0000-%012d".formatted(((index - 1) % 6) + 1));
+            UUID productId = UUID.fromString("31000000-0000-0000-0000-%012d".formatted(index));
+            UUID variantId = UUID.fromString("41000000-0000-0000-0000-%012d".formatted(index));
+            product(productId, categoryId, "Demo Catalog Item %02d".formatted(index),
+                "demo-catalog-item-%02d".formatted(index),
+                "A stable development fixture used to exercise cursor pagination.", "ECP Demo", "PUBLISHED");
+            variant(variantId, productId, "DEMO-PAGE-%02d".formatted(index), "Standard",
+                new BigDecimal("20.00").add(BigDecimal.valueOf(index)),
+                "{\"fixture\":\"pagination\"}", true, true);
+        }
 
         variant(KETTLE_BLACK_ID, KETTLE_ID, "DEMO-KETTLE-BLK", "Matte black", new BigDecimal("59.00"),
             "{\"color\":\"Black\"}", true, true);
@@ -157,6 +173,14 @@ class DemoDataSeeder implements ApplicationRunner {
         UUID legacyGrinderId = UUID.fromString("30000000-0000-0000-0000-000000000002");
         UUID legacyMugId = UUID.fromString("30000000-0000-0000-0000-000000000003");
         UUID legacyDraftId = UUID.fromString("30000000-0000-0000-0000-000000000004");
+
+        update("DELETE FROM catalog_outbox WHERE aggregate_id IN "
+            + "(SELECT id FROM catalog_product WHERE slug LIKE 'demo-catalog-item-%')");
+        update("DELETE FROM catalog_variant WHERE product_id IN "
+            + "(SELECT id FROM catalog_product WHERE slug LIKE 'demo-catalog-item-%')");
+        update("DELETE FROM catalog_retired_sku WHERE sku LIKE 'DEMO-PAGE-%'");
+        update("DELETE FROM catalog_product WHERE slug LIKE 'demo-catalog-item-%'");
+        update("DELETE FROM catalog_category WHERE slug LIKE 'demo-collection-%'");
 
         update("DELETE FROM catalog_outbox WHERE aggregate_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             KETTLE_ID, GRINDER_ID, MUG_ID, DRAFT_ID, legacyKettleId, legacyGrinderId, legacyMugId, legacyDraftId,

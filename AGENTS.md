@@ -20,6 +20,11 @@ You can find the Sprint plan of this project in [Plan](docs/scrum-plan)
 
 Run a focused module test with `./gradlew :identity:test`. Initialize the documentation submodule after cloning with `git submodule update --init --recursive`.
 
+> [!IMPORTANT]
+> Only use TESTCONTAINER when the prompt asks for it. Don't use it automatically.
+>
+> Only use JDK and Gradle in Docker setup when the prompt asks for it. Don't use it automatically.
+
 ## Coding Style & Naming Conventions
 
 Use Java 21, four-space indentation, and the existing idiomatic Spring/Java style. Package names are lowercase under `org.phuchoang.ecp`; classes and records use `PascalCase`, methods and fields use `camelCase`, and constants use `UPPER_SNAKE_CASE`. Name application services by intent — one focused use case per class (for example, `CreateProductService`), or one cohesive capability where the workflows share collaborators (for example, `RegistrationUseCases`) — and tests with a `Test` suffix. Preserve package-level `package-info.java` Modulith declarations when changing dependencies; every nested `api.*` sub-package needs its own `@NamedInterface("api")` package-info, because Spring Modulith 2.x scopes a package-level named interface to that single package.
