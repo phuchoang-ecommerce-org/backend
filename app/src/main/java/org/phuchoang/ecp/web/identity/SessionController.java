@@ -1,7 +1,6 @@
 package org.phuchoang.ecp.web.identity;
 
 import jakarta.validation.Valid;
-import jakarta.servlet.http.HttpServletResponse;
 import org.phuchoang.ecp.cart.api.CartFacade;
 import org.phuchoang.ecp.cart.api.CartMergeNotice;
 import org.phuchoang.ecp.cart.api.CartMergeResult;
@@ -13,42 +12,36 @@ import org.phuchoang.ecp.identity.api.view.SessionResponse;
 import org.phuchoang.ecp.web.common.security.RequestContextResolver;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
-import java.util.List;
 import java.util.UUID;
 
 /** `logIn`, `logOut`, `endAllOwnSessions` (`UC-CUS-03`, `UC-CUS-04`), `renewSession` (`UC-CUS-05`). */
 @RestController
 @lombok.RequiredArgsConstructor(access = lombok.AccessLevel.PACKAGE)
 class SessionController {
-    private static final String GUEST_CART_COOKIE = "ecp_guest_cart";
-
     private final IdentityFacade identityFacade;
     private final CartFacade carts;
     private final RequestContextResolver requestContext;
 
     @PostMapping("/api/v1/sessions")
-    ResponseEntity<SessionResponse> logIn(@Valid @RequestBody LoginRequest request,
-            @CookieValue(name = GUEST_CART_COOKIE, required = false) String guestToken, HttpServletResponse response) {
+    ResponseEntity<SessionResponse> logIn(@Valid @RequestBody LoginRequest request) {
         SessionResponse session = identityFacade.logIn(request);
-        if (guestToken != null && !guestToken.isBlank()) {
+        if (request.guestCartId() != null) {
             try {
-                CartMergeResult merge = carts.mergeGuestCart(UUID.fromString(session.account().id()), guestToken);
-                session = withCartMergeNotices(session, merge.notices().stream().map(SessionController::notice).toList());
-                if (merge.merged()) clearGuestCartCookie(response);
+                CartMergeResult merge = carts.mergeGuestCart(UUID.fromString(session.account().id()), request.guestCartId().toString());
+                session = withCartMergeOutcome(session, merge);
             } catch (RuntimeException exception) {
-                // UC-CUS-03 E4: session issuance has already succeeded; preserve the cookie for retry.
-                session = withCartMergeNotices(session, List.of("Your guest cart could not be recovered yet; retrying sign-in will recover your items."));
+                // UC-CUS-03 E4: session issuance has already succeeded; preserve the guest cart for retry.
+                session = new SessionResponse(session.accessToken(), session.refreshToken(), session.expiresIn(),
+                    session.restricted(), session.account(), new SessionResponse.CartMergeOutcome(false, null, null));
             }
         }
 
@@ -57,23 +50,21 @@ class SessionController {
             .body(session);
     }
 
-    private static String notice(CartMergeNotice notice) {
-        String item = notice.productName() == null || notice.productName().isBlank() ? notice.sku() : notice.productName();
-        return switch (notice.reason()) {
-            case DROPPED_UNPUBLISHED -> item + " was not carried over because it is no longer published.";
-            case QUANTITY_REDUCED_TO_AVAILABLE -> item + " was reduced to " + notice.quantity() + " because of available stock.";
-            case RETAINED_OUT_OF_STOCK -> item + " was carried over but is currently out of stock.";
-        };
-    }
-
-    private static SessionResponse withCartMergeNotices(SessionResponse session, List<String> notices) {
+    private static SessionResponse withCartMergeOutcome(SessionResponse session, CartMergeResult merge) {
         return new SessionResponse(session.accessToken(), session.refreshToken(), session.expiresIn(), session.restricted(),
-            session.account(), notices);
+            session.account(), new SessionResponse.CartMergeOutcome(merge.merged(), null,
+                merge.notices().stream().map(SessionController::adjustment).toList()));
     }
 
-    private static void clearGuestCartCookie(HttpServletResponse response) {
-        response.addHeader("Set-Cookie", ResponseCookie.from(GUEST_CART_COOKIE, "").httpOnly(true).secure(true)
-            .sameSite("Lax").path("/api/v1/carts").maxAge(0).build().toString());
+    private static SessionResponse.CartMergeAdjustment adjustment(CartMergeNotice notice) {
+        return switch (notice.reason()) {
+            case DROPPED_UNPUBLISHED -> new SessionResponse.CartMergeAdjustment(
+                notice.variantId(), "DROPPED", null, null, null);
+            case QUANTITY_REDUCED_TO_AVAILABLE -> new SessionResponse.CartMergeAdjustment(
+                notice.variantId(), "QUANTITY_CAPPED", null, notice.quantity(), null);
+            case RETAINED_OUT_OF_STOCK -> new SessionResponse.CartMergeAdjustment(
+                notice.variantId(), "CARRIED_UNPURCHASABLE", notice.quantity(), notice.quantity(), null);
+        };
     }
 
     @DeleteMapping("/api/v1/sessions/current")

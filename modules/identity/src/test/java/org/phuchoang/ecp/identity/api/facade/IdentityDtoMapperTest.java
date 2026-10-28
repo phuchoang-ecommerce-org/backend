@@ -22,7 +22,7 @@ class IdentityDtoMapperTest {
     private final IdentityDtoMapper mapper = Mappers.getMapper(IdentityDtoMapper.class);
 
     @Test
-    void mapsNewSessionWithAnEmptyCartMergeNoticeList() {
+    void mapsNewSessionWithoutACartMergeOutcome() {
         AccountSummary account = new AccountSummary(UUID.randomUUID().toString(), "customer@example.com",
             null, "ACTIVE", "UNVERIFIED", null, Set.of("CUSTOMER"), null, null, null);
 
@@ -30,7 +30,7 @@ class IdentityDtoMapperTest {
 
         assertThat(session.accessToken()).isEqualTo("access");
         assertThat(session.refreshToken()).isEqualTo("refresh");
-        assertThat(session.cartMergeNotices()).isEmpty();
+        assertThat(session.cartMerge()).isNull();
     }
 
     @Test

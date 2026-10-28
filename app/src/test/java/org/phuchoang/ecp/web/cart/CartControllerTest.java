@@ -49,11 +49,12 @@ class CartControllerTest {
         given(requestContext.resolve(null)).willReturn(new RequestContext(UUID.randomUUID(), IdentityActor.GUEST));
         given(carts.getCurrentCart(IdentityActor.GUEST, "guest-token")).willReturn(new CartView(UUID.randomUUID(),
             null, "ACTIVE", List.of(), new MoneyView(new BigDecimal("0.0000"), "USD"), now,
-            now.plusSeconds(604800), false));
+            now.plusSeconds(604800)));
 
         mockMvc.perform(get("/api/v1/carts/current").cookie(new Cookie("ecp_guest_cart", "guest-token")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.subtotal.amount").value("0.0000"))
-            .andExpect(jsonPath("$.subtotal.currency").value("USD"));
+            .andExpect(jsonPath("$.subtotal.currency").value("USD"))
+            .andExpect(jsonPath("$.expired").doesNotExist());
     }
 }

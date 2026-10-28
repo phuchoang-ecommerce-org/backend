@@ -83,34 +83,39 @@ class SessionControllerTest {
     }
 
     @Test
-    void successfulGuestCartMergeClearsTheCookieOnlyAfterTheCartFacadeConfirmsIt() throws Exception {
+    void successfulGuestCartMergeReturnsTheContractOutcome() throws Exception {
         SessionResponse session = session();
+        String guestCartId = "018f3c2a-0000-7000-8000-000000000001";
         BDDMockito.given(identityFacade.logIn(any(LoginRequest.class))).willReturn(session);
-        BDDMockito.given(carts.mergeGuestCart(java.util.UUID.fromString(session.account().id()), "guest-token"))
+        BDDMockito.given(carts.mergeGuestCart(java.util.UUID.fromString(session.account().id()), guestCartId))
             .willReturn(new CartMergeResult(true, java.util.List.of(new CartMergeNotice(java.util.UUID.randomUUID(), "SKU-1", "T-Shirt",
                 CartMergeNotice.Reason.RETAINED_OUT_OF_STOCK, 2))));
 
-        mockMvc.perform(post("/api/v1/sessions").with(csrf()).cookie(new jakarta.servlet.http.Cookie("ecp_guest_cart", "guest-token"))
-                .contentType(MediaType.APPLICATION_JSON).content("{\"email\":\"customer@example.com\",\"password\":\"Str0ngPassword\"}"))
+        mockMvc.perform(post("/api/v1/sessions").with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"customer@example.com\",\"password\":\"Str0ngPassword\",\"guestCartId\":\"" + guestCartId + "\"}"))
             .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.cartMergeNotices[0]").value("T-Shirt was carried over but is currently out of stock."))
-            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Set-Cookie", org.hamcrest.Matchers.containsString("Max-Age=0")));
+            .andExpect(jsonPath("$.cartMerge.merged").value(true))
+            .andExpect(jsonPath("$.cartMerge.adjustments[0].outcome").value("CARRIED_UNPURCHASABLE"))
+            .andExpect(jsonPath("$.cartMerge.adjustments[0].requestedQuantity").value(2))
+            .andExpect(jsonPath("$.cartMerge.adjustments[0].appliedQuantity").value(2))
+            .andExpect(jsonPath("$.cartMergeNotices").doesNotExist());
 
-        verify(carts).mergeGuestCart(java.util.UUID.fromString(session.account().id()), "guest-token");
+        verify(carts).mergeGuestCart(java.util.UUID.fromString(session.account().id()), guestCartId);
     }
 
     @Test
-    void failedGuestCartMergeDoesNotDenyLoginOrClearTheCookie() throws Exception {
+    void failedGuestCartMergeDoesNotDenyLogin() throws Exception {
         SessionResponse session = session();
+        String guestCartId = "018f3c2a-0000-7000-8000-000000000001";
         BDDMockito.given(identityFacade.logIn(any(LoginRequest.class))).willReturn(session);
-        BDDMockito.given(carts.mergeGuestCart(java.util.UUID.fromString(session.account().id()), "guest-token"))
+        BDDMockito.given(carts.mergeGuestCart(java.util.UUID.fromString(session.account().id()), guestCartId))
             .willThrow(new IllegalStateException("cart database unavailable"));
 
-        mockMvc.perform(post("/api/v1/sessions").with(csrf()).cookie(new jakarta.servlet.http.Cookie("ecp_guest_cart", "guest-token"))
-                .contentType(MediaType.APPLICATION_JSON).content("{\"email\":\"customer@example.com\",\"password\":\"Str0ngPassword\"}"))
+        mockMvc.perform(post("/api/v1/sessions").with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"customer@example.com\",\"password\":\"Str0ngPassword\",\"guestCartId\":\"" + guestCartId + "\"}"))
             .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.cartMergeNotices[0]").value(org.hamcrest.Matchers.containsString("could not be recovered")))
-            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().doesNotExist("Set-Cookie"));
+            .andExpect(jsonPath("$.cartMerge.merged").value(false))
+            .andExpect(jsonPath("$.cartMerge.adjustments").isEmpty());
     }
 
     @Test

@@ -39,7 +39,7 @@ interface IdentityDtoMapper {
     ChangePasswordCommand changePasswordCommand(ChangePasswordRequest request);
 
     @Mapping(target = "expiresIn", source = "expiresInSeconds")
-    @Mapping(target = "cartMergeNotices", expression = "java(java.util.List.of())")
+    @Mapping(target = "cartMerge", ignore = true)
     SessionResponse sessionResponse(LoginResult result);
 
     AccountView accountView(AccountSummary summary);
