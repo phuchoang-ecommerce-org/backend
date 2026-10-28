@@ -10,6 +10,8 @@ import org.phuchoang.ecp.identity.api.request.LogoutRequest;
 import org.phuchoang.ecp.identity.api.request.RenewSessionRequest;
 import org.phuchoang.ecp.identity.api.view.SessionResponse;
 import org.phuchoang.ecp.web.common.security.RequestContextResolver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -27,6 +29,8 @@ import java.util.UUID;
 @RestController
 @lombok.RequiredArgsConstructor(access = lombok.AccessLevel.PACKAGE)
 class SessionController {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SessionController.class);
+
     private final IdentityFacade identityFacade;
     private final CartFacade carts;
     private final RequestContextResolver requestContext;
@@ -40,6 +44,7 @@ class SessionController {
                 session = withCartMergeOutcome(session, merge);
             } catch (RuntimeException exception) {
                 // UC-CUS-03 E4: session issuance has already succeeded; preserve the guest cart for retry.
+                LOGGER.warn("Guest cart merge failed after session issuance: {}", exception.getClass().getSimpleName());
                 session = new SessionResponse(session.accessToken(), session.refreshToken(), session.expiresIn(),
                     session.restricted(), session.account(), new SessionResponse.CartMergeOutcome(false, null, null));
             }
