@@ -44,6 +44,7 @@ class CheckoutJpaMapperTest {
         });
         assertThat(entity.getCreatedAt()).isEqualTo(persistedAt);
         assertThat(entity.getUpdatedAt()).isEqualTo(persistedAt);
-        assertThat(mapper.toDomain(entity)).isEqualTo(checkout);
+        assertThat(mapper.toDomain(entity)).usingRecursiveComparison().ignoringFields("createdAt").isEqualTo(checkout);
+        assertThat(mapper.toDomain(entity).createdAt()).isEqualTo(persistedAt);
     }
 }

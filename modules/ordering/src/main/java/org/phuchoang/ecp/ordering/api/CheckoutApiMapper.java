@@ -10,6 +10,7 @@ import org.phuchoang.ecp.ordering.internal.application.checkout.review.command.R
 import org.phuchoang.ecp.ordering.internal.application.checkout.shipping.query.ShippingQuoteResult;
 
 import java.util.List;
+import java.math.BigDecimal;
 
 /** MapStruct boundary mapping keeps API records out of focused application use cases. */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR)
@@ -24,7 +25,9 @@ interface CheckoutApiMapper {
 
     @Mapping(target = "unitPriceAtOrder", source = "unitPrice")
     CheckoutView.LineView lineView(CheckoutCommandResult.CheckoutLineData value);
-    CheckoutView.MoneyView moneyView(CheckoutCommandResult.MoneyData value);
+    default CheckoutView.MoneyView moneyView(CheckoutCommandResult.MoneyData value) {
+        return moneyView(value.amount(), value.currency());
+    }
     CheckoutView.AddressView addressView(CheckoutCommandResult.CheckoutAddressData value);
     CheckoutView.ShippingOptionView optionView(CheckoutCommandResult.ShippingOptionData value);
     CheckoutView.OrderView orderView(CheckoutCommandResult.CheckoutData value);
@@ -36,16 +39,22 @@ interface CheckoutApiMapper {
     CheckoutView checkoutView(CheckoutReadView value);
     @Mapping(target = "unitPriceAtOrder", source = "unitPrice")
     CheckoutView.LineView lineView(CheckoutReadView.Line value);
-    CheckoutView.MoneyView moneyView(CheckoutReadView.Money value);
+    default CheckoutView.MoneyView moneyView(CheckoutReadView.Money value) {
+        return moneyView(value.amount(), value.currency());
+    }
     CheckoutView.AddressView addressView(CheckoutReadView.Address value);
     CheckoutView.ShippingOptionView optionView(CheckoutReadView.ShippingOption value);
     CheckoutView.OrderView orderView(CheckoutReadView value);
 
     @Mapping(target = "options", source = "options")
     ShippingQuoteView shippingQuoteView(ShippingQuoteResult value);
-    @Mapping(target = "fee", expression = "java(new CheckoutView.MoneyView(value.feeAmount(), value.currency()))")
+    @Mapping(target = "fee", expression = "java(moneyView(value.feeAmount(), value.currency()))")
     CheckoutView.ShippingOptionView optionView(ShippingQuoteResult.Option value);
 
     @Mapping(target = "order", source = "checkout.checkout")
     CheckoutSummaryView summaryView(ReviewCheckoutSummaryService.CheckoutSummaryResult value);
+
+    default CheckoutView.MoneyView moneyView(BigDecimal amount, String currency) {
+        return new CheckoutView.MoneyView(amount.toPlainString(), currency);
+    }
 }

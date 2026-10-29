@@ -21,10 +21,10 @@ public record CheckoutCommandResult(CheckoutData checkout, List<ShippingOptionDa
 
     public static CheckoutData data(Checkout checkout) {
         return new CheckoutData(checkout.id(), checkout.orderNumber(), checkout.customerId(), checkout.lines().stream()
-            .map(CheckoutCommandResult::line).toList(), money(checkout.subtotal()), money(checkout.discount()),
+            .map(CheckoutCommandResult::line).toList(), "DRAFT", checkout.subtotal().currency(), money(checkout.subtotal()), money(checkout.discount()),
             money(checkout.shippingFee()), money(checkout.total()), checkout.promotionId(), checkout.promotionCode(),
             address(checkout.shippingAddress()), address(checkout.billingAddress()), checkout.shippingOption() == null ? null : option(checkout.shippingOption()),
-            checkout.ready());
+            checkout.ready(), checkout.createdAt());
     }
 
     private static CheckoutLineData line(CheckoutLine line) {
@@ -41,9 +41,10 @@ public record CheckoutCommandResult(CheckoutData checkout, List<ShippingOptionDa
             value.estimatedDeliveryTo());
     }
 
-    public record CheckoutData(UUID id, String orderNumber, UUID customerId, List<CheckoutLineData> lines, MoneyData subtotal,
+    public record CheckoutData(UUID id, String orderNumber, UUID customerId, List<CheckoutLineData> lines, String status, String currency, MoneyData subtotal,
             MoneyData discount, MoneyData shippingFee, MoneyData total, UUID promotionId, String promotionCode,
-            CheckoutAddressData shippingAddress, CheckoutAddressData billingAddress, ShippingOptionData shippingOption, boolean ready) {
+            CheckoutAddressData shippingAddress, CheckoutAddressData billingAddress, ShippingOptionData shippingOption, boolean ready,
+            Instant createdAt) {
         public CheckoutData { lines = List.copyOf(lines); }
     }
     public record CheckoutLineData(UUID id, UUID variantId, String sku, String productName, String variantName, int quantity,

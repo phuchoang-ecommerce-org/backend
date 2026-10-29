@@ -71,7 +71,7 @@ class OrderTest {
             "70000", "VN", null);
         return new Checkout(UUID.randomUUID(), UUID.randomUUID(), "DRAFT-1", List.of(line()), address, address,
             new ShippingOption("standard", "PROVISIONAL", "Standard", new Money(new BigDecimal("5.0000"), "USD"),
-                null, null), null, null, Money.zero("USD"), "confirmed", 0);
+                null, null), null, null, Money.zero("USD"), "confirmed", 0, null);
     }
 
     private static CheckoutLine line() {

@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -57,12 +57,16 @@ class CheckoutControllerTest {
             .andExpect(status().isCreated())
             .andExpect(header().string("Location", "/api/v1/checkouts/" + id))
             .andExpect(jsonPath("$.order.id").value(id.toString()))
+            .andExpect(jsonPath("$.order.status").value("DRAFT"))
+            .andExpect(jsonPath("$.order.currency").value("USD"))
+            .andExpect(jsonPath("$.order.createdAt").value("2026-10-29T00:00:00Z"))
+            .andExpect(jsonPath("$.order.total.amount").value("0"))
             .andExpect(jsonPath("$.ready").value(false));
     }
 
     private static CheckoutView checkout(UUID id) {
-        CheckoutView.MoneyView zero = new CheckoutView.MoneyView(BigDecimal.ZERO, "USD");
-        return new CheckoutView(new CheckoutView.OrderView(id, "DRAFT-1", UUID.randomUUID(), List.of(), zero, zero, zero,
-            zero, null, null, null, null), List.of(), null, false, List.of());
+        CheckoutView.MoneyView zero = new CheckoutView.MoneyView("0", "USD");
+        return new CheckoutView(new CheckoutView.OrderView(id, "DRAFT-1", UUID.randomUUID(), "DRAFT", "USD", List.of(), zero, zero, zero,
+            zero, null, null, null, null, Instant.parse("2026-10-29T00:00:00Z")), List.of(), null, false, List.of());
     }
 }

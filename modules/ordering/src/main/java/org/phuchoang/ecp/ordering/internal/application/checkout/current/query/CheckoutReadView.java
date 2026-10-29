@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.UUID;
 
 /** Read model owned by the get-current-checkout use case. */
-public record CheckoutReadView(UUID id, String orderNumber, UUID customerId, List<Line> lines, Money subtotal, Money discount,
+public record CheckoutReadView(UUID id, String orderNumber, UUID customerId, String status, String currency, List<Line> lines, Money subtotal, Money discount,
         Money shippingFee, Money total, UUID promotionId, String promotionCode, Address shippingAddress, Address billingAddress,
-        ShippingOption shippingOption, boolean ready) {
+        ShippingOption shippingOption, boolean ready, Instant createdAt) {
     public CheckoutReadView { lines = List.copyOf(lines); }
     public record Line(UUID id, UUID variantId, String sku, String productName, String variantName, int quantity, Money unitPrice,
             Money lineTotal) { }

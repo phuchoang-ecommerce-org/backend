@@ -5,6 +5,7 @@ import org.jmolecules.ddd.annotation.Identity;
 import org.phuchoang.ecp.ordering.internal.domain.repository.CheckoutRepository;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -16,7 +17,7 @@ import java.util.UUID;
 @AggregateRoot
 public record Checkout(@Identity UUID id, UUID customerId, String orderNumber, List<CheckoutLine> lines,
         CheckoutAddress shippingAddress, CheckoutAddress billingAddress, ShippingOption shippingOption, UUID promotionId,
-        String promotionCode, Money discount, String confirmationToken, long version) {
+        String promotionCode, Money discount, String confirmationToken, long version, Instant createdAt) {
 
     public Checkout {
         Objects.requireNonNull(id, "id");
@@ -38,7 +39,7 @@ public record Checkout(@Identity UUID id, UUID customerId, String orderNumber, L
 
     public static Checkout start(UUID id, UUID customerId, String orderNumber, List<CheckoutLine> lines) {
         return new Checkout(id, customerId, orderNumber, lines, null, null, null, null, null,
-            Money.zero(lines.isEmpty() ? "USD" : lines.getFirst().unitPrice().currency()), null, 0);
+            Money.zero(lines.isEmpty() ? "USD" : lines.getFirst().unitPrice().currency()), null, 0, null);
     }
 
     /** Persists the complete Checkout aggregate; child lines never have a standalone write operation. */
@@ -86,34 +87,34 @@ public record Checkout(@Identity UUID id, UUID customerId, String orderNumber, L
 
     public Checkout setShippingAddress(CheckoutAddress address, List<ShippingOption> options) {
         return new Checkout(id, customerId, orderNumber, lines, Objects.requireNonNull(address), billingAddress,
-            null, promotionId, promotionCode, discount, null, version);
+            null, promotionId, promotionCode, discount, null, version, createdAt);
     }
 
     public Checkout setBillingAddress(CheckoutAddress address) {
         return new Checkout(id, customerId, orderNumber, lines, shippingAddress, Objects.requireNonNull(address),
-            shippingOption, promotionId, promotionCode, discount, null, version);
+            shippingOption, promotionId, promotionCode, discount, null, version, createdAt);
     }
 
     public Checkout selectShippingOption(ShippingOption option) {
         return new Checkout(id, customerId, orderNumber, lines, shippingAddress, billingAddress,
-            Objects.requireNonNull(option), promotionId, promotionCode, discount, null, version);
+            Objects.requireNonNull(option), promotionId, promotionCode, discount, null, version, createdAt);
     }
 
     public Checkout applyVoucher(UUID newPromotionId, String code, BigDecimal amount) {
         BigDecimal cappedAmount = amount.max(BigDecimal.ZERO).min(subtotal().amount());
         return new Checkout(id, customerId, orderNumber, lines, shippingAddress, billingAddress, shippingOption,
             Objects.requireNonNull(newPromotionId), Objects.requireNonNull(code), new Money(cappedAmount, subtotal().currency()),
-            null, version);
+            null, version, createdAt);
     }
 
     public Checkout removeVoucher() {
         return new Checkout(id, customerId, orderNumber, lines, shippingAddress, billingAddress, shippingOption,
-            null, null, Money.zero(subtotal().currency()), null, version);
+            null, null, Money.zero(subtotal().currency()), null, version, createdAt);
     }
 
     public Checkout refresh(List<CheckoutLine> currentLines, String newConfirmationToken) {
         return new Checkout(id, customerId, orderNumber, currentLines, shippingAddress, billingAddress, shippingOption,
-            promotionId, promotionCode, discount, Objects.requireNonNull(newConfirmationToken), version);
+            promotionId, promotionCode, discount, Objects.requireNonNull(newConfirmationToken), version, createdAt);
     }
 
     public boolean ready() {

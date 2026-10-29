@@ -75,6 +75,6 @@ class PlaceOrderServiceTest {
         return new Checkout(UUID.randomUUID(), customerId, "DRAFT-1", List.of(new CheckoutLine(UUID.randomUUID(),
             UUID.randomUUID(), "SKU-1", "Product", "Variant", 1, new Money(new BigDecimal("8.0000"), "USD"))),
             address, address, new ShippingOption("standard", "PROVISIONAL", "Standard", new Money(new BigDecimal("5"),
-                "USD"), null, null), null, null, Money.zero("USD"), "confirmed", 0);
+                "USD"), null, null), null, null, Money.zero("USD"), "confirmed", 0, null);
     }
 }
