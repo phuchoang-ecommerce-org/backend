@@ -24,9 +24,11 @@ class DemoDataSeeder implements ApplicationRunner {
 
     private static final UUID ADMIN_ID = UUID.fromString("10000000-0000-0000-0000-000000000001");
     private static final UUID CUSTOMER_ID = UUID.fromString("10000000-0000-0000-0000-000000000002");
+    private static final UUID SECOND_CUSTOMER_ID = UUID.fromString("10000000-0000-0000-0000-000000000006");
     private static final UUID STAFF_ID = UUID.fromString("10000000-0000-0000-0000-000000000003");
     private static final UUID WAREHOUSE_ID = UUID.fromString("10000000-0000-0000-0000-000000000004");
     private static final UUID SUPPORT_ID = UUID.fromString("10000000-0000-0000-0000-000000000005");
+    private static final UUID DEMO_WAREHOUSE_ID = UUID.fromString("50000000-0000-0000-0000-000000000001");
     private static final UUID COFFEE_ID = UUID.fromString("20000000-0000-0000-0000-000000000001");
     private static final UUID BREWING_ID = UUID.fromString("20000000-0000-0000-0000-000000000002");
     private static final UUID KETTLE_ID = UUID.fromString("30000000-0000-4000-8000-000000000001");
@@ -71,9 +73,11 @@ class DemoDataSeeder implements ApplicationRunner {
         String passwordHash = passwordEncoder.encode(DEMO_PASSWORD);
         account(ADMIN_ID, "admin@demo.local", "Demo Administrator", passwordHash, "ADMINISTRATOR");
         account(CUSTOMER_ID, "customer@demo.local", "Demo Customer", passwordHash, "CUSTOMER");
+        account(SECOND_CUSTOMER_ID, "customer-two@demo.local", "Second Demo Customer", passwordHash, "CUSTOMER");
         account(STAFF_ID, "staff@demo.local", "Demo Staff", passwordHash, "STAFF");
         account(WAREHOUSE_ID, "warehouse@demo.local", "Demo Warehouse Operator", passwordHash, "WAREHOUSE_OPERATOR");
         account(SUPPORT_ID, "support@demo.local", "Demo Customer Support", passwordHash, "CUSTOMER_SUPPORT");
+        warehouse(DEMO_WAREHOUSE_ID, "DEMO-PRIMARY", "Demo primary warehouse", "VN");
 
         category(COFFEE_ID, null, "Demo Coffee", "demo-coffee", "/demo-coffee/", 0, true);
         category(BREWING_ID, COFFEE_ID, "Demo Brewing", "demo-brewing", "/demo-coffee/demo-brewing/", 0, false);
@@ -101,14 +105,18 @@ class DemoDataSeeder implements ApplicationRunner {
             variant(variantId, productId, "DEMO-PAGE-%02d".formatted(index), "Standard",
                 new BigDecimal("20.00").add(BigDecimal.valueOf(index)),
                 "{\"fixture\":\"pagination\"}", true, true);
+            stock(variantId, "DEMO-PAGE-%02d".formatted(index), 25);
         }
 
         variant(KETTLE_BLACK_ID, KETTLE_ID, "DEMO-KETTLE-BLK", "Matte black", new BigDecimal("59.00"),
             "{\"color\":\"Black\"}", true, true);
+        stock(KETTLE_BLACK_ID, "DEMO-KETTLE-BLK", 12);
         variant(KETTLE_WHITE_ID, KETTLE_ID, "DEMO-KETTLE-WHT", "Matte white", new BigDecimal("59.00"),
             "{\"color\":\"White\"}", true, true);
+        stock(KETTLE_WHITE_ID, "DEMO-KETTLE-WHT", 12);
         variant(GRINDER_ID_VARIANT, GRINDER_ID, "DEMO-GRINDER-01", "Standard", new BigDecimal("89.00"),
             "{\"finish\":\"Steel\"}", true, true);
+        stock(GRINDER_ID_VARIANT, "DEMO-GRINDER-01", 12);
         variant(MUG_ID_VARIANT, MUG_ID, "DEMO-MUG-01", "12 oz", new BigDecimal("24.00"),
             "{\"size\":\"12 oz\"}", true, false);
         variant(DRAFT_ID_VARIANT, DRAFT_ID, "DEMO-SCALE-01", "Standard", new BigDecimal("39.00"),
@@ -160,6 +168,27 @@ class DemoDataSeeder implements ApplicationRunner {
             """, id, productId, sku, name, price, options, active, inStock, ADMIN_ID, ADMIN_ID);
     }
 
+    private void warehouse(UUID id, String code, String name, String countryCode) {
+        update("""
+            INSERT INTO inventory_warehouse (id, code, name, country_code, is_active, created_by, updated_by)
+            VALUES (?, ?, ?, ?, true, ?, ?)
+            ON CONFLICT (id) DO NOTHING
+            """, id, code, name, countryCode, ADMIN_ID, ADMIN_ID);
+    }
+
+    /**
+     * Placement currently uses the variant snapshot UUID as Inventory's stock-item identifier.
+     * Keep the local fixture aligned until Shipping owns explicit SKU-to-stock allocation.
+     */
+    private void stock(UUID id, String sku, int quantityOnHand) {
+        update("""
+            INSERT INTO inventory_stock_item (id, sku, warehouse_id, owner_id, quantity_on_hand, quantity_reserved,
+                                              reorder_threshold, created_by, updated_by)
+            VALUES (?, ?, ?, ?, ?, 0, 5, ?, ?)
+            ON CONFLICT (sku, warehouse_id) DO NOTHING
+            """, id, sku, DEMO_WAREHOUSE_ID, ADMIN_ID, quantityOnHand, ADMIN_ID, ADMIN_ID);
+    }
+
     private void image(UUID productId, String url, String altText) {
         update("""
             INSERT INTO catalog_product_image (id, product_id, url, alt_text, sort_order, created_by, updated_by)
@@ -173,6 +202,9 @@ class DemoDataSeeder implements ApplicationRunner {
         UUID legacyGrinderId = UUID.fromString("30000000-0000-0000-0000-000000000002");
         UUID legacyMugId = UUID.fromString("30000000-0000-0000-0000-000000000003");
         UUID legacyDraftId = UUID.fromString("30000000-0000-0000-0000-000000000004");
+
+        update("DELETE FROM inventory_stock_item WHERE warehouse_id = ?", DEMO_WAREHOUSE_ID);
+        update("DELETE FROM inventory_warehouse WHERE id = ?", DEMO_WAREHOUSE_ID);
 
         update("DELETE FROM catalog_outbox WHERE aggregate_id IN "
             + "(SELECT id FROM catalog_product WHERE slug LIKE 'demo-catalog-item-%')");
@@ -194,8 +226,8 @@ class DemoDataSeeder implements ApplicationRunner {
             KETTLE_ID, GRINDER_ID, MUG_ID, DRAFT_ID, legacyKettleId, legacyGrinderId, legacyMugId, legacyDraftId);
         update("DELETE FROM catalog_category WHERE id = ?", BREWING_ID);
         update("DELETE FROM catalog_category WHERE id = ?", COFFEE_ID);
-        update("DELETE FROM identity_account WHERE id IN (?, ?, ?, ?, ?)",
-            ADMIN_ID, CUSTOMER_ID, STAFF_ID, WAREHOUSE_ID, SUPPORT_ID);
+        update("DELETE FROM identity_account WHERE id IN (?, ?, ?, ?, ?, ?)",
+            ADMIN_ID, CUSTOMER_ID, SECOND_CUSTOMER_ID, STAFF_ID, WAREHOUSE_ID, SUPPORT_ID);
     }
 
     private void update(String sql, Object... parameters) {

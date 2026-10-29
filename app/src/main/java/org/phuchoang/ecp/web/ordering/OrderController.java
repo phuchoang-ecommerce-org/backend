@@ -3,7 +3,7 @@ package org.phuchoang.ecp.web.ordering;
 import jakarta.servlet.http.HttpServletRequest;
 import org.phuchoang.ecp.ordering.api.OrderFacade;
 import org.phuchoang.ecp.ordering.api.OrderPageView;
-import org.phuchoang.ecp.ordering.api.OrderPlacementView;
+import org.phuchoang.ecp.ordering.api.OrderView;
 import org.phuchoang.ecp.ordering.api.PlaceOrderRequest;
 import org.phuchoang.ecp.web.common.pagination.Page;
 import org.phuchoang.ecp.web.common.pagination.PageEnvelope;
@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.Set;
 import java.util.UUID;
@@ -26,7 +27,7 @@ import org.springframework.http.ResponseEntity;
 
 /**
  * `listOrders` (`UC-CUS-10`) — see {@code ordering.application.ListOrdersService}'s Javadoc: this
- * always returns an empty page until Sprint 18 (`ordering` has no order-placement code yet).
+ * exposes placement and immutable order reads at the contract boundary.
  */
 @RestController
 @lombok.RequiredArgsConstructor(access = lombok.AccessLevel.PACKAGE)
@@ -39,7 +40,7 @@ class OrderController {
     private final RequestContextResolver requestContext;
 
     @GetMapping("/api/v1/orders")
-    PageEnvelope<Object> listOrders(@AuthenticationPrincipal Jwt jwt, HttpServletRequest request,
+    PageEnvelope<OrderView> listOrders(@AuthenticationPrincipal Jwt jwt, HttpServletRequest request,
             @RequestParam(required = false) String cursor, @RequestParam(required = false) Integer size,
             @RequestParam(required = false) UUID customerId) {
         QueryParams.rejectUnknown(request, LIST_QUERY_PARAMS);
@@ -51,11 +52,15 @@ class OrderController {
     }
 
     @PostMapping("/api/v1/orders")
-    ResponseEntity<OrderPlacementView> place(@AuthenticationPrincipal Jwt jwt, @RequestBody PlaceOrderRequest body,
+    ResponseEntity<OrderView> place(@AuthenticationPrincipal Jwt jwt, @RequestBody PlaceOrderRequest body,
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
         var context = requestContext.resolve(jwt);
-        OrderPlacementView placed = orderFacade.placeOrder(context.caller(), body, idempotencyKey, context.correlationId());
-        if (placed.duplicate()) return ResponseEntity.ok(placed);
-        return ResponseEntity.created(URI.create("/api/v1/orders/" + placed.orderId())).body(placed);
+        OrderView placed = orderFacade.placeOrder(context.caller(), body, idempotencyKey, context.correlationId());
+        return ResponseEntity.created(URI.create("/api/v1/orders/" + placed.id())).body(placed);
+    }
+
+    @GetMapping("/api/v1/orders/{orderId}")
+    OrderView getOrder(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID orderId) {
+        return orderFacade.getOrder(requestContext.resolve(jwt).caller(), orderId);
     }
 }

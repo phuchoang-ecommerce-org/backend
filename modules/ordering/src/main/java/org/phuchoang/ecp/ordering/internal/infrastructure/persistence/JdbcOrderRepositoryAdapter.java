@@ -15,6 +15,9 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 import java.util.List;
 import java.util.UUID;
+import java.time.Instant;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 /** Persists the Draft-to-Order aggregate transition over the already-frozen checkout row and its owned lines. */
 @Repository
@@ -37,7 +40,24 @@ class JdbcOrderRepositoryAdapter implements OrderRepository {
                 new Money(rs.getBigDecimal("subtotal_amount"), rs.getString("currency")),
                 new Money(rs.getBigDecimal("discount_amount"), rs.getString("currency")),
                 new Money(rs.getBigDecimal("total_amount"), rs.getString("currency")), reservations(id),
-                OrderStatus.valueOf(rs.getString("status")), rs.getLong("version"))).optional();
+                OrderStatus.valueOf(rs.getString("status")), instant(rs, "placed_at"), instant(rs, "created_at"),
+                rs.getLong("version"))).optional();
+    }
+
+    @Override
+    public OrderRepository.OrderPage findPlacedByCustomerId(UUID customerId, String cursor, int size) {
+        Cursor after = cursor == null ? null : decode(cursor);
+        String sql = "SELECT id, placed_at FROM ordering_order WHERE customer_id = :customerId AND status <> 'DRAFT' "
+            + (after == null ? "" : "AND (placed_at, id) < (:placedAt, :id) ")
+            + "ORDER BY placed_at DESC NULLS LAST, id DESC LIMIT :limit";
+        var query = jdbc.sql(sql).param("customerId", customerId).param("limit", size + 1);
+        if (after != null) query = query.param("placedAt", after.placedAt()).param("id", after.id());
+        List<Cursor> rows = query.query((rs, row) -> new Cursor(rs.getTimestamp("placed_at").toInstant(),
+            rs.getObject("id", UUID.class))).list();
+        boolean hasNext = rows.size() > size;
+        List<Cursor> page = hasNext ? rows.subList(0, size) : rows;
+        String next = hasNext ? encode(page.getLast()) : null;
+        return new OrderRepository.OrderPage(page.stream().flatMap(item -> findById(item.id()).stream()).toList(), next);
     }
 
     @Override public Order save(Order order) {
@@ -68,7 +88,8 @@ class JdbcOrderRepositoryAdapter implements OrderRepository {
         if (changed != 1) throw new IllegalStateException("Order changed concurrently; reload before retrying.");
         return new Order(order.id(), order.customerId(), order.orderNumber(), order.lines(), order.shippingAddress(),
             order.billingAddress(), order.shippingOption(), order.promotionId(), order.promotionCode(), order.subtotal(),
-            order.discount(), order.total(), order.reservations(), order.status(), order.version() + 1);
+            order.discount(), order.total(), order.reservations(), order.status(), order.placedAt(), order.createdAt(),
+            order.version() + 1);
     }
 
     private List<CheckoutLine> lines(UUID orderId) {
@@ -94,4 +115,25 @@ class JdbcOrderRepositoryAdapter implements OrderRepository {
             rs.getString(prefix + "_line2"), rs.getString(prefix + "_city"), rs.getString(prefix + "_region"),
             rs.getString(prefix + "_postal_code"), rs.getString(prefix + "_country_code"), null);
     }
+
+    private static java.time.Instant instant(java.sql.ResultSet rs, String column) throws java.sql.SQLException {
+        var value = rs.getTimestamp(column);
+        return value == null ? null : value.toInstant();
+    }
+
+    private static String encode(Cursor cursor) {
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(
+            (cursor.placedAt() + "|" + cursor.id()).getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static Cursor decode(String value) {
+        try {
+            String[] parts = new String(Base64.getUrlDecoder().decode(value), StandardCharsets.UTF_8).split("\\|", 2);
+            return new Cursor(Instant.parse(parts[0]), UUID.fromString(parts[1]));
+        } catch (RuntimeException exception) {
+            throw new IllegalArgumentException("Invalid order cursor.", exception);
+        }
+    }
+
+    private record Cursor(Instant placedAt, UUID id) { }
 }

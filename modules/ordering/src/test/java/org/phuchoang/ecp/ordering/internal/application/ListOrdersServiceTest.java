@@ -7,6 +7,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.ordering.internal.application.error.ApplicationException;
+import org.phuchoang.ecp.ordering.internal.domain.repository.OrderRepository;
 
 import java.util.Set;
 import java.util.UUID;
@@ -14,6 +15,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * `UC-CUS-10` (`US-CUS-10`): the empty-page stub, and `BR-AUD-02` — the same
@@ -24,11 +26,15 @@ class ListOrdersServiceTest {
 
     @Mock
     private IdentityAuthorization authorizationService;
+    @Mock
+    private OrderRepository orders;
 
     @Test
     void listOrdersAssertsAuthorizationAndReturnsAnEmptyPage() {
-        ListOrdersService service = new ListOrdersService(authorizationService);
+        ListOrdersService service = new ListOrdersService(authorizationService, orders);
         IdentityActor caller = new IdentityActor(UUID.randomUUID(), Set.of("CUSTOMER"));
+        when(orders.findPlacedByCustomerId(caller.accountId(), null, 20))
+            .thenReturn(new OrderRepository.OrderPage(java.util.List.of(), null));
 
         OrderPageResult result = service.listOrders(caller, new ListOrdersQuery(null, 20, null));
 
@@ -39,7 +45,7 @@ class ListOrdersServiceTest {
 
     @Test
     void aCustomerSupplyingCustomerIdIsForbidden() {
-        ListOrdersService service = new ListOrdersService(authorizationService);
+        ListOrdersService service = new ListOrdersService(authorizationService, orders);
         IdentityActor caller = new IdentityActor(UUID.randomUUID(), Set.of("CUSTOMER"));
 
         Throwable thrown = catchThrowable(
@@ -50,7 +56,7 @@ class ListOrdersServiceTest {
 
     @Test
     void supportMaySupplyCustomerId() {
-        ListOrdersService service = new ListOrdersService(authorizationService);
+        ListOrdersService service = new ListOrdersService(authorizationService, orders);
         IdentityActor caller = new IdentityActor(UUID.randomUUID(), Set.of("CUSTOMER_SUPPORT"));
 
         OrderPageResult result = service.listOrders(caller, new ListOrdersQuery(null, 20, UUID.randomUUID()));

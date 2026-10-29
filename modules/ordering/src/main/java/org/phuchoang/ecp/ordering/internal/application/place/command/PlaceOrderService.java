@@ -1,6 +1,7 @@
 package org.phuchoang.ecp.ordering.internal.application.place.command;
 
 import lombok.RequiredArgsConstructor;
+import org.phuchoang.ecp.cart.api.CartFacade;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
 import org.phuchoang.ecp.ordering.internal.application.error.ApplicationErrorCode;
 import org.phuchoang.ecp.ordering.internal.application.error.ApplicationException;
@@ -31,6 +32,7 @@ public class PlaceOrderService {
     private final PromotionRedemptionPort promotions;
     private final OrderIdempotencyStore idempotency;
     private final OrderOutbox outbox;
+    private final CartFacade carts;
     private final Clock clock;
 
     @Transactional
@@ -49,7 +51,15 @@ public class PlaceOrderService {
         List<OrderReservation> reservations = reserveStock(checkout, command);
         var order = orders.place(checkout, reservations, discount);
         appendOrderCreated(order, command);
+        clearCustomerCart(command);
         return new PlaceOrderResult(order.id(), order.status().name(), false);
+    }
+
+    private void clearCustomerCart(PlaceOrderCommand command) {
+        var cart = carts.getCurrentCart(command.caller(), null);
+        for (var line : cart.lines()) {
+            carts.removeCartLine(command.caller(), null, cart.id(), line.id());
+        }
     }
 
     private Checkout confirmedCheckout(PlaceOrderCommand command) {
@@ -88,7 +98,7 @@ public class PlaceOrderService {
         outbox.appendOrderCreated(order.id(), command.correlationId(), command.caller(), clock.instant(),
             "{\"orderId\":\"" + order.id() + "\",\"customerId\":\"" + order.customerId()
                 + "\",\"totalAmount\":" + order.total().amount() + ",\"currency\":\"" + order.total().currency()
-                + "\",\"status\":\"PENDING_PAYMENT\"}");
+                + "\",\"status\":\"" + order.status().name() + "\"}");
     }
 
     private static PlaceOrderResult existing(OrderIdempotencyStore.Entry entry, PlaceOrderCommand command, String hash) {

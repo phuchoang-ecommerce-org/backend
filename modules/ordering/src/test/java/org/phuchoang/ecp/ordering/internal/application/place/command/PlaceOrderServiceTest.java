@@ -1,6 +1,8 @@
 package org.phuchoang.ecp.ordering.internal.application.place.command;
 
 import org.junit.jupiter.api.Test;
+import org.phuchoang.ecp.cart.api.CartFacade;
+import org.phuchoang.ecp.cart.api.CartView;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
 import org.phuchoang.ecp.ordering.internal.application.error.ApplicationException;
@@ -35,8 +37,9 @@ class PlaceOrderServiceTest {
     private final PromotionRedemptionPort promotions = mock(PromotionRedemptionPort.class);
     private final OrderIdempotencyStore idempotency = mock(OrderIdempotencyStore.class);
     private final OrderOutbox outbox = mock(OrderOutbox.class);
+    private final CartFacade carts = mock(CartFacade.class);
     private final PlaceOrderService service = new PlaceOrderService(authorization, checkouts, orders, stock, promotions,
-        idempotency, outbox, Clock.fixed(Instant.parse("2026-10-15T00:00:00Z"), ZoneOffset.UTC));
+        idempotency, outbox, carts, Clock.fixed(Instant.parse("2026-10-15T00:00:00Z"), ZoneOffset.UTC));
 
     @Test
     void placesOnlyAfterClaimingTheIdempotencyKeyAndWritesItsOutboxEvent() {
@@ -50,6 +53,8 @@ class PlaceOrderServiceTest {
         Order order = Order.place(checkout, List.of(new org.phuchoang.ecp.ordering.internal.domain.model.OrderReservation(
             checkout.lines().getFirst().id(), checkout.lines().getFirst().variantId(), UUID.randomUUID(), UUID.randomUUID(), 1)), Money.zero("USD"));
         when(orders.place(eq(checkout), any(), any())).thenReturn(order);
+        when(carts.getCurrentCart(caller, null)).thenReturn(new CartView(UUID.randomUUID(), caller.accountId(), "ACTIVE",
+            List.of(), null, Instant.now(), Instant.now()));
 
         PlaceOrderResult result = service.place(new PlaceOrderCommand(caller, checkout.id(), "confirmed", "attempt-1",
             UUID.randomUUID()));

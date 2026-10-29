@@ -22,7 +22,7 @@ class JdbcInventoryManagementQueries implements InventoryManagementQueries {
     @Override
     public List<StockItemView> listStockItems(String sku, UUID warehouseId, boolean lowStock, int limit) {
         String sql = "select id, sku, warehouse_id, quantity_on_hand, quantity_reserved, available_quantity, reorder_threshold "
-            + "from inventory_stock_item where (:sku is null or sku = :sku) and (:warehouseId is null or warehouse_id = :warehouseId) "
+            + "from inventory_stock_item where (cast(:sku as varchar) is null or sku = :sku) and (cast(:warehouseId as uuid) is null or warehouse_id = :warehouseId) "
             + "and (:lowStock = false or (reorder_threshold is not null and available_quantity < reorder_threshold)) "
             + "order by sku, warehouse_id, id limit :limit";
         return jdbc.sql(sql).param("sku", sku).param("warehouseId", warehouseId).param("lowStock", lowStock)

@@ -4,6 +4,7 @@ import org.phuchoang.ecp.identity.api.authorization.IdentityAuthorization;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.ordering.internal.application.error.ApplicationErrorCode;
 import org.phuchoang.ecp.ordering.internal.application.error.ApplicationException;
+import org.phuchoang.ecp.ordering.internal.domain.repository.OrderRepository;
 import org.springframework.stereotype.Service;
 
 /**
@@ -22,9 +23,11 @@ public class ListOrdersService {
     static final String LIST_ORDERS = "listOrders";
 
     private final IdentityAuthorization authorizationService;
+    private final OrderRepository orders;
 
-    public ListOrdersService(IdentityAuthorization authorizationService) {
+    public ListOrdersService(IdentityAuthorization authorizationService, OrderRepository orders) {
         this.authorizationService = authorizationService;
+        this.orders = orders;
     }
 
     public OrderPageResult listOrders(IdentityActor caller, ListOrdersQuery query) {
@@ -36,6 +39,11 @@ public class ListOrdersService {
                 "customerId may only be supplied by Support or Administrator.");
         }
 
-        return OrderPageResult.EMPTY;
+        // Cursor extension is deliberately represented in the contract but not
+        // inferred from a mutable offset. This first read-model slice serves a
+        // customer's own newest snapshot rows; staff search remains separate.
+        if (!caller.roles().contains("CUSTOMER")) return OrderPageResult.EMPTY;
+        var page = orders.findPlacedByCustomerId(caller.accountId(), query.cursor(), query.size());
+        return new OrderPageResult(page.items(), page.nextCursor());
     }
 }
