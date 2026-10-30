@@ -17,6 +17,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.List;
@@ -113,6 +114,13 @@ public class GlobalExceptionHandler {
             exception.errors());
     }
 
+    @ExceptionHandler(org.phuchoang.ecp.payment.api.PaymentException.class)
+    public ResponseEntity<Problem> handlePayment(
+            org.phuchoang.ecp.payment.api.PaymentException exception, HttpServletRequest request) {
+        var code = exception.errorCode();
+        return problemResponse(code.code(), code.title(), code.httpStatus(), exception.getMessage(), request, List.of());
+    }
+
     @ExceptionHandler(UnprocessableQueryException.class)
     public ResponseEntity<Problem> handleUnprocessableQuery(UnprocessableQueryException exception,
             HttpServletRequest request) {
@@ -169,6 +177,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Problem> handleNotFound(NoResourceFoundException exception, HttpServletRequest request) {
         return problemResponse(GenErrorCode.NOT_FOUND.code(), GenErrorCode.NOT_FOUND.title(),
             GenErrorCode.NOT_FOUND.httpStatus(), null, request, List.of());
+    }
+
+    /** Controllers use this only for deliberately public HTTP outcomes. */
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Problem> handleResponseStatus(ResponseStatusException exception, HttpServletRequest request) {
+        int status = exception.getStatusCode().value();
+        GenErrorCode code = status == 404 ? GenErrorCode.NOT_FOUND : GenErrorCode.UNMAPPED_ERROR;
+        return problemResponse(code.code(), code.title(), status, null, request, List.of());
     }
 
     @ExceptionHandler(Exception.class)

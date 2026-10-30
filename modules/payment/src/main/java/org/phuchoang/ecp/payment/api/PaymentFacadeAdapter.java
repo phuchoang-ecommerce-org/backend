@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.phuchoang.ecp.identity.api.authorization.IdentityActor;
 import org.phuchoang.ecp.payment.internal.application.authorise.command.InitiatePaymentCommand;
 import org.phuchoang.ecp.payment.internal.application.authorise.command.InitiatePaymentService;
+import org.phuchoang.ecp.payment.internal.application.authorise.command.PaymentAttemptRejectedException;
 import org.phuchoang.ecp.payment.internal.application.callback.command.ProviderNotification;
 import org.phuchoang.ecp.payment.internal.application.callback.command.ReceivePaymentProviderNotificationService;
 import org.phuchoang.ecp.payment.internal.application.get.query.GetOrderPaymentService;
@@ -36,13 +37,24 @@ class PaymentFacadeAdapter implements PaymentFacade {
   @Override
   public Initiation initiatePayment(IdentityActor caller, UUID id, PaymentMethod method, String key, URI url,
       UUID correlation) {
-    var result = initiation.initiate(new InitiatePaymentCommand(caller, id, method.name(), key, url, correlation));
-    return mapper.toInitiation(result);
+    try {
+      var result = initiation.initiate(new InitiatePaymentCommand(caller, id, method.name(), key, url, correlation));
+      return mapper.toInitiation(result);
+    } catch (PaymentAttemptRejectedException rejected) {
+      throw new PaymentException(switch (rejected.reason()) {
+        case IDEMPOTENCY_KEY_MISSING -> PaymentErrorCode.IDEMPOTENCY_KEY_MISSING;
+        case IDEMPOTENCY_KEY_REUSED -> PaymentErrorCode.IDEMPOTENCY_KEY_REUSED;
+        case ATTEMPT_ALREADY_IN_FLIGHT -> PaymentErrorCode.ATTEMPT_ALREADY_IN_FLIGHT;
+      }, rejected.getMessage());
+    }
   }
 
   @Override
-  public PaymentDetails getOrderPayment(UUID orderId) {
-    return mapper.toPaymentDetails(payments.get(orderId));
+  public PaymentDetails getOrderPayment(IdentityActor caller, UUID orderId) {
+    PaymentDetails payment = mapper.toPaymentDetails(payments.get(orderId));
+    if (!payment.customerId().equals(caller.accountId()))
+      throw new org.phuchoang.ecp.payment.internal.application.get.query.GetOrderPaymentService.PaymentNotFound();
+    return payment;
   }
 
   @Override

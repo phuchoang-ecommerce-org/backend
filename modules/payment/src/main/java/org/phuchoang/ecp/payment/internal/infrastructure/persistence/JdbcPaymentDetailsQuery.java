@@ -16,12 +16,14 @@ class JdbcPaymentDetailsQuery implements PaymentDetailsQuery {
 
     @Override
     public Optional<PaymentDetails> findByOrderId(UUID orderId) {
-        return jdbc.sql("SELECT id, order_id, customer_id, method, authorised_amount, currency, status "
+        return jdbc.sql("SELECT id, order_id, customer_id, method, authorised_amount, captured_amount, refunded_amount, currency, status, created_at "
                 + "FROM payment_payment WHERE order_id = :orderId")
             .param("orderId", orderId)
             .query((rs, ignored) -> new PaymentDetails(rs.getObject("id", UUID.class),
                 rs.getObject("order_id", UUID.class), rs.getObject("customer_id", UUID.class), rs.getString("method"),
-                rs.getBigDecimal("authorised_amount"), rs.getString("currency"), rs.getString("status")))
+                rs.getBigDecimal("authorised_amount"), rs.getBigDecimal("captured_amount"),
+                rs.getBigDecimal("refunded_amount"), rs.getString("currency"), rs.getString("status"),
+                rs.getTimestamp("created_at").toInstant()))
             .optional();
     }
 }

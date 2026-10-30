@@ -7,6 +7,8 @@ import org.phuchoang.ecp.payment.api.error.ErrorCode;
  */
 public enum PaymentErrorCode implements ErrorCode {
 
+  IDEMPOTENCY_KEY_MISSING("ECP-ORD-4001", 400, "Idempotency-Key required"),
+  IDEMPOTENCY_KEY_REUSED("ECP-ORD-4090", 409, "Idempotency-Key reused with a different request body"),
   ATTEMPT_ALREADY_IN_FLIGHT("ECP-PAY-4090", 409, "A payment attempt is already in flight"),
   REFUND_EXCEEDS_CAPTURED("ECP-PAY-4220", 422, "Refund exceeds captured amount");
 

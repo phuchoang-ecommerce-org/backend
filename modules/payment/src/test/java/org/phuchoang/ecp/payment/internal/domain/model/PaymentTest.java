@@ -25,4 +25,20 @@ class PaymentTest {
             new BigDecimal("24.50"), "provider-ref", Instant.parse("2026-10-16T10:00:03Z")))
             .isInstanceOf(Payment.ContradictoryResult.class);
     }
+
+    @Test
+    void reuses_the_same_attempt_for_the_same_idempotency_key() {
+        Payment payment = Payment.begin(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), PaymentMethod.CARD,
+            new Money(new BigDecimal("24.50"), "USD"), Instant.parse("2026-10-16T10:00:00Z"));
+
+        Payment.AttemptStarted first = payment.startAttempt(PaymentMethod.CARD, "request-1",
+            Instant.parse("2026-10-16T10:00:01Z"));
+        Payment.AttemptStarted replay = first.payment().startAttempt(PaymentMethod.CARD, "request-1",
+            Instant.parse("2026-10-16T10:00:02Z"));
+
+        assertThat(first.created()).isTrue();
+        assertThat(replay.created()).isFalse();
+        assertThat(replay.attempt()).isEqualTo(first.attempt());
+        assertThat(replay.payment().attempts()).hasSize(1);
+    }
 }

@@ -34,7 +34,8 @@ public final class PaymentDomainService {
 
   public PendingAttempt startAttempt(UUID orderId, PaymentMethod method, String idempotencyKey, Instant at) {
     Payment.AttemptStarted started = requireForOrder(orderId).startAttempt(method, idempotencyKey, at);
-    return new PendingAttempt(started.payment().save(payments), started.attempt());
+    return new PendingAttempt(started.created() ? started.payment().save(payments) : started.payment(), started.attempt(),
+        started.created());
   }
 
   public Payment resolveAttempt(UUID orderId, UUID attemptId, AttemptOutcome outcome, BigDecimal amount,
@@ -48,7 +49,7 @@ public final class PaymentDomainService {
         .resolveProviderReference(providerReference, outcome, amount, at).save(payments);
   }
 
-  public record PendingAttempt(Payment payment, PaymentAttempt attempt) {
+  public record PendingAttempt(Payment payment, PaymentAttempt attempt, boolean created) {
   }
 
 }

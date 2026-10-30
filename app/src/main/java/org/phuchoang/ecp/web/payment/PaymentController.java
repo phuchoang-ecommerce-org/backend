@@ -66,7 +66,13 @@ class PaymentController {
     }
 
     @GetMapping("/api/v1/orders/{orderId}/payment")
-    PaymentView payment(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID orderId) { return view(payments.getOrderPayment(orderId)); }
+    PaymentView payment(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID orderId) {
+        try {
+            return view(payments.getOrderPayment(context.resolve(jwt).caller(), orderId));
+        } catch (org.phuchoang.ecp.payment.internal.application.get.query.GetOrderPaymentService.PaymentNotFound missing) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+    }
 
     @GetMapping("/api/v1/unmatched-payments")
     PageEnvelope<UnmatchedPaymentView> unmatched(@AuthenticationPrincipal Jwt jwt, HttpServletRequest request,
@@ -91,16 +97,29 @@ class PaymentController {
     }
 
     private static String display(PaymentMethod method) { return method.name().replace('_', ' '); }
-    private static InitiationView view(PaymentFacade.Initiation value) { return new InitiationView(view(value.payment()), new AttemptView(value.attempt().id(), value.attempt().attemptNumber(), value.attempt().outcome(), value.attempt().providerReference()), value.redirectUrl()); }
-    private static PaymentView view(PaymentFacade.PaymentDetails p) { return new PaymentView(p.id(), p.orderId(), p.customerId(), p.method(), p.authorisedAmount(), p.currency(), p.status()); }
+    private static InitiationView view(PaymentFacade.Initiation value) {
+        var a = value.attempt();
+        return new InitiationView(view(value.payment()), new AttemptView(a.id(), a.paymentId(), a.attemptNumber(),
+            money(a.amount(), a.currency()), a.outcome(), a.providerReference(), a.failureReason(), a.requestedAt(),
+            a.resolvedAt()), value.redirectUrl());
+    }
+    private static PaymentView view(PaymentFacade.PaymentDetails p) {
+        return new PaymentView(p.id(), p.orderId(), p.customerId(), p.method(), money(p.authorisedAmount(), p.currency()),
+            money(p.capturedAmount(), p.currency()), money(p.refundedAmount(), p.currency()), p.currency(), p.status(), p.createdAt());
+    }
+    private static MoneyView money(BigDecimal amount, String currency) {
+        return amount == null ? null : new MoneyView(amount.toPlainString(), currency);
+    }
     record PaymentMethodView(PaymentMethod type, String displayName, boolean eligible, String ineligibleReason) { }
     record PaymentMethodWrite(@NotNull PaymentMethod method) { }
     record InitiationWrite(@NotNull UUID orderId, @NotNull PaymentMethod method, URI returnUrl) { }
     record ProviderNotificationWrite(@NotBlank String providerReference, @NotNull PaymentOutcome outcome, @NotNull BigDecimal amount,
         @NotBlank String currency, String providerEventId, Instant occurredAt, Map<String,Object> providerPayload) { }
     record InitiationView(PaymentView payment, AttemptView attempt, URI redirectUrl) { }
-    record PaymentView(UUID id, UUID orderId, UUID customerId, PaymentMethod method, BigDecimal authorisedAmount, String currency, Object status) { }
-    record AttemptView(UUID id, int attemptNumber, PaymentOutcome outcome, String providerReference) { }
+    record PaymentView(UUID id, UUID orderId, UUID customerId, PaymentMethod method, MoneyView authorisedAmount,
+        MoneyView capturedAmount, MoneyView refundedAmount, String currency, Object status, Instant createdAt) { }
+    record AttemptView(UUID id, UUID paymentId, int attemptNumber, MoneyView amount, PaymentOutcome outcome,
+        String providerReference, String failureReason, Instant requestedAt, Instant resolvedAt) { }
     record MoneyView(String amount, String currency) { }
     record UnmatchedPaymentView(UUID id, String providerReference, MoneyView amount, String outcome,
         Instant receivedAt, Instant resolvedAt) { }

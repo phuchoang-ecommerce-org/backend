@@ -22,5 +22,7 @@ public interface PaymentCommandMapper {
   @Mapping(target = "attemptNumber", source = "attempt.attemptNumber")
   @Mapping(target = "outcome", source = "attempt.outcome")
   @Mapping(target = "providerReference", source = "attempt.providerReference")
+  @Mapping(target = "requestedAt", source = "attempt.requestedAt")
+  @Mapping(target = "resolvedAt", source = "attempt.resolvedAt")
   InitiatePaymentResult toResult(Payment payment, PaymentAttempt attempt, URI redirectUrl, boolean accepted);
 }

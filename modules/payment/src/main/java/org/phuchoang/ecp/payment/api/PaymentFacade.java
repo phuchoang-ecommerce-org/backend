@@ -17,7 +17,7 @@ public interface PaymentFacade {
   Initiation initiatePayment(IdentityActor caller, UUID orderId, PaymentMethod method, String idempotencyKey,
       URI returnUrl, UUID correlationId);
 
-  PaymentDetails getOrderPayment(UUID orderId);
+  PaymentDetails getOrderPayment(IdentityActor caller, UUID orderId);
 
   UnmatchedPaymentPage listUnmatchedPayments(IdentityActor caller, Boolean resolved, String cursor, int size);
 
@@ -33,10 +33,11 @@ public interface PaymentFacade {
   }
 
   record PaymentDetails(UUID id, UUID orderId, UUID customerId, PaymentMethod method, BigDecimal authorisedAmount,
-      String currency, String status) {
+      BigDecimal capturedAmount, BigDecimal refundedAmount, String currency, String status, Instant createdAt) {
   }
 
-  record PaymentAttemptDetails(UUID id, int attemptNumber, PaymentOutcome outcome, String providerReference) {
+  record PaymentAttemptDetails(UUID id, UUID paymentId, int attemptNumber, BigDecimal amount, String currency,
+      PaymentOutcome outcome, String providerReference, String failureReason, Instant requestedAt, Instant resolvedAt) {
   }
 
   record UnmatchedPayment(UUID id, String providerReference, BigDecimal amount, String currency, String outcome,

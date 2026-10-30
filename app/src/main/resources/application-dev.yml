@@ -1,3 +1,6 @@
 ecp:
   jwt:
     generate-dev-keys: true
+  payment:
+    # The dev-only gateway signs an internal mock callback; production has no fallback secret.
+    provider-webhook-secret: ${ECP_PAYMENT_PROVIDER_WEBHOOK_SECRET:development-mock-signing-key}

@@ -61,10 +61,16 @@ public record Payment(@Identity UUID id, UUID orderId, UUID customerId, PaymentM
   }
 
   public AttemptStarted startAttempt(PaymentMethod requestedMethod, String idempotencyKey, Instant at) {
+    var prior = attempts.stream().filter(value -> value.idempotencyKey().equals(idempotencyKey)).findFirst();
+    if (prior.isPresent()) {
+      if (method != requestedMethod)
+        throw new IdempotencyKeyReused();
+      return new AttemptStarted(this, prior.get(), false);
+    }
     if (method != requestedMethod)
       throw new PaymentMethodMismatch();
     PaymentAttempt attempt = startAttempt(idempotencyKey, at);
-    return new AttemptStarted(withAttempt(attempt), attempt);
+    return new AttemptStarted(withAttempt(attempt), attempt, true);
   }
 
   public Payment resolve(UUID attemptId, AttemptOutcome outcome, BigDecimal receivedAmount, String providerReference,
@@ -98,13 +104,16 @@ public record Payment(@Identity UUID id, UUID orderId, UUID customerId, PaymentM
     return repository.save(this);
   }
 
-  public record AttemptStarted(Payment payment, PaymentAttempt attempt) {
+  public record AttemptStarted(Payment payment, PaymentAttempt attempt, boolean created) {
   }
 
   public static final class AttemptAlreadyInFlight extends RuntimeException {
   }
 
   public static final class PaymentMethodMismatch extends RuntimeException {
+  }
+
+  public static final class IdempotencyKeyReused extends RuntimeException {
   }
 
   public static final class ContradictoryResult extends RuntimeException {
