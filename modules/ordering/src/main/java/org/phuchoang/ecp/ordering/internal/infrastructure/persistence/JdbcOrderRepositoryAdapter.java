@@ -46,11 +46,22 @@ class JdbcOrderRepositoryAdapter implements OrderRepository {
 
     @Override
     public OrderRepository.OrderPage findPlacedByCustomerId(UUID customerId, String cursor, int size) {
+        return findPlaced("customer_id = :customerId", cursor, size, customerId);
+    }
+
+    @Override
+    public OrderRepository.OrderPage findPlaced(String cursor, int size) {
+        return findPlaced(null, cursor, size, null);
+    }
+
+    private OrderRepository.OrderPage findPlaced(String predicate, String cursor, int size, UUID customerId) {
         Cursor after = cursor == null ? null : decode(cursor);
-        String sql = "SELECT id, placed_at FROM ordering_order WHERE customer_id = :customerId AND status <> 'DRAFT' "
+        String sql = "SELECT id, placed_at FROM ordering_order WHERE status <> 'DRAFT' "
+            + (predicate == null ? "" : "AND " + predicate + " ")
             + (after == null ? "" : "AND (placed_at, id) < (:placedAt, :id) ")
             + "ORDER BY placed_at DESC NULLS LAST, id DESC LIMIT :limit";
-        var query = jdbc.sql(sql).param("customerId", customerId).param("limit", size + 1);
+        var query = jdbc.sql(sql).param("limit", size + 1);
+        if (customerId != null) query = query.param("customerId", customerId);
         if (after != null) query = query.param("placedAt", after.placedAt()).param("id", after.id());
         List<Cursor> rows = query.query((rs, row) -> new Cursor(rs.getTimestamp("placed_at").toInstant(),
             rs.getObject("id", UUID.class))).list();

@@ -20,7 +20,7 @@ class ShipmentPersistenceMapperTest {
     Shipment shipment = Shipment.dispatch(UUID.randomUUID(), "ACME", "TRK-1", "70000", "VN",
         Instant.parse("2026-10-16T08:00:00Z"))
         .record(new TrackingEvent(UUID.randomUUID(), "carrier-1", ShipmentStatus.IN_TRANSIT, "Collected",
-            "Ho Chi Minh City", Instant.parse("2026-10-16T09:00:00Z")));
+            "Ho Chi Minh City", Instant.parse("2026-10-16T09:00:00Z"), Instant.parse("2026-10-16T09:05:00Z")));
 
     ShipmentEntity entity = mapper.entity(shipment);
     TrackingEvent trackingEvent = shipment.trackingEvents().getFirst();

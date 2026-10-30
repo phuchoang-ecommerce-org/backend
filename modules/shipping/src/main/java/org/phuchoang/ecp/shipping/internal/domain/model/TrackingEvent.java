@@ -6,20 +6,21 @@ import java.util.UUID;
 
 /** Append-only carrier fact; {@code applied} says whether it advanced the shipment. */
 public record TrackingEvent(UUID id, String carrierEventId, ShipmentStatus status, String description, String location,
-        Instant carrierOccurredAt, boolean applied) {
+        Instant carrierOccurredAt, Instant receivedAt, boolean applied) {
 
     public TrackingEvent(UUID id, String carrierEventId, ShipmentStatus status, String description, String location,
-            Instant carrierOccurredAt) {
-        this(id, carrierEventId, status, description, location, carrierOccurredAt, false);
+            Instant carrierOccurredAt, Instant receivedAt) {
+        this(id, carrierEventId, status, description, location, carrierOccurredAt, receivedAt, false);
     }
 
     public TrackingEvent {
         Objects.requireNonNull(id, "id");
         Objects.requireNonNull(status, "status");
         Objects.requireNonNull(carrierOccurredAt, "carrierOccurredAt");
+        Objects.requireNonNull(receivedAt, "receivedAt");
     }
 
     TrackingEvent applied(boolean value) {
-        return new TrackingEvent(id, carrierEventId, status, description, location, carrierOccurredAt, value);
+        return new TrackingEvent(id, carrierEventId, status, description, location, carrierOccurredAt, receivedAt, value);
     }
 }

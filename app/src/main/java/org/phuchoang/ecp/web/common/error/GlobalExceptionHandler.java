@@ -42,6 +42,7 @@ public class GlobalExceptionHandler {
         org.phuchoang.ecp.identity.api.error.DomainException.class,
         org.phuchoang.ecp.catalog.api.error.DomainException.class,
         org.phuchoang.ecp.ordering.api.error.DomainException.class,
+        org.phuchoang.ecp.shipping.api.error.DomainException.class,
         org.phuchoang.ecp.promotion.api.error.DomainException.class
     })
     public ResponseEntity<Problem> handleContextDomain(RuntimeException exception, HttpServletRequest request) {
@@ -56,6 +57,10 @@ public class GlobalExceptionHandler {
         if (exception instanceof org.phuchoang.ecp.promotion.api.error.DomainException promotion) {
             return problemResponse(promotion.errorCode().code(), promotion.errorCode().title(),
                 promotion.errorCode().httpStatus(), promotion.getMessage(), request, List.of());
+        }
+        if (exception instanceof org.phuchoang.ecp.shipping.api.error.DomainException shipping) {
+            return problemResponse(shipping.errorCode().code(), shipping.errorCode().title(),
+                shipping.errorCode().httpStatus(), shipping.getMessage(), request, List.of());
         }
         org.phuchoang.ecp.ordering.api.error.DomainException ordering =
             (org.phuchoang.ecp.ordering.api.error.DomainException) exception;

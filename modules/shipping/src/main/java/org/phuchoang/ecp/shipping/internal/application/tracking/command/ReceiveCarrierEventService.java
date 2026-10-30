@@ -39,6 +39,6 @@ public class ReceiveCarrierEventService {
     return trackingMapper.trackingView(shipments.record(shipments.require(event.carrier(), event.trackingReference()).id(),
         new TrackingEvent(UUID.randomUUID(),
             event.carrierEventId(), ShipmentStatus.valueOf(event.status()), event.description(), event.location(),
-            event.occurredAt())));
+            event.occurredAt(), clock.instant())));
   }
 }

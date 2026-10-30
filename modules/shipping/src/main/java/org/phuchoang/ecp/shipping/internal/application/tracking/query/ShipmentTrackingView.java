@@ -13,15 +13,18 @@ public record ShipmentTrackingView(
     String status,
     Instant dispatchedAt,
     Instant deliveredAt,
-    Instant lastUpdatedAt,
+    Instant createdAt,
+    Instant lastUpdateReceivedAt,
     List<TrackingEventView> trackingEvents) {
 
   public record TrackingEventView(
+      UUID id,
       String carrierEventId,
       String status,
       String description,
       String location,
-      Instant occurredAt,
+      Instant carrierOccurredAt,
+      Instant receivedAt,
       boolean applied) {
   }
 }

@@ -9,4 +9,5 @@ public interface OrderFacade {
     OrderPageView listOrders(IdentityActor caller, String cursor, int size, UUID customerId);
     OrderView getOrder(IdentityActor caller, UUID orderId);
     OrderView placeOrder(IdentityActor caller, PlaceOrderRequest request, String idempotencyKey, UUID correlationId);
+    OrderView advanceOrderStatus(IdentityActor caller, UUID orderId, String status, String reason, UUID correlationId);
 }

@@ -28,8 +28,8 @@ class JdbcShipmentRepository implements ShipmentRepository {
     ShipmentEntity entity = mapper.entity(shipment);
     int changed = jdbc.sql("""
         INSERT INTO shipping_shipment (id, order_id, carrier, tracking_reference, status, status_rank,
-          destination_postal_code, destination_country_code, dispatched_at, delivered_at, version)
-        VALUES (:id,:orderId,:carrier,:tracking,:status,:rank,:postal,:country,:dispatched,:delivered,0)
+          destination_postal_code, destination_country_code, dispatched_at, delivered_at, created_at, version)
+        VALUES (:id,:orderId,:carrier,:tracking,:status,:rank,:postal,:country,:dispatched,:delivered,:created,0)
         ON CONFLICT (id) DO UPDATE SET status=:status,status_rank=:rank,delivered_at=:delivered,
           updated_at=now(),version=shipping_shipment.version+1
         WHERE shipping_shipment.version=:version
@@ -37,7 +37,8 @@ class JdbcShipmentRepository implements ShipmentRepository {
         .param("tracking", entity.trackingReference()).param("status", entity.status())
         .param("rank", entity.statusRank()).param("postal", entity.destinationPostalCode())
         .param("country", entity.destinationCountryCode()).param("dispatched", timestamp(entity.dispatchedAt()))
-        .param("delivered", timestamp(entity.deliveredAt())).param("version", entity.version()).update();
+        .param("delivered", timestamp(entity.deliveredAt())).param("created", timestamp(entity.createdAt()))
+        .param("version", entity.version()).update();
     if (changed != 1)
       throw new IllegalStateException("Shipment changed concurrently; retry the carrier event.");
     for (TrackingEvent event : shipment.trackingEvents()) {
@@ -45,7 +46,7 @@ class JdbcShipmentRepository implements ShipmentRepository {
       jdbc.sql(
           """
               INSERT INTO shipping_tracking_event (id,shipment_id,carrier_event_id,status,status_rank,description,location,
-                carrier_occurred_at,applied) VALUES (:id,:shipment,:carrierEvent,:status,:rank,:description,:location,:occurred,:applied)
+                carrier_occurred_at,received_at,applied) VALUES (:id,:shipment,:carrierEvent,:status,:rank,:description,:location,:occurred,:received,:applied)
               ON CONFLICT (shipment_id,carrier_event_id) WHERE carrier_event_id IS NOT NULL DO NOTHING
               """)
           .param("id", trackingEvent.id()).param("shipment", shipment.id())
@@ -53,6 +54,7 @@ class JdbcShipmentRepository implements ShipmentRepository {
           .param("status", trackingEvent.status()).param("rank", trackingEvent.statusRank())
           .param("description", trackingEvent.description())
           .param("location", trackingEvent.location()).param("occurred", timestamp(trackingEvent.carrierOccurredAt()))
+          .param("received", timestamp(trackingEvent.receivedAt()))
           .param("applied", trackingEvent.applied()).update();
     }
     return mapper.domain(entity.withVersion(shipment.version() + 1), shipment.trackingEvents());
@@ -91,7 +93,7 @@ class JdbcShipmentRepository implements ShipmentRepository {
         .query((rs, row) -> mapper.domain(new TrackingEventEntity(rs.getObject("id", UUID.class), shipmentId,
             rs.getString("carrier_event_id"), rs.getString("status"), rs.getInt("status_rank"),
             rs.getString("description"), rs.getString("location"), rs.getTimestamp("carrier_occurred_at").toInstant(),
-            rs.getBoolean("applied"))))
+            rs.getTimestamp("received_at").toInstant(), rs.getBoolean("applied"))))
         .list();
   }
 
@@ -99,7 +101,8 @@ class JdbcShipmentRepository implements ShipmentRepository {
     return new ShipmentEntity(id, rs.getObject("order_id", UUID.class), rs.getString("carrier"),
         rs.getString("tracking_reference"), rs.getString("destination_postal_code"),
         rs.getString("destination_country_code"), rs.getString("status"), rs.getInt("status_rank"),
-        instant(rs.getTimestamp("dispatched_at")), instant(rs.getTimestamp("delivered_at")), rs.getLong("version"));
+        instant(rs.getTimestamp("dispatched_at")), instant(rs.getTimestamp("delivered_at")),
+        instant(rs.getTimestamp("created_at")), rs.getLong("version"));
   }
 
   private static java.time.Instant instant(Timestamp timestamp) {

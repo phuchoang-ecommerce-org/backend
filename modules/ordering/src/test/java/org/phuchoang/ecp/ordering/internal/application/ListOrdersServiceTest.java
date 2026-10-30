@@ -59,8 +59,23 @@ class ListOrdersServiceTest {
         ListOrdersService service = new ListOrdersService(authorizationService, orders);
         IdentityActor caller = new IdentityActor(UUID.randomUUID(), Set.of("CUSTOMER_SUPPORT"));
 
-        OrderPageResult result = service.listOrders(caller, new ListOrdersQuery(null, 20, UUID.randomUUID()));
+        UUID customerId = UUID.randomUUID();
+        when(orders.findPlacedByCustomerId(customerId, null, 20))
+            .thenReturn(new OrderRepository.OrderPage(java.util.List.of(), null));
+        OrderPageResult result = service.listOrders(caller, new ListOrdersQuery(null, 20, customerId));
 
         assertThat(result.items()).isEmpty();
+    }
+
+    @Test
+    void warehouseOperatorReadsPlacedOrders() {
+        ListOrdersService service = new ListOrdersService(authorizationService, orders);
+        IdentityActor caller = new IdentityActor(UUID.randomUUID(), Set.of("WAREHOUSE_OPERATOR"));
+        when(orders.findPlaced(null, 20)).thenReturn(new OrderRepository.OrderPage(java.util.List.of(), null));
+
+        OrderPageResult result = service.listOrders(caller, new ListOrdersQuery(null, 20, null));
+
+        assertThat(result.items()).isEmpty();
+        verify(orders).findPlaced(null, 20);
     }
 }

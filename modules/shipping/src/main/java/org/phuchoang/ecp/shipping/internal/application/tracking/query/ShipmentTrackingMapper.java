@@ -11,14 +11,12 @@ import java.time.Instant;
 /** Maps the Shipment aggregate into the application-owned tracking projection. */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface ShipmentTrackingMapper {
-  @Mapping(target = "lastUpdatedAt", expression = "java(lastUpdatedAt(shipment))")
+  @Mapping(target = "lastUpdateReceivedAt", expression = "java(lastUpdateReceivedAt(shipment))")
   ShipmentTrackingView trackingView(Shipment shipment);
 
-  @Mapping(target = "occurredAt", source = "carrierOccurredAt")
   ShipmentTrackingView.TrackingEventView trackingEventView(TrackingEvent event);
 
-  default Instant lastUpdatedAt(Shipment shipment) {
-    return shipment.trackingEvents().isEmpty() ? shipment.dispatchedAt()
-        : shipment.trackingEvents().getLast().carrierOccurredAt();
+  default Instant lastUpdateReceivedAt(Shipment shipment) {
+    return shipment.trackingEvents().stream().map(TrackingEvent::receivedAt).max(Instant::compareTo).orElse(null);
   }
 }

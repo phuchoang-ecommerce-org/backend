@@ -15,10 +15,11 @@ record ShipmentEntity(
     int statusRank,
     Instant dispatchedAt,
     Instant deliveredAt,
+    Instant createdAt,
     long version) {
 
   ShipmentEntity withVersion(long nextVersion) {
     return new ShipmentEntity(id, orderId, carrier, trackingReference, destinationPostalCode, destinationCountryCode,
-        status, statusRank, dispatchedAt, deliveredAt, nextVersion);
+        status, statusRank, dispatchedAt, deliveredAt, createdAt, nextVersion);
   }
 }

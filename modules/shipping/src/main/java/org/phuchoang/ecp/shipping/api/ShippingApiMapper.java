@@ -11,9 +11,7 @@ import org.phuchoang.ecp.shipping.internal.application.tracking.query.ShipmentTr
 interface ShippingApiMapper {
   ReceiveCarrierEventCommand command(ShippingFacade.CarrierEvent event);
 
-  @Mapping(target = "events", source = "trackingEvents")
   ShipmentView shipmentView(ShipmentTrackingView view);
 
-  @Mapping(target = "carrierOccurredAt", source = "occurredAt")
   ShipmentView.TrackingEventView trackingEventView(ShipmentTrackingView.TrackingEventView view);
 }

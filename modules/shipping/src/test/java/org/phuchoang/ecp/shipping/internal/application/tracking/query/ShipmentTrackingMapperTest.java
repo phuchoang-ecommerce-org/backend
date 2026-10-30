@@ -15,16 +15,18 @@ class ShipmentTrackingMapperTest {
   private final ShipmentTrackingMapper mapper = Mappers.getMapper(ShipmentTrackingMapper.class);
 
   @Test
-  void mapsAggregateStateAndLatestCarrierFactToTheTrackingProjection() {
+  void mapsAggregateStateAndLatestReceivedFactToTheTrackingProjection() {
+    UUID eventId = UUID.randomUUID();
     Shipment shipment = Shipment.dispatch(UUID.randomUUID(), "ACME", "TRK-1", "70000", "VN",
         Instant.parse("2026-10-16T08:00:00Z"))
-        .record(new TrackingEvent(UUID.randomUUID(), "carrier-1", ShipmentStatus.IN_TRANSIT, "Collected",
-            "Ho Chi Minh City", Instant.parse("2026-10-16T09:00:00Z")));
+        .record(new TrackingEvent(eventId, "carrier-1", ShipmentStatus.IN_TRANSIT, "Collected",
+            "Ho Chi Minh City", Instant.parse("2026-10-16T09:00:00Z"), Instant.parse("2026-10-16T09:05:00Z")));
 
     ShipmentTrackingView view = mapper.trackingView(shipment);
 
-    assertThat(view.lastUpdatedAt()).isEqualTo(Instant.parse("2026-10-16T09:00:00Z"));
-    assertThat(view.trackingEvents()).containsExactly(new ShipmentTrackingView.TrackingEventView("carrier-1",
-        "IN_TRANSIT", "Collected", "Ho Chi Minh City", Instant.parse("2026-10-16T09:00:00Z"), true));
+    assertThat(view.lastUpdateReceivedAt()).isEqualTo(Instant.parse("2026-10-16T09:05:00Z"));
+    assertThat(view.trackingEvents()).containsExactly(new ShipmentTrackingView.TrackingEventView(eventId, "carrier-1",
+        "IN_TRANSIT", "Collected", "Ho Chi Minh City", Instant.parse("2026-10-16T09:00:00Z"),
+        Instant.parse("2026-10-16T09:05:00Z"), true));
   }
 }

@@ -17,20 +17,21 @@ import java.util.UUID;
 @AggregateRoot
 public record Shipment(@Identity UUID id, UUID orderId, String carrier, String trackingReference,
     String destinationPostalCode, String destinationCountryCode, ShipmentStatus status, Instant dispatchedAt,
-    Instant deliveredAt, long version, List<TrackingEvent> trackingEvents) {
+    Instant deliveredAt, Instant createdAt, long version, List<TrackingEvent> trackingEvents) {
 
   public Shipment {
     Objects.requireNonNull(id, "id");
     Objects.requireNonNull(orderId, "orderId");
     Objects.requireNonNull(carrier, "carrier");
     Objects.requireNonNull(status, "status");
+    Objects.requireNonNull(createdAt, "createdAt");
     trackingEvents = List.copyOf(trackingEvents);
   }
 
   public static Shipment dispatch(UUID orderId, String carrier, String trackingReference, String postalCode,
       String countryCode, Instant dispatchedAt) {
     return new Shipment(UUID.randomUUID(), orderId, carrier, trackingReference, postalCode, countryCode,
-        ShipmentStatus.DISPATCHED, Objects.requireNonNull(dispatchedAt), null, 0, List.of());
+        ShipmentStatus.DISPATCHED, Objects.requireNonNull(dispatchedAt), null, dispatchedAt, 0, List.of());
   }
 
   /**
@@ -50,7 +51,7 @@ public record Shipment(@Identity UUID id, UUID orderId, String carrier, String t
         ? incoming.carrierOccurredAt()
         : deliveredAt;
     return new Shipment(id, orderId, carrier, trackingReference, destinationPostalCode, destinationCountryCode,
-        nextStatus, dispatchedAt, nextDeliveredAt, version, history);
+        nextStatus, dispatchedAt, nextDeliveredAt, createdAt, version, history);
   }
 
   /**

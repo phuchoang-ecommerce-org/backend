@@ -7,6 +7,9 @@ import org.phuchoang.ecp.shipping.internal.application.create.command.CreateShip
 import org.phuchoang.ecp.shipping.internal.application.tracking.command.ConfirmShipmentDeliveryService;
 import org.phuchoang.ecp.shipping.internal.application.tracking.command.ReceiveCarrierEventService;
 import org.phuchoang.ecp.shipping.internal.application.tracking.query.ShipmentTrackingQueryService;
+import org.phuchoang.ecp.shipping.api.error.DomainException;
+import org.phuchoang.ecp.shipping.api.error.GenErrorCode;
+import org.phuchoang.ecp.ordering.api.OrderErrorCode;
 import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.UUID;
@@ -24,13 +27,25 @@ class ShippingFacadeAdapter implements ShippingFacade {
   @Override
   public ShipmentView createShipment(IdentityActor caller, UUID orderId, String carrier, String postalCode,
       String countryCode, UUID correlationId) {
-    return view(create.create(caller, orderId, carrier, postalCode, countryCode, correlationId));
+    try {
+      String selectedCarrier = carrier == null || carrier.isBlank() ? "DEVELOPMENT" : carrier;
+      return view(create.create(caller, orderId, selectedCarrier, postalCode, countryCode, correlationId));
+    } catch (CreateShipmentService.CarrierDeclined exception) {
+      throw new DomainException(GenErrorCode.DEPENDENCY_UNAVAILABLE, exception.getMessage());
+    } catch (IllegalStateException exception) {
+      throw new org.phuchoang.ecp.ordering.api.error.DomainException(
+          OrderErrorCode.TRANSITION_NOT_PERMITTED, exception.getMessage());
+    }
   }
 
   @Override
   public ShipmentView getShipment(IdentityActor caller, UUID shipmentId) {
     authorization.assertAuthorized(caller, "trackOrder");
-    return view(tracking.get(shipmentId));
+    try {
+      return view(tracking.get(shipmentId));
+    } catch (org.phuchoang.ecp.shipping.internal.domain.service.ShipmentDomainService.ShipmentNotFound exception) {
+      throw new DomainException(GenErrorCode.NOT_FOUND, "Shipment not found.");
+    }
   }
 
   @Override

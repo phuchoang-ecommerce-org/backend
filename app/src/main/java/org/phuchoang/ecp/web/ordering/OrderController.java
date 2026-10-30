@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 
 import java.util.Set;
 import java.util.UUID;
@@ -63,4 +65,14 @@ class OrderController {
     OrderView getOrder(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID orderId) {
         return orderFacade.getOrder(requestContext.resolve(jwt).caller(), orderId);
     }
+
+    @PostMapping("/api/v1/orders/{orderId}/status-transitions")
+    OrderView advanceStatus(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID orderId,
+            @Valid @RequestBody StatusTransition request) {
+        var context = requestContext.resolve(jwt);
+        return orderFacade.advanceOrderStatus(context.caller(), orderId, request.status(), request.reason(),
+            context.correlationId());
+    }
+
+    record StatusTransition(@NotBlank String status, String reason) { }
 }

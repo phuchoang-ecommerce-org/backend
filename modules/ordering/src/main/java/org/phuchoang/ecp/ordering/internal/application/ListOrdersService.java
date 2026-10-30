@@ -39,11 +39,11 @@ public class ListOrdersService {
                 "customerId may only be supplied by Support or Administrator.");
         }
 
-        // Cursor extension is deliberately represented in the contract but not
-        // inferred from a mutable offset. This first read-model slice serves a
-        // customer's own newest snapshot rows; staff search remains separate.
-        if (!caller.roles().contains("CUSTOMER")) return OrderPageResult.EMPTY;
-        var page = orders.findPlacedByCustomerId(caller.accountId(), query.cursor(), query.size());
+        var page = caller.roles().contains("CUSTOMER")
+            ? orders.findPlacedByCustomerId(caller.accountId(), query.cursor(), query.size())
+            : query.customerId() == null
+                ? orders.findPlaced(query.cursor(), query.size())
+                : orders.findPlacedByCustomerId(query.customerId(), query.cursor(), query.size());
         return new OrderPageResult(page.items(), page.nextCursor());
     }
 }

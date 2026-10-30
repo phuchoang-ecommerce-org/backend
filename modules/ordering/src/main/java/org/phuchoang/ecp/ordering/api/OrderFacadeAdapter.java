@@ -10,6 +10,10 @@ import org.phuchoang.ecp.ordering.internal.application.GetOrderService;
 import org.phuchoang.ecp.ordering.internal.application.error.ApplicationException;
 import org.phuchoang.ecp.ordering.internal.application.place.command.PlaceOrderCommand;
 import org.phuchoang.ecp.ordering.internal.application.place.command.PlaceOrderService;
+import org.phuchoang.ecp.ordering.internal.application.lifecycle.command.AdvanceOrderStatusCommand;
+import org.phuchoang.ecp.ordering.internal.application.lifecycle.command.AdvanceOrderStatusService;
+import org.phuchoang.ecp.ordering.internal.domain.model.Order;
+import org.phuchoang.ecp.ordering.internal.domain.model.OrderStatus;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -20,6 +24,7 @@ class OrderFacadeAdapter implements OrderFacade {
     private final ListOrdersService listOrdersService;
     private final GetOrderService getOrderService;
     private final PlaceOrderService placeOrders;
+    private final AdvanceOrderStatusService advanceOrderStatus;
     private final OrderApiMapper mapper;
 
     @Override
@@ -56,6 +61,20 @@ class OrderFacadeAdapter implements OrderFacade {
                 case FORBIDDEN -> new DomainException(GenErrorCode.FORBIDDEN, exception.getMessage());
                 case NOT_FOUND -> new DomainException(GenErrorCode.NOT_FOUND, exception.getMessage());
             };
+        }
+    }
+
+    @Override
+    public OrderView advanceOrderStatus(IdentityActor caller, UUID orderId, String status, String reason,
+            UUID correlationId) {
+        try {
+            Order advanced = advanceOrderStatus.advance(new AdvanceOrderStatusCommand(caller, orderId,
+                OrderStatus.valueOf(status), reason, correlationId));
+            return mapper.orderView(advanced);
+        } catch (Order.IllegalStatusTransition exception) {
+            throw new DomainException(OrderErrorCode.TRANSITION_NOT_PERMITTED, exception.getMessage());
+        } catch (org.phuchoang.ecp.ordering.internal.domain.service.OrderLifecycleDomainService.OrderNotFound exception) {
+            throw new DomainException(GenErrorCode.NOT_FOUND, "Order not found.");
         }
     }
 }

@@ -13,5 +13,6 @@ record TrackingEventEntity(
     String description,
     String location,
     Instant carrierOccurredAt,
+    Instant receivedAt,
     boolean applied) {
 }

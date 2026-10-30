@@ -6,8 +6,9 @@ import java.util.UUID;
 
 /** Stable shipment tracking view. */
 public record ShipmentView(UUID id, UUID orderId, String carrier, String trackingReference, String status,
-        Instant dispatchedAt, Instant deliveredAt, Instant lastUpdatedAt, List<TrackingEventView> events) {
-    public ShipmentView { events = List.copyOf(events); }
-    public record TrackingEventView(String carrierEventId, String status, String description, String location,
-            Instant carrierOccurredAt, boolean applied) { }
+        Instant dispatchedAt, Instant deliveredAt, Instant createdAt, Instant lastUpdateReceivedAt,
+        List<TrackingEventView> trackingEvents) {
+    public ShipmentView { trackingEvents = List.copyOf(trackingEvents); }
+    public record TrackingEventView(UUID id, String carrierEventId, String status, String description, String location,
+            Instant carrierOccurredAt, Instant receivedAt, boolean applied) { }
 }

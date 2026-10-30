@@ -18,10 +18,12 @@ class ShippingApiMapperTest {
     ShippingFacade.CarrierEvent event = new ShippingFacade.CarrierEvent("ACME", "TRK-1", "carrier-1", "IN_TRANSIT",
         "Collected", "Ho Chi Minh City", Instant.parse("2026-10-16T09:00:00Z"));
     UUID shipmentId = UUID.randomUUID();
+    UUID eventId = UUID.randomUUID();
     ShipmentTrackingView tracking = new ShipmentTrackingView(shipmentId, UUID.randomUUID(), "ACME", "TRK-1",
-        "IN_TRANSIT", Instant.parse("2026-10-16T08:00:00Z"), null, Instant.parse("2026-10-16T09:00:00Z"),
-        List.of(new ShipmentTrackingView.TrackingEventView("carrier-1", "IN_TRANSIT", "Collected",
-            "Ho Chi Minh City", Instant.parse("2026-10-16T09:00:00Z"), true)));
+        "IN_TRANSIT", Instant.parse("2026-10-16T08:00:00Z"), null, Instant.parse("2026-10-16T08:00:00Z"),
+        Instant.parse("2026-10-16T09:05:00Z"), List.of(new ShipmentTrackingView.TrackingEventView(eventId,
+            "carrier-1", "IN_TRANSIT", "Collected", "Ho Chi Minh City", Instant.parse("2026-10-16T09:00:00Z"),
+            Instant.parse("2026-10-16T09:05:00Z"), true)));
 
     var command = mapper.command(event);
     assertThat(command.carrier()).isEqualTo("ACME");
@@ -30,7 +32,8 @@ class ShippingApiMapperTest {
     assertThat(command.occurredAt()).isEqualTo(Instant.parse("2026-10-16T09:00:00Z"));
     ShipmentView shipment = mapper.shipmentView(tracking);
     assertThat(shipment.id()).isEqualTo(shipmentId);
-    assertThat(shipment.events()).containsExactly(new ShipmentView.TrackingEventView("carrier-1", "IN_TRANSIT",
-        "Collected", "Ho Chi Minh City", Instant.parse("2026-10-16T09:00:00Z"), true));
+    assertThat(shipment.trackingEvents()).containsExactly(new ShipmentView.TrackingEventView(eventId, "carrier-1",
+        "IN_TRANSIT", "Collected", "Ho Chi Minh City", Instant.parse("2026-10-16T09:00:00Z"),
+        Instant.parse("2026-10-16T09:05:00Z"), true));
   }
 }

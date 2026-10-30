@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 import org.phuchoang.ecp.ordering.api.OrderFacade;
 import org.phuchoang.ecp.ordering.api.OrderPageView;
+import org.phuchoang.ecp.ordering.api.OrderErrorCode;
+import org.phuchoang.ecp.ordering.api.error.DomainException;
 import org.phuchoang.ecp.web.common.ratelimit.RateLimiter;
 import org.phuchoang.ecp.configuration.security.JwtKeysConfig;
 import org.phuchoang.ecp.configuration.security.SecurityConfig;
@@ -16,12 +18,15 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Set;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -69,5 +74,20 @@ class OrderControllerTest {
                 .with(jwt().jwt(builder -> builder.subject("018f3c2a-0000-7000-8000-000000000000")
                     .claim("roles", Set.of("CUSTOMER")))))
             .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void invalidStatusEdgeReturnsTheContractConflictCode() throws Exception {
+        UUID orderId = UUID.randomUUID();
+        BDDMockito.given(orderFacade.advanceOrderStatus(any(), eq(orderId), eq("PACKED"), any(), any()))
+            .willThrow(new DomainException(OrderErrorCode.TRANSITION_NOT_PERMITTED, "Order is PAID."));
+
+        mockMvc.perform(post("/api/v1/orders/{orderId}/status-transitions", orderId)
+                .contentType("application/json")
+                .content("{\"status\":\"PACKED\"}")
+                .with(jwt().jwt(builder -> builder.subject("018f3c2a-0000-7000-8000-000000000000")
+                    .claim("roles", Set.of("WAREHOUSE_OPERATOR")))))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.code").value("ECP-ORD-4091"));
     }
 }
